@@ -22,7 +22,9 @@
     },
     {
       "type": "npm",
-      "script": "test",
+      "script": "test:watch",
+      "path": "apps/angular",
+      "label": "npm: test:watch - apps/angular",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
