@@ -51,11 +51,11 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 
 ### 0.7 Modelo
 
-- [ ] Crear las tablas `geo`, `indicator`, `observation` y `source_snapshot` del esquema.
-- [ ] Transformaciones de staging a modelo por indicador: filtros, rebase a 2015, desgloses y categorías. Descartar la renta de 2024 y los códigos `XXZZ`.
-- [ ] Indicador derivado precio frente a renta (ambos índices con base 2015; renta por habitante en moneda nacional = `MIO_NAC × EUR_HAB / MIO_EUR`) y noches por habitante a partir de `P_THAB`.
-- [ ] Tests de calidad en SQL: claves únicas, códigos sin geometría, años fuera de rango y valores fuera de rango.
-- [ ] Comando `etl build` que reconstruye la base completa desde `data/raw/` en una sola ejecución. Ya existe y ejecuta `sql/staging`; falta añadir `model` a `LAYERS` en `build.ts`.
+- [x] Crear las tablas `geo`, `indicator`, `observation` y `source_snapshot` del esquema. `indicator` suma `levels`, `breakdowns` y `categories` para que el contrato salga del catálogo.
+- [x] Transformaciones de staging a modelo por indicador: filtros, rebase a 2015, desgloses y categorías. Descartar la renta de 2024 y los códigos `XXZZ`. Un fichero por indicador en `sql/model/`; solo geografía UE-27, valores no vacíos y años 2015–2025.
+- [x] Indicador derivado precio frente a renta (ambos índices con base 2015; renta por habitante en moneda nacional = `MIO_NAC × EUR_HAB / MIO_EUR`) y noches por habitante a partir de `P_THAB`.
+- [x] Tests de calidad en SQL (`sql/quality/`, fallan con `error()`): indicadores sin datos, desgloses no declarados, años y valores fuera de rango, cobertura del último año (90 % de países, 95 % de regiones) y códigos NUTS sin geometría en el último año. Las claves únicas las garantiza la clave primaria.
+- [x] Comando `etl build` que reconstruye la base completa desde `data/raw/` en una sola ejecución: staging, modelo y calidad.
 
 ## Hito 1 — ETL mínimo
 

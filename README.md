@@ -60,7 +60,7 @@ Las transformaciones están en ficheros `.sql` numerados y ejecutables con la CL
 
 ## Estado
 
-El monorepo pnpm ya está montado. `apps/angular` sigue siendo la app base de Angular CLI 20 (SSR con prerenderizado y tests con Karma); `packages/contract` y `packages/etl` son esqueletos con TypeScript estricto, ESLint y Vitest. El trabajo en curso es el hito 0.
+El monorepo pnpm ya está montado. `apps/angular` sigue siendo la app base de Angular CLI 20 (SSR con prerenderizado y tests con Karma); El hito 0 está terminado: `packages/etl` descarga Eurostat y GISCO y reconstruye la base DuckDB con los diez indicadores y sus tests de calidad (ver [cobertura.md](cobertura.md)). `packages/contract` sigue siendo un esqueleto. El siguiente paso es el hito 1.
 
 Hitos:
 

@@ -85,7 +85,7 @@ describe('build', () => {
   });
 
   it('loads every source and layer into staging without transforming it', async () => {
-    await build({ raw, database });
+    await build({ raw, database, layers: ['staging'] });
 
     const tables = await query(
       database,
@@ -106,8 +106,8 @@ describe('build', () => {
   });
 
   it('records one snapshot per raw file, also when rebuilt', async () => {
-    await build({ raw, database });
-    await build({ raw, database });
+    await build({ raw, database, layers: ['staging'] });
+    await build({ raw, database, layers: ['staging'] });
 
     const snapshots = await query(
       database,
@@ -124,7 +124,7 @@ describe('build', () => {
 
   it('names the SQL file that failed', async () => {
     await rm(join(raw, 'ilc_lvho02.csv.gz'));
-    await expect(build({ raw, database })).rejects.toThrow(/ilc_lvho02\.sql/);
+    await expect(build({ raw, database, layers: ['staging'] })).rejects.toThrow(/ilc_lvho02\.sql/);
   });
 });
 

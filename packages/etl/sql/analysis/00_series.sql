@@ -18,10 +18,7 @@ CREATE OR REPLACE TEMP VIEW series AS
 
 -- EU-27 countries and NUTS 2 regions (NUTS 2024).
 CREATE OR REPLACE TEMP VIEW eu_geo AS
-  SELECT DISTINCT LEVL_CODE AS level, NUTS_ID AS geo, NUTS_ID IN (
-    'ES70', 'FRY1', 'FRY2', 'FRY3', 'FRY4', 'FRY5', 'PT20', 'PT30') AS outermost
-  FROM staging.geo_nuts
-  WHERE EU_STAT = 'T' AND LEVL_CODE IN (0, 2);
+  SELECT level, code AS geo, is_outermost AS outermost FROM model.geo WHERE NOT is_aggregate;
 
 -- Observations with a value, restricted to EU-27 geography or the EU aggregate.
 CREATE OR REPLACE TEMP VIEW eu_obs AS

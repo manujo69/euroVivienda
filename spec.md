@@ -164,6 +164,9 @@ CREATE TABLE indicator (
   theme          VARCHAR NOT NULL,     -- prices | access | context
   kind           VARCHAR NOT NULL,     -- scalar | index | composition | derived
   unit           VARCHAR NOT NULL,
+  levels         TINYINT[] NOT NULL,   -- [0] o [0, 2]
+  breakdowns     JSON NOT NULL,        -- [{id, label}], el primero es el de por defecto
+  categories     JSON,                 -- solo composition: porciones del pastel
   source_code    VARCHAR NOT NULL,
   source_filter  JSON,
   map_category   VARCHAR,
@@ -222,6 +225,8 @@ interface IndicatorData {
   };
 }
 ```
+
+En una composición, `categories` son las porciones del pastel y `mapCategory` la categoría que pinta el mapa, que puede ser un agregado de ellas: en tenencia, `rent` (alquiler total, publicado por Eurostat) junto a `own_l`, `own_nl`, `rent_mkt` y `rent_fr`. `v` incluye las dos cosas.
 
 La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos primeros caracteres del código NUTS son el país). El agregado UE viene de Eurostat cuando existe; en el precio frente a renta se calcula con los agregados UE de sus dos fuentes.
 

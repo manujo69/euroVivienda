@@ -15,19 +15,4 @@ export function countriesUrl(): string {
   return `${GISCO}/countries/geojson/CNTR_RG_20M_2024_3035.geojson`;
 }
 
-/**
- * Outermost regions (art. 349 TFEU), identical in NUTS 2021 and 2024. Saint-Martin has no NUTS
- * code. They stay off the map; their NUTS 0 countries include them and must be clipped too.
- */
-export const OUTERMOST_REGIONS: readonly string[] = [
-  'ES70', // Canarias
-  'FRY1', // Guadeloupe
-  'FRY2', // Martinique
-  'FRY3', // Guyane
-  'FRY4', // La Réunion
-  'FRY5', // Mayotte
-  'PT20', // Região Autónoma dos Açores
-  'PT30', // Região Autónoma da Madeira
-];
-
 export const GEOMETRY_ATTRIBUTION = '© EuroGeographics para los límites administrativos';

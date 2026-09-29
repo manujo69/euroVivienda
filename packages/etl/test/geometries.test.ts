@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  GEOMETRY_ATTRIBUTION,
-  OUTERMOST_REGIONS,
-  countriesUrl,
-  nutsUrl,
-} from '../src/geometries.ts';
+import { GEOMETRY_ATTRIBUTION, countriesUrl, nutsUrl } from '../src/geometries.ts';
 
 const GISCO = 'https://gisco-services.ec.europa.eu/distribution/v2';
 
@@ -18,15 +13,6 @@ describe('nutsUrl', () => {
 describe('countriesUrl', () => {
   it('points to the 20M EPSG:3035 country layer', () => {
     expect(countriesUrl()).toBe(`${GISCO}/countries/geojson/CNTR_RG_20M_2024_3035.geojson`);
-  });
-});
-
-describe('OUTERMOST_REGIONS', () => {
-  it('lists the NUTS 2 codes of the outermost regions once each', () => {
-    expect(OUTERMOST_REGIONS).toHaveLength(new Set(OUTERMOST_REGIONS).size);
-    for (const code of OUTERMOST_REGIONS) {
-      expect(code).toMatch(/^[A-Z]{2}[0-9A-Z]{2}$/);
-    }
   });
 });
 
