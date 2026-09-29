@@ -24,9 +24,9 @@ Objetivo: una base DuckDB reconstruible con un comando, con todos los indicadore
 
 ### 0.3 Geometrías
 
-- [ ] Descargar de GISCO las geometrías NUTS 0 y NUTS 2 en EPSG:3035, a resolución 20M para empezar.
-- [ ] Descargar la capa de países de GISCO para el contexto no UE.
-- [ ] Identificar las regiones ultraperiféricas para marcarlas en `geo`.
+- [x] Descargar de GISCO las geometrías NUTS 0 y NUTS 2 en EPSG:3035, a resolución 20M para empezar. Registradas en `geometries.ts` para NUTS 2021 y 2024 (GeoJSON, que leen tanto `ST_Read` como mapshaper). Entre versiones solo cambian NL y PT en NUTS 2.
+- [x] Descargar la capa de países de GISCO para el contexto no UE: `CNTR_RG_20M_2024_3035`.
+- [x] Identificar las regiones ultraperiféricas para marcarlas en `geo`: `ES70`, `FRY1`–`FRY5`, `PT20` y `PT30`, iguales en ambas versiones. Las geometrías NUTS 0 de ES, FR y PT las incluyen: hay que recortarlas también en el nivel país.
 
 ### 0.4 Descarga cruda
 

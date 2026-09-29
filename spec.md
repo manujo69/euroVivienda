@@ -69,7 +69,8 @@ Tres zonas: catálogo a la izquierda, mapa de la UE en el centro y panel de grá
 - Regiones sin dato en gris con trama y el texto «sin dato».
 - Tooltip con valor, año, fuente y flags de Eurostat: `e` estimado, `p` provisional, `b` ruptura de serie, `u` baja fiabilidad, `c` confidencial, `d` definición distinta.
 - Proyección Lambert azimutal equivalente (EPSG:3035) aplicada en el ETL: el frontend recibe las geometrías ya proyectadas.
-- Países no UE en gris neutro y sin interacción. Regiones ultraperiféricas fuera del mapa en el MVP, con nota; sus datos siguen en gráficos y tablas.
+- Países no UE en gris neutro y sin interacción. Regiones ultraperiféricas (`ES70`, `FRY1`–`FRY5`, `PT20`, `PT30`) fuera del mapa en el MVP, también recortadas de la silueta de su país, con nota; sus datos siguen en gráficos y tablas.
+- Geometrías de GISCO a escala 20M, en GeoJSON ya proyectado: NUTS 0 y NUTS 2 de la versión elegida y la capa de países para el contexto. Atribución: «© EuroGeographics para los límites administrativos».
 - Tabla alternativa accesible por teclado y lector de pantalla.
 
 **Dirección visual («cifras destacadas»):**

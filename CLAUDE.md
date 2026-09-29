@@ -52,6 +52,7 @@ Monorepo con pnpm workspaces:
 - Conserva los flags de Eurostat (`e`, `p`, `b`, `u`, `c`, `d`) en `observation.flags`.
 - El ETL solo publica si pasan los tests de calidad; si Eurostat cambia dimensiones, falla con un error claro.
 - Fuentes en `packages/etl/src/sources.ts`: se descargan en SDMX-CSV comprimido desde 2015, filtrando por clave SDMX (dimensiones en el orden de Eurostat). Al leerlas con `read_csv`, pasa `timestampformat='%d/%m/%y %H:%M:%S'`: si no, DuckDB interpreta `LAST UPDATE` como año/mes/día.
+- Geometrías en `packages/etl/src/geometries.ts`: GeoJSON 20M de GISCO ya en EPSG:3035 (DuckDB lo lee con `ST_Read` sin reproyectar). Las ultraperiféricas también van dentro de las siluetas NUTS 0 de ES, FR y PT.
 - Comandos previstos: `etl download`, `etl build`.
 
 ## Frontend Angular
