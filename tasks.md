@@ -63,17 +63,17 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 - [x] Vistas de publicación y exportación de `catalog.json` y `data/[id].json` para un escalar y el de composición: `overburden` y `tenure`. Vistas en `sql/publish/` (DuckDB arma el JSON) y comando `etl export`, que valida con el contrato y escribe en `apps/angular/public/` solo si todo pasa. Salida determinista (claves ordenadas).
 - [x] Cálculo de cortes fijos con `quantile_cont` y de la escala (secuencial o divergente). Sobre los países (sin agregado UE) y todos los años, por desglose: quintiles si es secuencial; 0 más terciles de cada lado si es divergente. En índices, sobre la variación desde 2015; en composiciones, sobre `mapCategory`.
 - [x] Simplificación de NUTS 0 con mapshaper y exportación a TopoJSON, con presupuesto de tamaño fijado: 50 KB (sale en 36 KB). A escala 20M no se simplifica, porque deforma las costas y apenas ahorra; mapshaper construye la topología y cuantiza (1:10.000). Ultraperiféricas recortadas de ES, FR y PT.
-- [ ] Workflow mensual de GitHub Actions que publica solo si pasan los tests.
+- [x] Workflow mensual de GitHub Actions que publica solo si pasan los tests: `.github/workflows/monthly-data.yml` (día 5 de cada mes y a mano). Lint, tipos y tests; download, build y export; si cambian los ficheros de `apps/angular/public/`, abre un pull request para revisar el diff antes de desplegar. Pendiente de la primera ejecución real en GitHub.
 
 ## Hito 2 — Mapa
 
-- [ ] Esqueleto hexagonal de la app Angular: carpetas `domain`, `application`, `infrastructure` y `ui`, puertos con `InjectionToken`, enlace en `app.config.ts` y regla de lint de fronteras en CI.
-- [ ] Tipografías (Barlow Condensed y Source Sans 3) y tokens de la dirección visual «cifras destacadas».
-- [ ] App Angular standalone que carga el catálogo y un indicador.
-- [ ] Registrar el mapa en ECharts con las geometrías proyectadas y validar `aspectScale: 1`.
-- [ ] Coloreado con cortes fijos, leyenda, tooltip con flags y selección de región.
-- [ ] Paleta apta para daltonismo y tabla alternativa accesible.
-- [ ] Países no UE en gris y nota de regiones ultraperiféricas.
+- [x] Esqueleto hexagonal de la app Angular: carpetas `domain`, `application`, `infrastructure` y `ui`, puertos con `InjectionToken`, enlace en `app.config.ts` y regla de lint de fronteras en CI. Puertos `IndicatorRepository` y `GeographyRepository` (promesas; la geografía llega como GeoJSON), adaptadores HTTP, fronteras con `no-restricted-imports` por capa y workflow `ci.yml` (lint, tipos, tests en ChromeHeadless y build).
+- [x] Tipografías (Barlow Condensed y Source Sans 3) y tokens de la dirección visual «cifras destacadas». Fuentes autoalojadas con `@fontsource` (subconjunto latino); tokens como variables CSS en `src/styles.scss` (familias, escala tipográfica de escritorio y móvil, neutros y filetes) y clases `.figure`, `.screen-title`, `.section-title` y `.tabular`. `lang="es"` en `index.html`.
+- [x] App Angular standalone que carga el catálogo y un indicador. `ExplorerStore` con signals; la carga ocurre solo en el navegador (`afterNextRender`), así que el prerenderizado sirve el esqueleto vacío.
+- [x] Registrar el mapa en ECharts con las geometrías proyectadas y validar `aspectScale: 1` (comprobado con capturas: las proporciones coinciden con las de mapshaper). ECharts va en un bloque `@defer`: el bundle inicial baja de 848 KB a 320 KB.
+- [x] Coloreado con cortes fijos, leyenda, tooltip con flags y selección de región. Opciones de ECharts construidas con funciones puras (`ui/map/map-option.ts`); regiones sin dato en gris con trama; la selección es la del store, compartida con la tabla.
+- [x] Paleta apta para daltonismo y tabla alternativa accesible. ColorBrewer YlGnBu (secuencial) y PuOr (divergente); tabla con `caption`, botón por país (teclado) y media UE al pie.
+- [x] Países no UE en gris y nota de regiones ultraperiféricas. El export añade la capa `context` (países GISCO fuera de la UE, recortados a 300 km del marco UE) en la misma topología; presupuesto de `geo/nuts0.json` subido a 80 KB (65 KB, 21 KB comprimido).
 
 ## Hito 3 — Catálogo y panel
 

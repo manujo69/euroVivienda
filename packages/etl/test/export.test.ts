@@ -53,6 +53,8 @@ describe('exportPublished', () => {
     expect(topology.objects.nuts0?.geometries.map((g) => [g.id, g.type])).toEqual([
       ['ES', 'Polygon'],
     ]);
+    // Non-EU countries share the topology, so common borders line up.
+    expect(topology.objects.context?.geometries.map((g) => g.id)).toEqual(['AD', 'MA']);
   });
 
   it('writes nothing when the output breaks the contract', async () => {

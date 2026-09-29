@@ -137,4 +137,14 @@ describe('indicatorDataSchema', () => {
         .success,
     ).toBe(true);
   });
+
+  it('carries an optional note that explains one value', () => {
+    const note =
+      'Solo el 2,3 % de la población está en este grupo: estimación con una muestra pequeña.';
+    const data = { RO: { '2025': { total: { v: 156, n: note } } } };
+    expect(indicatorDataSchema(hpi).parse(data)).toEqual(data);
+    expect(
+      indicatorDataSchema(hpi).safeParse({ RO: { '2025': { total: { v: 156, n: '' } } } }).success,
+    ).toBe(false);
+  });
 });

@@ -18,7 +18,11 @@ const literal = (value: string | number | null | undefined) =>
       : `'${value}'`;
 
 /** Staging tables for every source; each row may omit dimensions left at their first filter code. */
-export async function stage(connection: DuckDBConnection, data: Record<string, Row[]>) {
+export async function stage(
+  connection: DuckDBConnection,
+  data: Record<string, Row[]>,
+  countries: readonly string[] = [],
+) {
   // Spain is a mainland square (Madrid west, Cataluña east) plus an island square: Canarias.
   await connection.run(`
     LOAD spatial;
@@ -32,9 +36,23 @@ export async function stage(connection: DuckDBConnection, data: Record<string, R
       ('ES51', 2, 'ES', 'Cataluña', 'T', ST_GeomFromText('POLYGON ((3100000 2000000, 3200000 2000000, 3200000 2200000, 3100000 2200000, 3100000 2000000))')),
       ('ES70', 2, 'ES', 'Canarias', 'T', ST_GeomFromText('POLYGON ((1800000 1000000, 1900000 1000000, 1900000 1100000, 1800000 1100000, 1800000 1000000))')),
       ('NO', 0, 'NO', 'Norge', 'F', ST_GeomFromText('POLYGON ((4000000 4000000, 4100000 4000000, 4100000 4100000, 4000000 4100000, 4000000 4000000))'));
+    -- Countries layer: Spain (EU), Andorra next to it, Morocco half inside the map frame, and a
+    -- country far away.
+    CREATE TABLE staging.geo_countries (CNTR_ID VARCHAR, EU_STAT VARCHAR, geom GEOMETRY);
+    INSERT INTO staging.geo_countries VALUES
+      ('ES', 'T', ST_GeomFromText('POLYGON ((3000000 2000000, 3200000 2000000, 3200000 2200000, 3000000 2200000, 3000000 2000000))')),
+      ('AD', 'F', ST_GeomFromText('POLYGON ((3000000 2200000, 3100000 2200000, 3100000 2300000, 3000000 2300000, 3000000 2200000))')),
+      ('MA', 'F', ST_GeomFromText('POLYGON ((2900000 1500000, 3300000 1500000, 3300000 1900000, 2900000 1900000, 2900000 1500000))')),
+      ('US', 'F', ST_GeomFromText('POLYGON ((0 0, 100000 0, 100000 100000, 0 100000, 0 0))'));
     CREATE TABLE model.source_snapshot (dataset VARCHAR, downloaded_at TIMESTAMP,
       last_update TIMESTAMP, file VARCHAR, sha256 VARCHAR, row_count INTEGER);
   `);
+  // Extra EU countries, without geometry: enough for the model, not for the map.
+  for (const code of countries) {
+    await connection.run(
+      `INSERT INTO staging.geo_nuts VALUES ('${code}', 0, '${code}', '${code}', 'T', NULL)`,
+    );
+  }
   for (const source of sources) {
     await connection.run(`INSERT INTO model.source_snapshot VALUES ('${source.code}',
       '2026-09-29 12:00:00', '2026-09-17 23:00:00', '${source.code}.csv.gz', '${'0'.repeat(64)}', 1)`);
@@ -62,11 +80,12 @@ export async function withModel<T>(
   layers: readonly string[],
   use: (connection: DuckDBConnection) => Promise<T>,
   database = ':memory:',
+  countries: readonly string[] = [],
 ): Promise<T> {
   const instance = await DuckDBInstance.create(database);
   const connection = await instance.connect();
   try {
-    await stage(connection, data);
+    await stage(connection, data, countries);
     for (const layer of layers) await runSqlFolder(connection, join(SQL, layer));
     return await use(connection);
   } finally {

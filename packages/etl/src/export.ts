@@ -8,8 +8,11 @@ import mapshaper from 'mapshaper';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-/** Size budget of the NUTS 0 topology, in bytes (spec.md, «Riesgos»). */
-export const NUTS0_BUDGET = 50 * 1024;
+/**
+ * Size budget of the NUTS 0 topology with its non-EU context, in bytes (spec.md, «Riesgos»):
+ * 65 KB in September 2026, about 21 KB gzipped.
+ */
+export const NUTS0_BUDGET = 80 * 1024;
 
 export interface ExportOptions {
   /** Database built by `etl build`. */
@@ -35,7 +38,7 @@ export async function exportPublished({ database, out }: ExportOptions): Promise
   const instance = await DuckDBInstance.create(database, { access_mode: 'READ_ONLY' });
   const connection = await instance.connect();
   let published: { meta: IndicatorMeta; data: unknown }[];
-  let geojson: string;
+  let geojson: { nuts0: string; context: string };
   try {
     await connection.run('LOAD spatial');
     const rows = await connection.runAndReadAll(`
@@ -51,8 +54,14 @@ export async function exportPublished({ database, out }: ExportOptions): Promise
       );
       return { meta, data };
     });
-    const geo = await connection.runAndReadAll('SELECT geojson::VARCHAR FROM publish.geo_nuts0');
-    geojson = String(geo.getRows()[0]?.[0]);
+    const geo = await connection.runAndReadAll(`
+      SELECT n.geojson::VARCHAR, c.geojson::VARCHAR
+      FROM publish.geo_nuts0 AS n, publish.geo_context AS c`);
+    const [nuts0, context] = geo.getRows()[0] ?? [];
+    if (typeof nuts0 !== 'string' || typeof context !== 'string') {
+      throw new Error('publish.geo_nuts0 or publish.geo_context is empty');
+    }
+    geojson = { nuts0, context };
   } finally {
     connection.closeSync();
     instance.closeSync();
@@ -60,9 +69,11 @@ export async function exportPublished({ database, out }: ExportOptions): Promise
 
   const catalog = check('catalog', catalogSchema.safeParse(published.map(({ meta }) => meta)));
   // Geometries arrive projected: mapshaper only builds the topology and quantises it (~1 km grid).
+  // EU countries and their non-EU context share one topology, so common borders line up.
   const topology = await mapshaper.applyCommands(
-    '-i nuts0.json -o nuts0.json format=topojson quantization=10000 id-field=code',
-    { 'nuts0.json': geojson },
+    '-i nuts0.json context.json combine-files ' +
+      '-o nuts0.json format=topojson quantization=10000 id-field=code',
+    { 'nuts0.json': geojson.nuts0, 'context.json': geojson.context },
   );
   const nuts0 = String(topology['nuts0.json']);
   if (nuts0.length > NUTS0_BUDGET) {

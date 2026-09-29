@@ -1,0 +1,70 @@
+.explorer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-bottom: 12px;
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+}
+
+.title {
+  flex: 1 1 320px;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: var(--color-ink-muted);
+  max-width: 60ch;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+}
+
+select {
+  margin-left: 6px;
+  font: inherit;
+}
+
+// EU mean as the entry figure of the map (spec.md, «Reglas de cifras destacadas»).
+.entry {
+  display: flex;
+  flex-direction: column;
+  margin: 16px 0 0;
+}
+
+.entry-value {
+  font-size: var(--size-figure-entry);
+}
+
+.entry-unit {
+  font-size: var(--size-figure-entry-unit);
+  margin-left: 4px;
+}
+
+// Same box as the map, so nothing jumps when ECharts arrives.
+.map-placeholder {
+  width: 100%;
+  aspect-ratio: 7 / 5;
+  max-height: 75vh;
+}
+
+.entry-text,
+.note {
+  color: var(--color-ink-muted);
+  font-size: var(--size-text-small);
+}
+
+a {
+  color: inherit;
+}

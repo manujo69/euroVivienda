@@ -1,5 +1,5 @@
--- One IndicatorData per published indicator: geo -> year -> breakdown -> {v, f}.
--- v is a number, or {category: share} in compositions; f only when there are flags.
+-- One IndicatorData per published indicator: geo -> year -> breakdown -> {v, f, n}.
+-- v is a number, or {category: share} in compositions; f and n only when there are flags or a note.
 CREATE OR REPLACE VIEW publish.data AS
   WITH cells AS (
     SELECT o.indicator_id, o.geo, o.year, o.breakdown,
@@ -14,9 +14,11 @@ CREATE OR REPLACE VIEW publish.data AS
     GROUP BY o.indicator_id, o.geo, o.year, o.breakdown, i.kind
   ),
   years AS (
-    SELECT indicator_id, geo, year,
-      sorted_object(breakdown, json_merge_patch('{}', json_object('v', v, 'f', f))) AS breakdowns
-    FROM cells
+    SELECT c.indicator_id, c.geo, c.year,
+      sorted_object(c.breakdown, json_merge_patch('{}', json_object('v', c.v, 'f', c.f, 'n', n.note)))
+        AS breakdowns
+    FROM cells AS c
+    LEFT JOIN model.observation_note AS n USING (indicator_id, geo, year, breakdown)
     GROUP BY ALL
   ),
   geos AS (

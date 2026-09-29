@@ -13,7 +13,9 @@ INSERT INTO model.indicator VALUES
     NULL, 'prc_hpi_a, nama_10r_2hhinc', '{"purchase": ["TOTAL"], "unit": ["MIO_NAC", "MIO_EUR", "EUR_HAB"]}', NULL,
     'Elaboración propia: índice de precios de la vivienda entre índice de renta disponible por habitante en moneda nacional, ambos con base 2015.'),
   ('overburden', 'Sobrecarga por coste de vivienda', 'access', 'scalar', '%', [0],
-    '[{"id": "total", "label": "Total"}, {"id": "youth", "label": "Jóvenes (20–29 años)"}, {"id": "own_l", "label": "Propietarios con hipoteca"}, {"id": "own_nl", "label": "Propietarios sin hipoteca"}, {"id": "rent_mkt", "label": "Alquiler a precio de mercado"}, {"id": "rent_fr", "label": "Alquiler reducido o gratuito"}]',
+    -- Opens on those who pay rent or a mortgage: the whole population, diluted by outright owners,
+    -- stays last as the reference Eurostat uses.
+    '[{"id": "rent_mkt", "label": "Inquilinos a precio de mercado"}, {"id": "rent", "label": "Todos los inquilinos (cálculo propio)"}, {"id": "own_l", "label": "Propietarios con hipoteca"}, {"id": "rent_fr", "label": "Inquilinos con alquiler reducido o gratuito"}, {"id": "youth", "label": "Jóvenes de 20 a 29 años"}, {"id": "own_nl", "label": "Propietarios sin hipoteca"}, {"id": "total", "label": "Toda la población"}]',
     NULL, 'ilc_lvho07a, ilc_lvho07c', '{"age": ["TOTAL", "Y20-29"], "sex": ["T"], "tenure": ["OWN_L", "OWN_NL", "RENT_MKT", "RENT_FR"]}', NULL,
     'Población que vive en hogares que dedican más del 40 % de su renta disponible a la vivienda.'),
   ('tenure', 'Régimen de tenencia', 'access', 'composition', '%', [0],

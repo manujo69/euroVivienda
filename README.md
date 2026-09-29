@@ -60,7 +60,7 @@ Las transformaciones están en ficheros `.sql` numerados y ejecutables con la CL
 
 ## Estado
 
-El monorepo pnpm ya está montado. `apps/angular` sigue siendo la app base de Angular CLI 20 (SSR con prerenderizado y tests con Karma). El hito 0 está terminado: `packages/etl` descarga Eurostat y GISCO y reconstruye la base DuckDB con los diez indicadores y sus tests de calidad (ver [cobertura.md](cobertura.md)). `packages/contract` define el contrato JSON con esquemas Zod. El trabajo en curso es el hito 1.
+El monorepo pnpm ya está montado. `apps/angular` sigue siendo la app base de Angular CLI 20 (SSR con prerenderizado y tests con Karma). El hito 0 está terminado: `packages/etl` descarga Eurostat y GISCO y reconstruye la base DuckDB con los diez indicadores y sus tests de calidad (ver [cobertura.md](cobertura.md)). `packages/contract` define el contrato JSON con esquemas Zod. El hito 1 también: `etl export` publica la sobrecarga, la tenencia y el mapa NUTS 0 en `apps/angular/public/`, y un workflow mensual abre un pull request cuando cambian los datos. El hito 2 también: la app muestra el mapa coroplético con leyenda, tooltip, selección y tabla alternativa. El siguiente es el hito 3, catálogo y panel.
 
 Hitos:
 

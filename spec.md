@@ -31,7 +31,7 @@ Diez indicadores en tres temas. El tipo de cada uno decide qué gráficos genera
 | Precios | Variación del precio de la vivienda | `prc_hpi_a` | País | Índice | Vivienda nueva y existente. Se rebasa a 2015 = 100 en el ETL. Eurostat no publica Grecia |
 | Precios | Variación del alquiler | `prc_hicp_ainr` (CP0411) | País | Índice | Alquileres pagados por inquilinos por su vivienda principal, incluidos regulados y sociales: no es el precio de mercado. Sustituye a `prc_hicp_aind`, descontinuado en 2026. Rebase a 2015 = 100 (Eurostat publica base 2025) |
 | Precios | Precio de la vivienda frente a renta | `prc_hpi_a` ÷ `nama_10r_2hhinc` | País | Derivado (índice) | Elaboración propia: índice de precios entre índice de renta disponible por habitante en moneda nacional (`MIO_NAC × EUR_HAB / MIO_EUR`), ambos base 2015. Hasta 2023 y sin Grecia |
-| Acceso | Sobrecarga por coste de vivienda | `ilc_lvho07a` + `ilc_lvho07c` | País | Escalar (%) | Desgloses por edad (total y jóvenes de 20–29 años) y por régimen de tenencia. Umbral: coste > 40 % de la renta disponible |
+| Acceso | Sobrecarga por coste de vivienda | `ilc_lvho07a` + `ilc_lvho07c` | País | Escalar (%) | Desgloses por régimen de tenencia y edad. Abre en inquilinos a precio de mercado, seguidos de hipotecados y alquiler reducido: el total de la población, diluido por los propietarios sin hipoteca, queda al final como referencia. Desglose «Todos los inquilinos» (cálculo propio): tasas de mercado y reducido ponderadas por la población de cada régimen (`ilc_lvho02`), comparable entre países pese a la reclasificación holandesa. Notas por valor: aviso de muestra pequeña si el grupo es menos del 5 % de la población y nota de Países Bajos en mercado y reducido. Umbral: coste > 40 % de la renta disponible |
 | Acceso | Régimen de tenencia | `ilc_lvho02` | País | Composición | Propietario con y sin hipoteca, alquiler a precio de mercado, alquiler reducido o gratuito. El mapa pinta el alquiler total. Países Bajos reclasifica en 2021 el alquiler social de mercado a reducido, sin flag |
 | Acceso | Edad media de emancipación | `yth_demo_030` | País | Escalar (años) | Desglose por sexo; estimación de Eurostat |
 | Contexto | Tasa de paro | `lfst_r_lfu3rt` | País + NUTS 2 | Escalar (%) | Total por defecto |
@@ -69,7 +69,7 @@ Tres zonas: catálogo a la izquierda, mapa de la UE en el centro y panel de grá
 - Regiones sin dato en gris con trama y el texto «sin dato».
 - Tooltip con valor, año, fuente y flags de Eurostat: `e` estimado, `p` provisional, `b` ruptura de serie, `u` baja fiabilidad, `c` confidencial, `d` definición distinta, `n` no significativo.
 - Proyección Lambert azimutal equivalente (EPSG:3035) aplicada en el ETL: el frontend recibe las geometrías ya proyectadas.
-- Países no UE en gris neutro y sin interacción. Regiones ultraperiféricas (`ES70`, `FRY1`–`FRY5`, `PT20`, `PT30`) fuera del mapa en el MVP, también recortadas de la silueta de su país, con nota; sus datos siguen en gráficos y tablas.
+- Países no UE en gris neutro y sin interacción: capa `context` de `geo/nuts0.json` (países GISCO fuera de la UE, recortados a un marco 300 km mayor que la UE), en la misma topología que los países UE para que las fronteras comunes coincidan. Regiones ultraperiféricas (`ES70`, `FRY1`–`FRY5`, `PT20`, `PT30`) fuera del mapa en el MVP, también recortadas de la silueta de su país, con nota; sus datos siguen en gráficos y tablas.
 - Geometrías de GISCO a escala 20M, en GeoJSON ya proyectado: NUTS 0 y NUTS 2 de la versión elegida y la capa de países para el contexto. Atribución: «© EuroGeographics para los límites administrativos».
 - Tabla alternativa accesible por teclado y lector de pantalla.
 
@@ -139,7 +139,7 @@ src/app/
 ```
 
 - Puertos: `IndicatorRepository`, `GeographyRepository`, `UrlStatePort`, `LayoutPreferencesPort`, inyectados con `InjectionToken`.
-- Fronteras comprobadas en CI con lint de dependencias (p. ej. `eslint-plugin-boundaries`).
+- Fronteras comprobadas en CI con `no-restricted-imports` de ESLint, una regla por capa.
 - El dominio se prueba sin TestBed; los adaptadores, con JSON de ejemplo.
 - Opciones de ECharts construidas con funciones puras a partir del estado.
 
@@ -184,6 +184,16 @@ CREATE TABLE observation (
   PRIMARY KEY (indicator_id, geo, year, breakdown, category)
 );
 
+-- Nota que acompaña a un valor en tooltip y tabla (muestra pequeña, cambio de definición)
+CREATE TABLE observation_note (
+  indicator_id  VARCHAR NOT NULL,
+  geo           VARCHAR NOT NULL,
+  year          SMALLINT NOT NULL,
+  breakdown     VARCHAR NOT NULL,
+  note          VARCHAR NOT NULL,
+  PRIMARY KEY (indicator_id, geo, year, breakdown)
+);
+
 CREATE TABLE source_snapshot (
   dataset        VARCHAR NOT NULL,
   downloaded_at  TIMESTAMP NOT NULL,
@@ -220,7 +230,7 @@ interface IndicatorMeta {
 interface IndicatorData {
   [geo: string]: {
     [year: string]: {
-      [breakdown: string]: { v: number | Record<string, number>; f?: string };  // f: flags de Eurostat
+      [breakdown: string]: { v: number | Record<string, number>; f?: string; n?: string };  // f: flags de Eurostat; n: nota del valor
     };
   };
 }

@@ -1,1 +1,97 @@
-/* You can add global styles to this file, and also import other style files */
+// Visual direction «cifras destacadas» (spec.md, «Dirección visual»): white ground, thin rules
+// instead of boxes, colour reserved for the data. Components read these tokens, never raw values.
+
+// Self-hosted fonts, Latin subset (Spanish included).
+@use '@fontsource/barlow-condensed/latin-500.css';
+@use '@fontsource/barlow-condensed/latin-600.css';
+@use '@fontsource-variable/source-sans-3/wght.css';
+
+:root {
+  // Families: condensed caps for figures, titles and headings; Source Sans 3 for the interface.
+  --font-figures: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-text: 'Source Sans 3 Variable', 'Source Sans 3', system-ui, sans-serif;
+
+  // Type scale, desktop (spec.md): figure sizes pair with a smaller unit beside them.
+  --size-figure-main: 75px;
+  --size-figure-main-unit: 33px;
+  --size-figure-entry: 63px;
+  --size-figure-entry-unit: 30px;
+  --size-figure-secondary: 54px;
+  --size-screen-title: 30px;
+  --size-section-title: 16px;
+  --size-text: 14px;
+  --size-text-small: 12.5px;
+
+  // Neutrals: ink and rules; the only colours outside the data.
+  --color-ground: #fff;
+  --color-ink: #1a1a1a;
+  --color-ink-muted: #5f5f5f;
+  --color-rule: #d6d6d6;
+  --color-rule-strong: #1a1a1a;
+  --color-selected: #efefef;
+  --color-no-data: #e3e3e3;
+  --color-context: #ececec;
+
+  --rule-thin: 1px;
+  --rule-section: 2px;
+
+  @media (max-width: 640px) {
+    --size-figure-main: 81px;
+    --size-figure-main-unit: 36px;
+    --size-figure-secondary: 48px;
+    --size-screen-title: 24px;
+    --size-section-title: 15px;
+    --size-text: 13.5px;
+  }
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-text);
+  font-size: var(--size-text);
+  line-height: 1.4;
+}
+
+// Condensed caps: figures, titles and section headings.
+.figure,
+.screen-title,
+.section-title {
+  font-family: var(--font-figures);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.screen-title {
+  font-size: var(--size-screen-title);
+  margin: 0;
+}
+
+// Section titles carry a 2 px rule underneath.
+.section-title {
+  font-size: var(--size-section-title);
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: var(--rule-section) solid var(--color-rule-strong);
+}
+
+// Figures in tables and rankings line up.
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

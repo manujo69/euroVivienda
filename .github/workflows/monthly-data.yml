@@ -1,0 +1,62 @@
+# Monthly data refresh: downloads Eurostat and GISCO, rebuilds the database (quality checks
+# included), exports the JSON validated against the contract and, if anything changed, opens a
+# pull request with the new files. Any failing step stops the run: nothing is published.
+name: Monthly data
+
+on:
+  schedule:
+    - cron: '0 6 5 * *' # day 5 of each month, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: monthly-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version from packageManager in package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint, types and tests of the data packages
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm --filter @eurovivienda/contract test
+          pnpm --filter @eurovivienda/etl test
+
+      - name: Download
+        run: pnpm etl download
+
+      - name: Build (fails if a quality check fails)
+        run: pnpm etl build
+
+      - name: Export (fails if the output breaks the contract or the size budget)
+        run: pnpm etl export
+
+      - name: Open a pull request with the new data
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: data/monthly-refresh
+          delete-branch: true
+          add-paths: apps/angular/public
+          commit-message: Refresh Eurostat data
+          title: Actualización mensual de datos
+          body: |
+            Datos regenerados por el workflow mensual: descarga de Eurostat y GISCO, base DuckDB con los tests de calidad superados y JSON validado contra el contrato.
+
+            Revisa el diff antes de fusionar: revisiones de Eurostat, años nuevos o cambios de flags.

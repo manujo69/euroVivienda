@@ -126,6 +126,27 @@ describe('publish.catalog and publish.data', () => {
     });
     expect(overburden.ES?.['2015']?.total).not.toHaveProperty('f');
   });
+
+  it('writes the note of a value, and only where there is one', async () => {
+    const data = {
+      ...cleanData(),
+      ilc_lvho07c: [
+        ...(cleanData().ilc_lvho07c ?? []),
+        { geo: 'RO', tenure: 'RENT_MKT', TIME_PERIOD: '2016', OBS_VALUE: 56 },
+      ],
+      ilc_lvho02: [
+        ...(cleanData().ilc_lvho02 ?? []),
+        { geo: 'RO', tenure: 'RENT_MKT', TIME_PERIOD: '2016', OBS_VALUE: 2.3 },
+      ],
+    };
+    const result = await withModel(data, ['model', 'publish'], published, ':memory:', ['RO']);
+    const overburden = JSON.parse(result[0]?.data as string) as IndicatorData;
+    expect(overburden.RO?.['2016']?.rent_mkt).toEqual({
+      v: 56,
+      n: 'Solo el 2,3 % de la población está en este grupo: estimación con una muestra pequeña.',
+    });
+    expect(overburden.ES?.['2016']?.rent_mkt).not.toHaveProperty('n');
+  });
 });
 
 describe('publish.geo_nuts0', () => {
@@ -138,5 +159,20 @@ describe('publish.geo_nuts0', () => {
     };
     expect(collection.features.map((feature) => feature.properties.code)).toEqual(['ES']);
     expect(collection.features[0]?.geometry.type).toBe('Polygon');
+  });
+});
+
+describe('publish.geo_context', () => {
+  it('holds the non-EU countries around the EU, cut at a frame 300 km beyond it', async () => {
+    const [row] = await publish(cleanData(), (c) =>
+      rows(c, 'SELECT geojson::VARCHAR AS geojson FROM publish.geo_context'),
+    );
+    const collection = JSON.parse(row?.geojson as string) as {
+      features: { properties: { code: string }; geometry: { coordinates: number[][][] } }[];
+    };
+    expect(collection.features.map((feature) => feature.properties.code)).toEqual(['AD', 'MA']);
+    // Mainland Spain starts at y = 2 000 km: Morocco is cut at 1 700 km.
+    const morocco = collection.features[1]?.geometry.coordinates[0] ?? [];
+    expect(Math.min(...morocco.map(([, y]) => y ?? 0))).toBe(1700000);
   });
 });

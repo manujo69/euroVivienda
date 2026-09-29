@@ -4,6 +4,7 @@
 SET VARIABLE first_year = 2015;
 SET VARIABLE final_year = 2025;
 
+DROP TABLE IF EXISTS model.observation_note;
 DROP TABLE IF EXISTS model.observation;
 DROP TABLE IF EXISTS model.indicator;
 DROP TABLE IF EXISTS model.geo;
@@ -42,6 +43,16 @@ CREATE TABLE model.observation (
   value         DOUBLE,
   flags         VARCHAR,
   PRIMARY KEY (indicator_id, geo, year, breakdown, category)
+);
+
+-- Explanation of one value shown with it (small sample, change of definition).
+CREATE TABLE model.observation_note (
+  indicator_id  VARCHAR NOT NULL,
+  geo           VARCHAR NOT NULL,
+  year          SMALLINT NOT NULL,
+  breakdown     VARCHAR NOT NULL,
+  note          VARCHAR NOT NULL,
+  PRIMARY KEY (indicator_id, geo, year, breakdown)
 );
 
 -- Staging rows the model keeps: EU-27 geography or aggregate, a value, and a year in range.

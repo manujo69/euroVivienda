@@ -75,6 +75,8 @@ const cell = z.strictObject({
   /** A number, or the share of each category in a composition. */
   v: z.union([z.number(), z.record(id, z.number())]),
   f: flags.optional(),
+  /** Note on this value, e.g. a small sample or a change of definition. */
+  n: z.string().min(1).optional(),
 });
 
 const dataShape = z.record(

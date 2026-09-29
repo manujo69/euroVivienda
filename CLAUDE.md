@@ -13,8 +13,9 @@ Idioma del proyecto: la interfaz y la documentación en español; el código (id
 
 ## Estado actual
 
-- `apps/angular` es todavía la app generada por Angular CLI 20: SSR activado (`outputMode: "server"`, todas las rutas en `RenderMode.Prerender`) y tests con Karma + Jasmine. Su ESLint (con la regla de fronteras) llega en el hito 2; hoy `eslint.config.js` ignora `apps/`.
-- `packages/contract` tiene los esquemas Zod del contrato; `packages/etl` cubre el hito 0: catálogos de fuentes y geometrías, `download`, `build` (staging, modelo, calidad y publicación) y `export`, que en el hito 1 publica `overburden`, `tenure` y el TopoJSON NUTS 0. Ambos con TypeScript estricto, ESLint con tipos y Vitest.
+- `apps/angular` (Angular 20, hito 2 terminado): mapa coroplético de un indicador con leyenda, tooltip, selección, tabla alternativa y contexto no UE. SSR activado (`outputMode: "server"`, todas las rutas en `RenderMode.Prerender`), pero los datos se cargan solo en el navegador (`afterNextRender`). Tests con Karma + Jasmine en ChromeHeadless (define `CHROME_BIN` si Karma no encuentra Chrome).
+- El mapa va en un bloque `@defer`: ECharts (~500 KB) queda fuera del bundle inicial. ECharts se importa por piezas en `ui/map/echarts.ts`; regiones UE y contexto se registran juntos como el mapa `nuts0`.
+- `packages/contract` tiene los esquemas Zod del contrato; `packages/etl` cubre el hito 0: catálogos de fuentes y geometrías, `download`, `build` (staging, modelo, calidad y publicación) y `export`, que publica `overburden`, `tenure` y el TopoJSON NUTS 0 con la capa `context` de países no UE (presupuesto 80 KB). Ambos con TypeScript estricto, ESLint con tipos y Vitest.
 
 ## Comandos
 
@@ -23,9 +24,10 @@ Desde la raíz (pnpm 12, Node ≥ 22.18):
 - `pnpm install`
 - `pnpm start`: servidor de desarrollo de Angular en `http://localhost:4200/`.
 - `pnpm build`, `pnpm test`, `pnpm typecheck`: en todos los paquetes (`pnpm test` corre Karma en una sola pasada).
-- `pnpm lint`: ESLint sobre `packages/`.
+- `pnpm lint`: ESLint sobre `packages/` y `apps/angular/src` (fronteras de capas incluidas).
 - `pnpm etl download`: descarga cruda de Eurostat y GISCO en `data/raw/AAAA-MM-DD/`.
 - `pnpm etl build`: borra y reconstruye `data/vivienda.duckdb` desde la última descarga completa; falla si no pasa algún test de calidad.
+- Workflow mensual (`.github/workflows/monthly-data.yml`): tests, `download`, `build` y `export`; si cambian los datos, abre un PR. En CI, pnpm falla con builds ignorados: `better-sqlite3` (dependencia de mapshaper) está denegado en `allowBuilds`.
 - `pnpm etl export`: escribe `catalog.json`, `data/[id].json` y `geo/nuts0.json` en `apps/angular/public/` (versionados); falla sin escribir nada si algo no cumple el contrato o el presupuesto de tamaño.
 - SQL desde la CLI de DuckDB: `cat packages/etl/sql/staging/*.sql | duckdb -cmd "SET VARIABLE raw = 'data/raw/AAAA-MM-DD';"` (con `ATTACH '<fichero>' (STORAGE_VERSION 'latest')` si quieres persistirlo).
 - Un paquete: `pnpm --filter @eurovivienda/etl test` (o `contract`, `angular`).
@@ -53,6 +55,7 @@ Monorepo con pnpm workspaces:
 - Esquemas DuckDB: `staging` (una tabla por dataset, sin transformar), `model` (`geo`, `indicator`, `observation`, `source_snapshot`), `publish` (vistas por indicador).
 - El SQL vive en ficheros `.sql` numerados en `packages/etl/sql/{staging,model,publish}` y debe poder ejecutarse con la CLI de DuckDB. Node solo orquesta: no metas lógica de transformación en TypeScript si cabe en SQL.
 - Índices rebasados a 2015 = 100 en el ETL. Cortes de clase fijos sobre toda la serie (`quantile_cont`). Geometrías de GISCO en EPSG:3035, ya proyectadas.
+- Notas por valor en `model.observation_note` (`model/13_notes.sql`), publicadas como `n` en cada celda del JSON y mostradas en tooltip y tabla.
 - Conserva los flags de Eurostat (`e`, `p`, `b`, `u`, `c`, `d`, `n`, y combinaciones como `bdu`) en `observation.flags`.
 - Cobertura y decisiones de datos en `cobertura.md` (NUTS 2024, renta hasta 2023, etc.); se reproduce con `cat packages/etl/sql/analysis/*.sql | duckdb -readonly -markdown data/vivienda.duckdb`.
 - El ETL solo publica si pasan los tests de calidad; si Eurostat cambia dimensiones, falla con un error claro.
@@ -80,7 +83,9 @@ Convenciones:
 - Las opciones de ECharts se construyen con funciones puras a partir del estado y se prueban sin DOM.
 - Cada tarjeta de gráfico redimensiona con `ResizeObserver` + `requestAnimationFrame`.
 - Todo el estado compartible vive en la URL; la disposición de paneles, en `localStorage`.
-- Las fronteras entre capas las comprueba el lint en CI; no las desactives.
+- Las fronteras entre capas las comprueba el lint en CI (`no-restricted-imports` por capa en `eslint.config.js`); no las desactives. `domain` no importa Angular, RxJS ni otras capas; `application` no importa `infrastructure` ni `ui`; `infrastructure` no importa `application` ni `ui`; `ui` no importa `infrastructure`.
+- Los `InjectionToken` viven en `application/tokens.ts` (el dominio no puede importar Angular); los puertos devuelven promesas.
+- CI (`.github/workflows/ci.yml`): lint, tipos, tests y build en cada push a `main` y en cada PR.
 
 ## Diseño
 
