@@ -15,12 +15,12 @@ Objetivo: una base DuckDB reconstruible con un comando, con todos los indicadore
 
 ### 0.2 Verificación de fuentes
 
-- [ ] Confirmar los códigos de dataset del catálogo, incluidos `ilc_lvho07c` (sobrecarga por tenencia) y, como opcional, `demo_r_gind3` (población), y anotar dimensiones, unidades y filtros (`unit`, `age`, `sex`, `tenure`, `coicop`, `rskpovth`).
-- [ ] Comprobar la base actual de `prc_hpi_a` y `prc_hicp_aind`.
-- [ ] Elegir el grupo de edad de «jóvenes» en `ilc_lvho07a` (15–29, 16–29 o 18–24).
-- [ ] Elegir el dataset de población a 1 de enero por NUTS 2 para la intensidad turística.
-- [ ] Descargar un mismo dataset en SDMX-CSV y en JSON-stat y elegir el formato que DuckDB lea sin transformación previa.
-- [ ] Registrar cada fuente en un catálogo versionado (`sources.ts`): código, filtros, URL y atribución.
+- [x] Confirmar los códigos de dataset del catálogo, incluidos `ilc_lvho07c` (sobrecarga por tenencia) y, como opcional, `demo_r_gind3` (población), y anotar dimensiones, unidades y filtros (`unit`, `age`, `sex`, `tenure`, `coicop`, `rskpovth`). `prc_hicp_aind` está descontinuado: se usa `prc_hicp_ainr` (CP0411).
+- [x] Comprobar la base actual de `prc_hpi_a` y `prc_hicp_aind`. `prc_hpi_a` publica base 2015 y 2025; `prc_hicp_ainr`, solo base 2025.
+- [x] Elegir el grupo de edad de «jóvenes» en `ilc_lvho07a`: `Y20-29` (18–29 no existe).
+- [x] Elegir el dataset de población a 1 de enero por NUTS 2 para la intensidad turística. No hace falta: `tour_occ_nin2` publica noches por mil habitantes (`P_THAB`).
+- [x] Descargar un mismo dataset en SDMX-CSV y en JSON-stat y elegir el formato que DuckDB lea sin transformación previa: SDMX-CSV comprimido.
+- [x] Registrar cada fuente en un catálogo versionado (`sources.ts`): código, filtros, URL y atribución.
 
 ### 0.3 Geometrías
 
@@ -51,7 +51,7 @@ Objetivo: una base DuckDB reconstruible con un comando, con todos los indicadore
 
 - [ ] Crear las tablas `geo`, `indicator`, `observation` y `source_snapshot` del esquema.
 - [ ] Transformaciones de staging a modelo por indicador: filtros, rebase a 2015, desgloses y categorías.
-- [ ] Indicadores derivados: noches entre población, con agregado UE ponderado, y precio frente a renta (ambos índices con base 2015).
+- [ ] Indicador derivado precio frente a renta (ambos índices con base 2015) y noches por habitante a partir de `P_THAB`.
 - [ ] Tests de calidad en SQL: claves únicas, códigos sin geometría, años fuera de rango y valores fuera de rango.
 - [ ] Comando `etl build` que reconstruye la base completa desde `data/raw/` en una sola ejecución.
 

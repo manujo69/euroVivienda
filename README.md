@@ -20,17 +20,17 @@ Las relaciones entre indicadores se presentan como descriptivas, nunca causales.
 | Tema | Indicador | Fuente (Eurostat) | Nivel |
 | --- | --- | --- | --- |
 | Precios | Variación del precio de la vivienda | `prc_hpi_a` | País |
-| Precios | Variación del alquiler | `prc_hicp_aind` (CP041) | País |
+| Precios | Variación del alquiler | `prc_hicp_ainr` (CP0411) | País |
 | Precios | Precio de la vivienda frente a renta | `prc_hpi_a` ÷ `nama_10r_2hhinc` | País |
 | Acceso | Sobrecarga por coste de vivienda | `ilc_lvho07a`, `ilc_lvho07c` | País |
 | Acceso | Régimen de tenencia | `ilc_lvho02` | País |
 | Acceso | Edad media de emancipación | `yth_demo_030` | País |
 | Contexto | Tasa de paro | `lfst_r_lfu3rt` | País + NUTS 2 |
 | Contexto | Renta disponible de los hogares por habitante | `nama_10r_2hhinc` | País + NUTS 2 |
-| Contexto | Intensidad turística (noches por habitante) | `tour_occ_nin2` + población | País + NUTS 2 |
+| Contexto | Intensidad turística (noches por habitante) | `tour_occ_nin2` (P_THAB) | País + NUTS 2 |
 | Contexto | Crecimiento de la población (opcional) | `demo_r_gind3` | País + NUTS 2 |
 
-Los índices se rebasan a 2015 = 100. Los indicadores derivados se marcan como «elaboración propia». Solo se usan fuentes oficiales y abiertas; las geometrías proceden de GISCO.
+Los índices se rebasan a 2015 = 100. El indicador derivado (precio frente a renta) se marca como «elaboración propia». Solo se usan fuentes oficiales y abiertas; las geometrías proceden de GISCO.
 
 ## Arquitectura
 

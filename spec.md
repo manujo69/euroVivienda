@@ -29,15 +29,15 @@ Nueve indicadores en tres temas, más uno opcional. El tipo de cada uno decide q
 | Tema | Indicador | Código Eurostat | Nivel | Tipo | Desgloses y limitaciones |
 | --- | --- | --- | --- | --- | --- |
 | Precios | Variación del precio de la vivienda | `prc_hpi_a` | País | Índice | Vivienda nueva y existente. Se rebasa a 2015 = 100 en el ETL |
-| Precios | Variación del alquiler | `prc_hicp_aind` (CP041) | País | Índice | Alquileres pagados por inquilinos, incluidos regulados y sociales: no es el precio de mercado. Rebase a 2015 = 100 |
+| Precios | Variación del alquiler | `prc_hicp_ainr` (CP0411) | País | Índice | Alquileres pagados por inquilinos por su vivienda principal, incluidos regulados y sociales: no es el precio de mercado. Sustituye a `prc_hicp_aind`, descontinuado en 2026. Rebase a 2015 = 100 (Eurostat publica base 2025) |
 | Precios | Precio de la vivienda frente a renta | `prc_hpi_a` ÷ `nama_10r_2hhinc` | País | Derivado (índice) | Elaboración propia: índice de precios entre índice de renta disponible por habitante, ambos base 2015 |
-| Acceso | Sobrecarga por coste de vivienda | `ilc_lvho07a` + `ilc_lvho07c` | País | Escalar (%) | Desgloses por edad (total y jóvenes) y por régimen de tenencia. Umbral: coste > 40 % de la renta disponible |
+| Acceso | Sobrecarga por coste de vivienda | `ilc_lvho07a` + `ilc_lvho07c` | País | Escalar (%) | Desgloses por edad (total y jóvenes de 20–29 años) y por régimen de tenencia. Umbral: coste > 40 % de la renta disponible |
 | Acceso | Régimen de tenencia | `ilc_lvho02` | País | Composición | Propietario con y sin hipoteca, alquiler a precio de mercado, alquiler reducido o gratuito |
 | Acceso | Edad media de emancipación | `yth_demo_030` | País | Escalar (años) | Desglose por sexo; estimación de Eurostat |
 | Contexto | Tasa de paro | `lfst_r_lfu3rt` | País + NUTS 2 | Escalar (%) | Total por defecto |
 | Contexto | Renta disponible de los hogares por habitante | `nama_10r_2hhinc` | País + NUTS 2 | Escalar (€ o PPS) | Unidad por decidir. Retraso habitual de unos dos años |
-| Contexto | Intensidad turística (noches por habitante) | `tour_occ_nin2` + población | País + NUTS 2 | Derivado | Elaboración propia. Posibles datos confidenciales en NUTS 2 (flag `c`); caída en 2020–2021 |
-| Contexto | Crecimiento de la población (opcional) | `demo_r_gind3` | País + NUTS 2 | Escalar (‰) | Crecimiento total y saldo migratorio. Entra solo si la cobertura del hito 0 es limpia |
+| Contexto | Intensidad turística (noches por habitante) | `tour_occ_nin2` (P_THAB) | País + NUTS 2 | Escalar (noches) | Eurostat publica noches por mil habitantes, con agregado UE; el ETL divide entre 1.000. Posibles datos confidenciales en NUTS 2 (flag `c`); caída en 2020–2021 |
+| Contexto | Crecimiento de la población (opcional) | `demo_r_gind3` | País + NUTS 2 | Escalar (‰) | Crecimiento total y saldo migratorio. Eurostat no publica agregado UE. Entra solo si la cobertura del hito 0 es limpia |
 
 ## Experiencia de usuario
 
@@ -222,7 +222,7 @@ interface IndicatorData {
 }
 ```
 
-La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos primeros caracteres del código NUTS son el país). El agregado UE viene de Eurostat cuando existe; en los derivados lo calcula el ETL ponderando por población.
+La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos primeros caracteres del código NUTS son el país). El agregado UE viene de Eurostat cuando existe; en el precio frente a renta se calcula con los agregados UE de sus dos fuentes.
 
 ## Hitos
 
@@ -248,14 +248,13 @@ La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos prime
 
 ## Decisiones
 
-**Cerradas:** DuckDB en el ETL · ultraperiféricas fuera del mapa · dato nacional en NUTS 2 · desgloses como dimensión · una tarjeta de dispersión con parejas sugeridas · cuantiles con cortes fijos · rebase de índices a 2015 · proyección EPSG:3035 en el ETL · agregado UE de Eurostat o ponderado · Angular hexagonal simplificada · dirección visual «cifras destacadas».
+**Cerradas:** DuckDB en el ETL · ultraperiféricas fuera del mapa · dato nacional en NUTS 2 · desgloses como dimensión · una tarjeta de dispersión con parejas sugeridas · cuantiles con cortes fijos · rebase de índices a 2015 · proyección EPSG:3035 en el ETL · agregado UE de Eurostat o ponderado · Angular hexagonal simplificada · dirección visual «cifras destacadas» · jóvenes = 20–29 años en la sobrecarga (Eurostat no publica 18–29) · descarga en SDMX-CSV · intensidad turística con el dato por habitante de Eurostat.
 
 **Abiertas:**
 
 - [ ] Nombre definitivo (provisional: EuroVivienda).
 - [ ] Unidad de la renta: € o PPS por habitante.
 - [ ] Categoría de tenencia que pinta el mapa.
-- [ ] Grupo de edad de «jóvenes» en la sobrecarga (15–29, 16–29 o 18–24).
 - [ ] Versión NUTS (2021 o 2024).
 
 ## Fases posteriores

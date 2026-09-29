@@ -51,6 +51,7 @@ Monorepo con pnpm workspaces:
 - Índices rebasados a 2015 = 100 en el ETL. Cortes de clase fijos sobre toda la serie (`quantile_cont`). Geometrías de GISCO en EPSG:3035, ya proyectadas.
 - Conserva los flags de Eurostat (`e`, `p`, `b`, `u`, `c`, `d`) en `observation.flags`.
 - El ETL solo publica si pasan los tests de calidad; si Eurostat cambia dimensiones, falla con un error claro.
+- Fuentes en `packages/etl/src/sources.ts`: se descargan en SDMX-CSV comprimido desde 2015, filtrando por clave SDMX (dimensiones en el orden de Eurostat). Al leerlas con `read_csv`, pasa `timestampformat='%d/%m/%y %H:%M:%S'`: si no, DuckDB interpreta `LAST UPDATE` como año/mes/día.
 - Comandos previstos: `etl download`, `etl build`.
 
 ## Frontend Angular
