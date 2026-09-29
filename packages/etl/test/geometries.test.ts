@@ -10,8 +10,8 @@ const GISCO = 'https://gisco-services.ec.europa.eu/distribution/v2';
 
 describe('nutsUrl', () => {
   it('points to the 20M GeoJSON already projected to EPSG:3035', () => {
-    expect(nutsUrl(0, '2024')).toBe(`${GISCO}/nuts/geojson/NUTS_RG_20M_2024_3035_LEVL_0.geojson`);
-    expect(nutsUrl(2, '2021')).toBe(`${GISCO}/nuts/geojson/NUTS_RG_20M_2021_3035_LEVL_2.geojson`);
+    expect(nutsUrl(0)).toBe(`${GISCO}/nuts/geojson/NUTS_RG_20M_2024_3035_LEVL_0.geojson`);
+    expect(nutsUrl(2)).toBe(`${GISCO}/nuts/geojson/NUTS_RG_20M_2024_3035_LEVL_2.geojson`);
   });
 });
 

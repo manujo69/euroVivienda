@@ -35,10 +35,11 @@ export const sources: readonly Source[] = [
     code: 'nama_10r_2hhinc',
     title: 'Income of households by NUTS 2 region',
     dimensions: ['freq', 'unit', 'direct', 'na_item', 'geo'],
-    // Both per-inhabitant units until the coverage report settles the choice.
+    // PPS per inhabitant for the map. Price vs income needs national currency per inhabitant,
+    // which Eurostat does not publish: MIO_NAC * EUR_HAB / MIO_EUR.
     filters: {
       freq: ['A'],
-      unit: ['EUR_HAB', 'PPS_EU27_2020_HAB'],
+      unit: ['PPS_EU27_2020_HAB', 'EUR_HAB', 'MIO_NAC', 'MIO_EUR'],
       direct: ['BAL'],
       na_item: ['B6N'],
     },
@@ -87,7 +88,7 @@ export const sources: readonly Source[] = [
     filters: { freq: ['A'], c_resid: ['TOTAL'], unit: ['P_THAB'], nace_r2: ['I551-I553'] },
   },
   {
-    // Optional indicator: enters only if the coverage report is clean. No EU27_2020 aggregate.
+    // Accepted by the coverage report (task 0.6). No EU27_2020 aggregate.
     code: 'demo_r_gind3',
     title: 'Population change - demographic balance and crude rates at regional level (NUTS 3)',
     dimensions: ['freq', 'indic_de', 'geo'],

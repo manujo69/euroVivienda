@@ -14,7 +14,7 @@ Idioma del proyecto: la interfaz y la documentación en español; el código (id
 ## Estado actual
 
 - `apps/angular` es todavía la app generada por Angular CLI 20: SSR activado (`outputMode: "server"`, todas las rutas en `RenderMode.Prerender`) y tests con Karma + Jasmine. Su ESLint (con la regla de fronteras) llega en el hito 2; hoy `eslint.config.js` ignora `apps/`.
-- `packages/contract` y `packages/etl` son esqueletos: TypeScript estricto, ESLint con tipos y Vitest.
+- `packages/contract` es un esqueleto; `packages/etl` ya tiene los catálogos de fuentes y geometrías, `download` y `build` (hasta staging). Ambos con TypeScript estricto, ESLint con tipos y Vitest.
 
 ## Comandos
 
@@ -24,6 +24,9 @@ Desde la raíz (pnpm 12, Node ≥ 22.18):
 - `pnpm start`: servidor de desarrollo de Angular en `http://localhost:4200/`.
 - `pnpm build`, `pnpm test`, `pnpm typecheck`: en todos los paquetes (`pnpm test` corre Karma en una sola pasada).
 - `pnpm lint`: ESLint sobre `packages/`.
+- `pnpm etl download`: descarga cruda de Eurostat y GISCO en `data/raw/AAAA-MM-DD/`.
+- `pnpm etl build`: borra y reconstruye `data/vivienda.duckdb` desde la última descarga completa.
+- SQL desde la CLI de DuckDB: `cat packages/etl/sql/staging/*.sql | duckdb -cmd "SET VARIABLE raw = 'data/raw/AAAA-MM-DD';"` (con `ATTACH '<fichero>' (STORAGE_VERSION 'latest')` si quieres persistirlo).
 - Un paquete: `pnpm --filter @eurovivienda/etl test` (o `contract`, `angular`).
 - Un solo test con Vitest: `pnpm --filter @eurovivienda/etl exec vitest run test/duckdb.test.ts`.
 - Un solo test con Karma: `pnpm --filter @eurovivienda/angular exec ng test --watch=false --include src/app/app.spec.ts`.
@@ -49,11 +52,13 @@ Monorepo con pnpm workspaces:
 - Esquemas DuckDB: `staging` (una tabla por dataset, sin transformar), `model` (`geo`, `indicator`, `observation`, `source_snapshot`), `publish` (vistas por indicador).
 - El SQL vive en ficheros `.sql` numerados en `packages/etl/sql/{staging,model,publish}` y debe poder ejecutarse con la CLI de DuckDB. Node solo orquesta: no metas lógica de transformación en TypeScript si cabe en SQL.
 - Índices rebasados a 2015 = 100 en el ETL. Cortes de clase fijos sobre toda la serie (`quantile_cont`). Geometrías de GISCO en EPSG:3035, ya proyectadas.
-- Conserva los flags de Eurostat (`e`, `p`, `b`, `u`, `c`, `d`) en `observation.flags`.
+- Conserva los flags de Eurostat (`e`, `p`, `b`, `u`, `c`, `d`, `n`, y combinaciones como `bdu`) en `observation.flags`.
+- Cobertura y decisiones de datos en `cobertura.md` (NUTS 2024, renta hasta 2023, etc.); se reproduce con `cat packages/etl/sql/analysis/*.sql | duckdb -readonly -markdown data/vivienda.duckdb`.
 - El ETL solo publica si pasan los tests de calidad; si Eurostat cambia dimensiones, falla con un error claro.
 - Fuentes en `packages/etl/src/sources.ts`: se descargan en SDMX-CSV comprimido desde 2015, filtrando por clave SDMX (dimensiones en el orden de Eurostat). Al leerlas con `read_csv`, pasa `timestampformat='%d/%m/%y %H:%M:%S'`: si no, DuckDB interpreta `LAST UPDATE` como año/mes/día.
 - Geometrías en `packages/etl/src/geometries.ts`: GeoJSON 20M de GISCO ya en EPSG:3035 (DuckDB lo lee con `ST_Read` sin reproyectar). Las ultraperiféricas también van dentro de las siluetas NUTS 0 de ES, FR y PT.
-- Comandos previstos: `etl download`, `etl build`.
+- `pnpm etl download` (en `packages/etl/src/download.ts`) descarga fuentes y geometrías en `data/raw/AAAA-MM-DD/` con `manifest.json`; sin manifiesto, la descarga está incompleta. La última actualización de Eurostat sale de la columna `LAST UPDATE`; la de GISCO, de `Last-Modified`.
+- `etl build` (`src/build.ts`) fija `SET VARIABLE raw` y ejecuta los `.sql` en orden. `sql/staging/00_setup.sql` define las macros `raw_file`, `eurostat_csv` y `snapshot`; cada fichero posterior es reejecutable y registra su carga en `model.source_snapshot`. Staging lee Eurostat con `all_varchar` (salvo `OBS_VALUE` y `LAST UPDATE`): la detección automática convierte `sex` = `T` en booleano. La base se crea con `storage_compatibility_version: 'latest'` para no perder el CRS de las geometrías.
 
 ## Frontend Angular
 

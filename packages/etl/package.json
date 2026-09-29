@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "etl": "node src/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json"

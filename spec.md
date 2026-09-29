@@ -6,7 +6,7 @@
 
 EuroVivienda es un portal estadístico y geográfico sobre el acceso a la vivienda en la UE. El usuario activa indicadores, ve el principal sobre un mapa de Europa y el resto como gráficos sincronizados (barras, líneas, pastel, dispersión).
 
-El MVP prioriza calidad sobre cantidad: 9 indicadores de Eurostat (10 si entra el crecimiento de población), documentados y comparables. Los datos se consolidan en una base DuckDB dentro del ETL y se publican como JSON estático, sin backend en tiempo de ejecución.
+El MVP prioriza calidad sobre cantidad: 10 indicadores de Eurostat, documentados y comparables. Los datos se consolidan en una base DuckDB dentro del ETL y se publican como JSON estático, sin backend en tiempo de ejecución.
 
 Se construye en Angular con arquitectura hexagonal simplificada. Una versión en React queda fuera del MVP.
 
@@ -16,7 +16,7 @@ Se construye en Angular con arquitectura hexagonal simplificada. Una versión en
 
 - UE-27 en dos niveles: país (NUTS 0) y región (NUTS 2). Cada indicador declara los niveles en que existe; en NUTS 2, los indicadores solo nacionales muestran el valor de su país marcado como «dato nacional».
 - Serie temporal 2015 → último año disponible, con selector de año global.
-- Catálogo de 9 indicadores con desgloses, mapa coroplético, panel de gráficos y estado compartible por URL.
+- Catálogo de 10 indicadores con desgloses, mapa coroplético, panel de gráficos y estado compartible por URL.
 - Página «Sobre los datos» con fuentes, metodología, limitaciones de cada indicador y aviso de que las relaciones mostradas son descriptivas, no causales.
 - Accesibilidad desde el primer mapa: paletas aptas para daltonismo y una tabla alternativa al mapa navegable por teclado.
 
@@ -24,20 +24,20 @@ Se construye en Angular con arquitectura hexagonal simplificada. Una versión en
 
 ## Catálogo de indicadores
 
-Nueve indicadores en tres temas, más uno opcional. El tipo de cada uno decide qué gráficos genera. Los códigos se verifican en el hito 0.
+Diez indicadores en tres temas. El tipo de cada uno decide qué gráficos genera. Códigos y cobertura verificados en el hito 0: ver `cobertura.md`.
 
 | Tema | Indicador | Código Eurostat | Nivel | Tipo | Desgloses y limitaciones |
 | --- | --- | --- | --- | --- | --- |
-| Precios | Variación del precio de la vivienda | `prc_hpi_a` | País | Índice | Vivienda nueva y existente. Se rebasa a 2015 = 100 en el ETL |
+| Precios | Variación del precio de la vivienda | `prc_hpi_a` | País | Índice | Vivienda nueva y existente. Se rebasa a 2015 = 100 en el ETL. Eurostat no publica Grecia |
 | Precios | Variación del alquiler | `prc_hicp_ainr` (CP0411) | País | Índice | Alquileres pagados por inquilinos por su vivienda principal, incluidos regulados y sociales: no es el precio de mercado. Sustituye a `prc_hicp_aind`, descontinuado en 2026. Rebase a 2015 = 100 (Eurostat publica base 2025) |
-| Precios | Precio de la vivienda frente a renta | `prc_hpi_a` ÷ `nama_10r_2hhinc` | País | Derivado (índice) | Elaboración propia: índice de precios entre índice de renta disponible por habitante, ambos base 2015 |
+| Precios | Precio de la vivienda frente a renta | `prc_hpi_a` ÷ `nama_10r_2hhinc` | País | Derivado (índice) | Elaboración propia: índice de precios entre índice de renta disponible por habitante en moneda nacional (`MIO_NAC × EUR_HAB / MIO_EUR`), ambos base 2015. Hasta 2023 y sin Grecia |
 | Acceso | Sobrecarga por coste de vivienda | `ilc_lvho07a` + `ilc_lvho07c` | País | Escalar (%) | Desgloses por edad (total y jóvenes de 20–29 años) y por régimen de tenencia. Umbral: coste > 40 % de la renta disponible |
-| Acceso | Régimen de tenencia | `ilc_lvho02` | País | Composición | Propietario con y sin hipoteca, alquiler a precio de mercado, alquiler reducido o gratuito |
+| Acceso | Régimen de tenencia | `ilc_lvho02` | País | Composición | Propietario con y sin hipoteca, alquiler a precio de mercado, alquiler reducido o gratuito. El mapa pinta el alquiler total. Países Bajos reclasifica en 2021 el alquiler social de mercado a reducido, sin flag |
 | Acceso | Edad media de emancipación | `yth_demo_030` | País | Escalar (años) | Desglose por sexo; estimación de Eurostat |
 | Contexto | Tasa de paro | `lfst_r_lfu3rt` | País + NUTS 2 | Escalar (%) | Total por defecto |
-| Contexto | Renta disponible de los hogares por habitante | `nama_10r_2hhinc` | País + NUTS 2 | Escalar (€ o PPS) | Unidad por decidir. Retraso habitual de unos dos años |
-| Contexto | Intensidad turística (noches por habitante) | `tour_occ_nin2` (P_THAB) | País + NUTS 2 | Escalar (noches) | Eurostat publica noches por mil habitantes, con agregado UE; el ETL divide entre 1.000. Posibles datos confidenciales en NUTS 2 (flag `c`); caída en 2020–2021 |
-| Contexto | Crecimiento de la población (opcional) | `demo_r_gind3` | País + NUTS 2 | Escalar (‰) | Crecimiento total y saldo migratorio. Eurostat no publica agregado UE. Entra solo si la cobertura del hito 0 es limpia |
+| Contexto | Renta disponible de los hogares por habitante | `nama_10r_2hhinc` | País + NUTS 2 | Escalar (PPS) | PPS por habitante. Hasta 2023: el 2024 publicado está incompleto |
+| Contexto | Intensidad turística (noches por habitante) | `tour_occ_nin2` (P_THAB) | País + NUTS 2 | Escalar (noches) | Eurostat publica noches por mil habitantes, con agregado UE; el ETL divide entre 1.000. Caída en 2020–2021. En NUTS 2, regiones con códigos antiguos sin dato hasta 2022 |
+| Contexto | Crecimiento de la población | `demo_r_gind3` | País + NUTS 2 | Escalar (‰) | Crecimiento total y saldo migratorio. Eurostat no publica agregado UE: sin media UE. El nivel regional acaba en 2024 |
 
 ## Experiencia de usuario
 
@@ -67,7 +67,7 @@ Tres zonas: catálogo a la izquierda, mapa de la UE en el centro y panel de grá
 - Cuantiles con cortes fijos sobre toda la serie, para que un color signifique lo mismo en todos los años.
 - Escala secuencial si todos los valores tienen el mismo signo; divergente centrada en 0 solo si hay valores a ambos lados. La decide el ETL.
 - Regiones sin dato en gris con trama y el texto «sin dato».
-- Tooltip con valor, año, fuente y flags de Eurostat: `e` estimado, `p` provisional, `b` ruptura de serie, `u` baja fiabilidad, `c` confidencial, `d` definición distinta.
+- Tooltip con valor, año, fuente y flags de Eurostat: `e` estimado, `p` provisional, `b` ruptura de serie, `u` baja fiabilidad, `c` confidencial, `d` definición distinta, `n` no significativo.
 - Proyección Lambert azimutal equivalente (EPSG:3035) aplicada en el ETL: el frontend recibe las geometrías ya proyectadas.
 - Países no UE en gris neutro y sin interacción. Regiones ultraperiféricas (`ES70`, `FRY1`–`FRY5`, `PT20`, `PT30`) fuera del mapa en el MVP, también recortadas de la silueta de su país, con nota; sus datos siguen en gráficos y tablas.
 - Geometrías de GISCO a escala 20M, en GeoJSON ya proyectado: NUTS 0 y NUTS 2 de la versión elegida y la capa de países para el contexto. Atribución: «© EuroGeographics para los límites administrativos».
@@ -249,14 +249,11 @@ La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos prime
 
 ## Decisiones
 
-**Cerradas:** DuckDB en el ETL · ultraperiféricas fuera del mapa · dato nacional en NUTS 2 · desgloses como dimensión · una tarjeta de dispersión con parejas sugeridas · cuantiles con cortes fijos · rebase de índices a 2015 · proyección EPSG:3035 en el ETL · agregado UE de Eurostat o ponderado · Angular hexagonal simplificada · dirección visual «cifras destacadas» · jóvenes = 20–29 años en la sobrecarga (Eurostat no publica 18–29) · descarga en SDMX-CSV · intensidad turística con el dato por habitante de Eurostat.
+**Cerradas:** DuckDB en el ETL · ultraperiféricas fuera del mapa · dato nacional en NUTS 2 · desgloses como dimensión · una tarjeta de dispersión con parejas sugeridas · cuantiles con cortes fijos · rebase de índices a 2015 · proyección EPSG:3035 en el ETL · agregado UE de Eurostat o ponderado · Angular hexagonal simplificada · dirección visual «cifras destacadas» · jóvenes = 20–29 años en la sobrecarga (Eurostat no publica 18–29) · descarga en SDMX-CSV · intensidad turística con el dato por habitante de Eurostat · NUTS 2024 · año final 2025, con la renta hasta 2023 · renta en PPS por habitante y derivado en moneda nacional · el mapa de tenencia pinta el alquiler total · el crecimiento de la población entra, sin media UE.
 
 **Abiertas:**
 
 - [ ] Nombre definitivo (provisional: EuroVivienda).
-- [ ] Unidad de la renta: € o PPS por habitante.
-- [ ] Categoría de tenencia que pinta el mapa.
-- [ ] Versión NUTS (2021 o 2024).
 
 ## Fases posteriores
 

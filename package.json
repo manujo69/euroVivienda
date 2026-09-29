@@ -11,7 +11,8 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "etl": "pnpm --filter @eurovivienda/etl etl"
   },
   "prettier": {
     "printWidth": 100,

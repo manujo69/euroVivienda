@@ -1,14 +1,13 @@
 // GISCO geometries behind the map, verified in task 0.3.
 
-/** Both candidate NUTS versions until the coverage report settles the choice. */
-export const NUTS_VERSIONS = ['2021', '2024'] as const;
-export type NutsVersion = (typeof NUTS_VERSIONS)[number];
+/** Chosen in the coverage report (task 0.6): it fits the latest years of every regional series. */
+export const NUTS_VERSION = '2024';
 
 const GISCO = 'https://gisco-services.ec.europa.eu/distribution/v2';
 
 // 20M scale, already projected to EPSG:3035: the ETL never reprojects.
-export function nutsUrl(level: 0 | 2, version: NutsVersion): string {
-  return `${GISCO}/nuts/geojson/NUTS_RG_20M_${version}_3035_LEVL_${level}.geojson`;
+export function nutsUrl(level: 0 | 2): string {
+  return `${GISCO}/nuts/geojson/NUTS_RG_20M_${NUTS_VERSION}_3035_LEVL_${level}.geojson`;
 }
 
 /** Every country in the world; the map uses it for the grey non-EU context. */

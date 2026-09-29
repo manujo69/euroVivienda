@@ -8,7 +8,7 @@ Portal estadístico y geográfico sobre el acceso a la vivienda en la UE-27. El 
 
 - UE-27 en dos niveles: país (NUTS 0) y región (NUTS 2).
 - Serie temporal desde 2015 hasta el último año disponible, con selector de año global.
-- Nueve indicadores documentados y comparables, más uno opcional.
+- Diez indicadores documentados y comparables.
 - Estado compartible: indicadores activos, región, año, nivel y desgloses viven en la URL.
 - Accesibilidad desde el primer mapa: paletas aptas para daltonismo y tabla alternativa navegable por teclado.
 - Página «Sobre los datos» con fuentes, metodología y limitaciones.
@@ -28,7 +28,7 @@ Las relaciones entre indicadores se presentan como descriptivas, nunca causales.
 | Contexto | Tasa de paro | `lfst_r_lfu3rt` | País + NUTS 2 |
 | Contexto | Renta disponible de los hogares por habitante | `nama_10r_2hhinc` | País + NUTS 2 |
 | Contexto | Intensidad turística (noches por habitante) | `tour_occ_nin2` (P_THAB) | País + NUTS 2 |
-| Contexto | Crecimiento de la población (opcional) | `demo_r_gind3` | País + NUTS 2 |
+| Contexto | Crecimiento de la población | `demo_r_gind3` | País + NUTS 2 |
 
 Los índices se rebasan a 2015 = 100. El indicador derivado (precio frente a renta) se marca como «elaboración propia». Solo se usan fuentes oficiales y abiertas; las geometrías proceden de GISCO.
 
@@ -83,6 +83,8 @@ pnpm build                                  # build de todos los paquetes
 pnpm test                                   # tests de todos los paquetes (una sola pasada)
 pnpm typecheck                              # comprobación de tipos
 pnpm lint                                   # ESLint sobre packages/
+pnpm etl download                           # descarga cruda en data/raw/AAAA-MM-DD/
+pnpm etl build                              # reconstruye data/vivienda.duckdb
 pnpm --filter @eurovivienda/etl test        # tests de un solo paquete
 ```
 
@@ -90,4 +92,5 @@ pnpm --filter @eurovivienda/etl test        # tests de un solo paquete
 
 - [spec.md](spec.md): especificación completa del MVP (catálogo, experiencia de usuario, modelo de datos, contrato JSON, riesgos y decisiones).
 - [tasks.md](tasks.md): hitos y tareas.
+- [cobertura.md](cobertura.md): informe de cobertura de los datos y decisiones que cerró.
 - [CLAUDE.md](CLAUDE.md): convenciones del proyecto para agentes de código.
