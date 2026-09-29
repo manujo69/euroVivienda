@@ -19,18 +19,26 @@ const literal = (value: string | number | null | undefined) =>
 
 /** Staging tables for every source; each row may omit dimensions left at their first filter code. */
 export async function stage(connection: DuckDBConnection, data: Record<string, Row[]>) {
+  // Spain is a mainland square (Madrid west, Cataluña east) plus an island square: Canarias.
   await connection.run(`
+    LOAD spatial;
     CREATE SCHEMA staging;
     CREATE SCHEMA model;
     CREATE TABLE staging.geo_nuts (NUTS_ID VARCHAR, LEVL_CODE INTEGER, CNTR_CODE VARCHAR,
-      NAME_LATN VARCHAR, EU_STAT VARCHAR);
+      NAME_LATN VARCHAR, EU_STAT VARCHAR, geom GEOMETRY);
     INSERT INTO staging.geo_nuts VALUES
-      ('ES', 0, 'ES', 'España', 'T'),
-      ('ES30', 2, 'ES', 'Comunidad de Madrid', 'T'),
-      ('ES51', 2, 'ES', 'Cataluña', 'T'),
-      ('ES70', 2, 'ES', 'Canarias', 'T'),
-      ('NO', 0, 'NO', 'Norge', 'F');
+      ('ES', 0, 'ES', 'España', 'T', ST_GeomFromText('MULTIPOLYGON (((3000000 2000000, 3200000 2000000, 3200000 2200000, 3000000 2200000, 3000000 2000000)), ((1800000 1000000, 1900000 1000000, 1900000 1100000, 1800000 1100000, 1800000 1000000)))')),
+      ('ES30', 2, 'ES', 'Comunidad de Madrid', 'T', ST_GeomFromText('POLYGON ((3000000 2000000, 3100000 2000000, 3100000 2200000, 3000000 2200000, 3000000 2000000))')),
+      ('ES51', 2, 'ES', 'Cataluña', 'T', ST_GeomFromText('POLYGON ((3100000 2000000, 3200000 2000000, 3200000 2200000, 3100000 2200000, 3100000 2000000))')),
+      ('ES70', 2, 'ES', 'Canarias', 'T', ST_GeomFromText('POLYGON ((1800000 1000000, 1900000 1000000, 1900000 1100000, 1800000 1100000, 1800000 1000000))')),
+      ('NO', 0, 'NO', 'Norge', 'F', ST_GeomFromText('POLYGON ((4000000 4000000, 4100000 4000000, 4100000 4100000, 4000000 4100000, 4000000 4000000))'));
+    CREATE TABLE model.source_snapshot (dataset VARCHAR, downloaded_at TIMESTAMP,
+      last_update TIMESTAMP, file VARCHAR, sha256 VARCHAR, row_count INTEGER);
   `);
+  for (const source of sources) {
+    await connection.run(`INSERT INTO model.source_snapshot VALUES ('${source.code}',
+      '2026-09-29 12:00:00', '2026-09-17 23:00:00', '${source.code}.csv.gz', '${'0'.repeat(64)}', 1)`);
+  }
   for (const source of sources) {
     const columns = [...source.dimensions, 'TIME_PERIOD', 'OBS_VALUE', 'OBS_FLAG'];
     await connection.run(`
@@ -48,13 +56,14 @@ export async function stage(connection: DuckDBConnection, data: Record<string, R
   }
 }
 
-/** Opens an in-memory database, stages `data`, runs the given SQL layers and hands over. */
+/** Opens a database (in memory by default), stages `data`, runs the given SQL layers and hands over. */
 export async function withModel<T>(
   data: Record<string, Row[]>,
   layers: readonly string[],
   use: (connection: DuckDBConnection) => Promise<T>,
+  database = ':memory:',
 ): Promise<T> {
-  const instance = await DuckDBInstance.create(':memory:');
+  const instance = await DuckDBInstance.create(database);
   const connection = await instance.connect();
   try {
     await stage(connection, data);
@@ -93,8 +102,12 @@ export function cleanData(): Record<string, Row[]> {
       ...years(geo, { '2015': 700000, '2016': 720000 }, { unit: 'MIO_NAC' }),
       ...years(geo, { '2015': 700000, '2016': 720000 }, { unit: 'MIO_EUR' }),
     ]),
-    ilc_lvho07a: years('ES', { '2015': 10, '2016': 9 }),
-    ilc_lvho07c: years('ES', { '2015': 10, '2016': 9 }),
+    ilc_lvho07a: ['TOTAL', 'Y20-29'].flatMap((age) =>
+      years('ES', { '2015': 10, '2016': 9 }, { age }),
+    ),
+    ilc_lvho07c: ['OWN_L', 'OWN_NL', 'RENT_MKT', 'RENT_FR'].flatMap((tenure) =>
+      years('ES', { '2015': 10, '2016': 9 }, { tenure }),
+    ),
     ilc_lvho02: ['OWN_L', 'OWN_NL', 'RENT_MKT', 'RENT_FR', 'RENT'].flatMap((tenure) =>
       years('ES', { '2015': 20, '2016': 20 }, { tenure }),
     ),

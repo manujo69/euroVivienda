@@ -14,7 +14,7 @@ Idioma del proyecto: la interfaz y la documentación en español; el código (id
 ## Estado actual
 
 - `apps/angular` es todavía la app generada por Angular CLI 20: SSR activado (`outputMode: "server"`, todas las rutas en `RenderMode.Prerender`) y tests con Karma + Jasmine. Su ESLint (con la regla de fronteras) llega en el hito 2; hoy `eslint.config.js` ignora `apps/`.
-- `packages/contract` es un esqueleto; `packages/etl` cubre el hito 0: catálogos de fuentes y geometrías, `download` y `build` (staging, modelo y calidad). Falta la exportación a JSON (hito 1). Ambos con TypeScript estricto, ESLint con tipos y Vitest.
+- `packages/contract` tiene los esquemas Zod del contrato; `packages/etl` cubre el hito 0: catálogos de fuentes y geometrías, `download`, `build` (staging, modelo, calidad y publicación) y `export`, que en el hito 1 publica `overburden`, `tenure` y el TopoJSON NUTS 0. Ambos con TypeScript estricto, ESLint con tipos y Vitest.
 
 ## Comandos
 
@@ -26,6 +26,7 @@ Desde la raíz (pnpm 12, Node ≥ 22.18):
 - `pnpm lint`: ESLint sobre `packages/`.
 - `pnpm etl download`: descarga cruda de Eurostat y GISCO en `data/raw/AAAA-MM-DD/`.
 - `pnpm etl build`: borra y reconstruye `data/vivienda.duckdb` desde la última descarga completa; falla si no pasa algún test de calidad.
+- `pnpm etl export`: escribe `catalog.json`, `data/[id].json` y `geo/nuts0.json` en `apps/angular/public/` (versionados); falla sin escribir nada si algo no cumple el contrato o el presupuesto de tamaño.
 - SQL desde la CLI de DuckDB: `cat packages/etl/sql/staging/*.sql | duckdb -cmd "SET VARIABLE raw = 'data/raw/AAAA-MM-DD';"` (con `ATTACH '<fichero>' (STORAGE_VERSION 'latest')` si quieres persistirlo).
 - Un paquete: `pnpm --filter @eurovivienda/etl test` (o `contract`, `angular`).
 - Un solo test con Vitest: `pnpm --filter @eurovivienda/etl exec vitest run test/duckdb.test.ts`.
@@ -42,7 +43,7 @@ Formato: Prettier con `printWidth: 100` y comillas simples (config en el `packag
 
 Monorepo con pnpm workspaces:
 
-- `packages/contract` — tipos del contrato JSON (`IndicatorMeta`, `IndicatorData`) y validador. Lo usan el ETL y la app. Cualquier cambio aquí es un cambio de contrato: actualiza `spec.md`.
+- `packages/contract` — contrato JSON como esquemas Zod 4 (`indicatorMetaSchema`, `catalogSchema`, `indicatorDataSchema(meta)`), de los que se infieren los tipos (`IndicatorMeta`, `IndicatorData`, `Catalog`). El ETL valida con los esquemas; la app importa solo los tipos (`import type`) para que Zod no entre en su bundle. Cualquier cambio aquí es un cambio de contrato: actualiza `spec.md`.
 - `packages/etl` — ETL en Node + TypeScript sobre DuckDB.
 - `apps/angular` — frontend.
 
@@ -59,7 +60,8 @@ Monorepo con pnpm workspaces:
 - Geometrías en `packages/etl/src/geometries.ts`: GeoJSON 20M de GISCO ya en EPSG:3035 (DuckDB lo lee con `ST_Read` sin reproyectar). Las ultraperiféricas también van dentro de las siluetas NUTS 0 de ES, FR y PT.
 - `pnpm etl download` (en `packages/etl/src/download.ts`) descarga fuentes y geometrías en `data/raw/AAAA-MM-DD/` con `manifest.json`; sin manifiesto, la descarga está incompleta. La última actualización de Eurostat sale de la columna `LAST UPDATE`; la de GISCO, de `Last-Modified`.
 - `etl build` (`src/build.ts`) fija `SET VARIABLE raw` y ejecuta los `.sql` en orden. `sql/staging/00_setup.sql` define las macros `raw_file`, `eurostat_csv` y `snapshot`; cada fichero posterior es reejecutable y registra su carga en `model.source_snapshot`. Staging lee Eurostat con `all_varchar` (salvo `OBS_VALUE` y `LAST UPDATE`): la detección automática convierte `sex` = `T` en booleano. La base se crea con `storage_compatibility_version: 'latest'` para no perder el CRS de las geometrías.
-- Capas en orden: `sql/staging`, `sql/model`, `sql/quality`. `model/00_tables.sql` recrea las tablas y define `first_year`/`final_year` (2015–2025) y las macros `keep` (geografía UE-27, valor no vacío, año en rango) y `merge_flags`; luego un fichero por indicador. Cada fichero de `quality/` lanza `error()` si encuentra violaciones, lo que detiene el build y la CLI. La lista de ultraperiféricas vive en `model/01_geo.sql`.
+- `sql/publish/`: la lista de indicadores publicados (`publish.published`), cortes y escala (`publish.breaks`) y las vistas `publish.catalog`, `publish.data` y `publish.geo_nuts0`, que DuckDB arma como JSON con claves ordenadas (macro `sorted_object`; `json_group_object` no admite `ORDER BY`). `src/export.ts` solo valida con el contrato, pasa NUTS 0 por mapshaper (topología y cuantización, sin simplificar) y escribe. `data/` y `geo/` de `public/` pertenecen al export: los borra antes de escribir. mapshaper no trae tipos: `src/mapshaper.d.ts` declara lo que se usa.
+- Capas en orden: `sql/staging`, `sql/model`, `sql/quality`, `sql/publish`. `model/00_tables.sql` recrea las tablas y define `first_year`/`final_year` (2015–2025) y las macros `keep` (geografía UE-27, valor no vacío, año en rango) y `merge_flags`; luego un fichero por indicador. Cada fichero de `quality/` lanza `error()` si encuentra violaciones, lo que detiene el build y la CLI. La lista de ultraperiféricas vive en `model/01_geo.sql`.
 - Tests del modelo y de calidad: `test/staging-fixture.ts` monta un staging mínimo en memoria (`withModel`, `cleanData`) y ejecuta las capas sobre él.
 
 ## Frontend Angular

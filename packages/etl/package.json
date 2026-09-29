@@ -10,6 +10,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@duckdb/node-api": "1.5.5-r.5"
+    "@duckdb/node-api": "1.5.5-r.5",
+    "@eurovivienda/contract": "workspace:*",
+    "mapshaper": "^0.7.69"
   }
 }

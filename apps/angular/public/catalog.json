@@ -1,0 +1,131 @@
+[
+  {
+    "id": "overburden",
+    "label": "Sobrecarga por coste de vivienda",
+    "theme": "access",
+    "kind": "scalar",
+    "unit": "%",
+    "levels": [
+      0
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "ilc_lvho07a, ilc_lvho07c",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/ilc_lvho07a/default/table",
+      "lastUpdate": "2026-09-17"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      },
+      {
+        "id": "youth",
+        "label": "Jóvenes (20–29 años)"
+      },
+      {
+        "id": "own_l",
+        "label": "Propietarios con hipoteca"
+      },
+      {
+        "id": "own_nl",
+        "label": "Propietarios sin hipoteca"
+      },
+      {
+        "id": "rent_mkt",
+        "label": "Alquiler a precio de mercado"
+      },
+      {
+        "id": "rent_fr",
+        "label": "Alquiler reducido o gratuito"
+      }
+    ],
+    "scale": "sequential",
+    "breaks": {
+      "own_l": [
+        1.4,
+        2.4,
+        4,
+        7.7
+      ],
+      "own_nl": [
+        1.7,
+        2.6,
+        4.1,
+        6.4
+      ],
+      "rent_fr": [
+        5.06,
+        7.5,
+        9.3,
+        12.7
+      ],
+      "rent_mkt": [
+        15.6,
+        20.9,
+        27,
+        34.9
+      ],
+      "total": [
+        4.5,
+        6,
+        7.8,
+        9.8
+      ],
+      "youth": [
+        4.7,
+        7.4,
+        9.7,
+        13.9
+      ]
+    },
+    "notes": "Población que vive en hogares que dedican más del 40 % de su renta disponible a la vivienda."
+  },
+  {
+    "id": "tenure",
+    "label": "Régimen de tenencia",
+    "theme": "access",
+    "kind": "composition",
+    "unit": "%",
+    "levels": [
+      0
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "ilc_lvho02",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/ilc_lvho02/default/table",
+      "lastUpdate": "2026-09-17"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      }
+    ],
+    "categories": [
+      "own_l",
+      "own_nl",
+      "rent_mkt",
+      "rent_fr"
+    ],
+    "mapCategory": "rent",
+    "scale": "sequential",
+    "breaks": {
+      "total": [
+        13.92,
+        22.78,
+        27.66,
+        32.14
+      ]
+    },
+    "notes": "El mapa pinta el alquiler total (mercado más reducido). Países Bajos reclasifica en 2021 el alquiler social de mercado a reducido."
+  }
+]

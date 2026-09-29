@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 const SQL = join(import.meta.dirname, '../sql');
 // quality raises an error on any failed check, so a bad download never reaches publication.
-const LAYERS = ['staging', 'model', 'quality'];
+const LAYERS = ['staging', 'model', 'quality', 'publish'];
 
 /** Newest dated folder whose download finished, i.e. that has a manifest. */
 export async function latestRawDir(root: string): Promise<string> {

@@ -64,7 +64,7 @@ Tres zonas: catálogo a la izquierda, mapa de la UE en el centro y panel de grá
 
 **Mapa:**
 
-- Cuantiles con cortes fijos sobre toda la serie, para que un color signifique lo mismo en todos los años.
+- Cuantiles con cortes fijos sobre toda la serie, para que un color signifique lo mismo en todos los años: calculados sobre los países (sin agregado UE), por desglose. Quintiles en escala secuencial; en divergente, 0 más terciles de cada lado.
 - Escala secuencial si todos los valores tienen el mismo signo; divergente centrada en 0 solo si hay valores a ambos lados. La decide el ETL.
 - Regiones sin dato en gris con trama y el texto «sin dato».
 - Tooltip con valor, año, fuente y flags de Eurostat: `e` estimado, `p` provisional, `b` ruptura de serie, `u` baja fiabilidad, `c` confidencial, `d` definición distinta, `n` no significativo.
@@ -116,14 +116,14 @@ Sin backend en tiempo de ejecución: un ETL mensual (GitHub Actions) descarga Eu
 
 1. Descargas crudas en `data/raw/AAAA-MM-DD/` con manifiesto. No se versionan.
 2. Base `vivienda.duckdb`, reconstruible y sin versionar. Esquemas `staging` (una tabla por dataset), `model` y `publish` (vistas por indicador).
-3. Salida JSON y TopoJSON, versionada.
+3. Salida JSON y TopoJSON, versionada, en `apps/angular/public/`: `catalog.json`, `data/[id].json` y `geo/nuts0.json`.
 
 Las transformaciones viven en ficheros `.sql` numerados por capa, ejecutables también desde la CLI de DuckDB; Node solo orquesta. El ETL publica únicamente si pasan los tests de calidad.
 
 **Stack:**
 
 - Monorepo con pnpm workspaces: `packages/contract`, `packages/etl`, `apps/angular`.
-- ETL en Node + TypeScript con `@duckdb/node-api` y extensiones `httpfs` y `spatial`; mapshaper para simplificar geometrías.
+- ETL en Node + TypeScript con `@duckdb/node-api` y extensiones `httpfs` y `spatial`; mapshaper para construir la topología (y simplificar si hace falta: a 20M, NUTS 0 no lo necesita).
 - Angular con componentes standalone y signals; estado sincronizado con la URL mediante el router.
 - Apache ECharts con `ngx-echarts`. Geometrías proyectadas registradas como coordenadas planas; validar `aspectScale: 1` en el hito 2.
 
@@ -207,7 +207,7 @@ interface IndicatorMeta {
   unit: string;
   levels: (0 | 2)[];
   years: [number, number];
-  source: { name: string; code: string; url: string; lastUpdate: string };
+  source: { name: string; code: string; url: string; lastUpdate: string };  // lastUpdate: AAAA-MM-DD
   breakdowns: { id: string; label: string }[];  // el primero es el de por defecto
   categories?: string[];                        // solo 'composition'
   mapCategory?: string;
@@ -220,11 +220,13 @@ interface IndicatorMeta {
 interface IndicatorData {
   [geo: string]: {
     [year: string]: {
-      [breakdown: string]: { v: number | Record<string, number>; f?: string };
+      [breakdown: string]: { v: number | Record<string, number>; f?: string };  // f: flags de Eurostat
     };
   };
 }
 ```
+
+Los tipos se infieren de esquemas Zod, que además validan lo que los tipos no expresan: años en orden, desgloses sin repetir, `categories` y `mapCategory` solo (y siempre) en composiciones, cortes ascendentes con una entrada por desglose, ids únicos en `catalog.json` y, en cada `data/[id].json` frente a su `IndicatorMeta`, años dentro de `years`, desgloses declarados, `v` numérico salvo en composiciones (categorías conocidas) y flags con las letras de Eurostat. La app importa solo los tipos.
 
 En una composición, `categories` son las porciones del pastel y `mapCategory` la categoría que pinta el mapa, que puede ser un agregado de ellas: en tenencia, `rent` (alquiler total, publicado por Eurostat) junto a `own_l`, `own_nl`, `rent_mkt` y `rent_fr`. `v` incluye las dos cosas.
 

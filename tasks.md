@@ -59,10 +59,10 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 
 ## Hito 1 — ETL mínimo
 
-- [ ] Paquete `contract` con los tipos y un validador de esquema que usen los tests del ETL.
-- [ ] Vistas de publicación y exportación de `catalog.json` y `data/[id].json` para un escalar y el de composición.
-- [ ] Cálculo de cortes fijos con `quantile_cont` y de la escala (secuencial o divergente).
-- [ ] Simplificación de NUTS 0 con mapshaper y exportación a TopoJSON, con presupuesto de tamaño fijado.
+- [x] Paquete `contract` con los tipos y un validador de esquema que usen los tests del ETL. Esquemas Zod 4 (`indicatorMetaSchema`, `catalogSchema`, `indicatorDataSchema(meta)`) con tipos inferidos; `etl` ya depende del paquete.
+- [x] Vistas de publicación y exportación de `catalog.json` y `data/[id].json` para un escalar y el de composición: `overburden` y `tenure`. Vistas en `sql/publish/` (DuckDB arma el JSON) y comando `etl export`, que valida con el contrato y escribe en `apps/angular/public/` solo si todo pasa. Salida determinista (claves ordenadas).
+- [x] Cálculo de cortes fijos con `quantile_cont` y de la escala (secuencial o divergente). Sobre los países (sin agregado UE) y todos los años, por desglose: quintiles si es secuencial; 0 más terciles de cada lado si es divergente. En índices, sobre la variación desde 2015; en composiciones, sobre `mapCategory`.
+- [x] Simplificación de NUTS 0 con mapshaper y exportación a TopoJSON, con presupuesto de tamaño fijado: 50 KB (sale en 36 KB). A escala 20M no se simplifica, porque deforma las costas y apenas ahorra; mapshaper construye la topología y cuantiza (1:10.000). Ultraperiféricas recortadas de ES, FR y PT.
 - [ ] Workflow mensual de GitHub Actions que publica solo si pasan los tests.
 
 ## Hito 2 — Mapa
