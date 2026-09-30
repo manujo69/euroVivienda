@@ -16,7 +16,12 @@ export interface GeoValue {
   readonly flags: string | undefined;
   /** Explanation of this value, e.g. a small sample (from the ETL). */
   readonly note?: string;
+  /** At NUTS 2, a national indicator paints each region with its country's value. */
+  readonly national?: true;
 }
+
+/** NUTS level on the map: countries (0) or regions (2). */
+export type Level = 0 | 2;
 
 /** What the map paints: the value, the change since 2015 of an index, the map category of a composition. */
 export function mapValue(meta: IndicatorMeta, cell: Cell): number | undefined {
@@ -41,6 +46,9 @@ export function valuesByGeo(
   data: IndicatorData,
   year: number,
   breakdown: string,
+  level: Level = 0,
+  /** At NUTS 2, the regions on the map. */
+  regions: readonly string[] = [],
 ): { values: GeoValue[]; eu: GeoValue | undefined } {
   const all: GeoValue[] = [];
   for (const [geo, byYear] of Object.entries(data)) {
@@ -51,11 +59,22 @@ export function valuesByGeo(
     }
   }
   all.sort((a, b) => a.geo.localeCompare(b.geo));
-  return {
-    // Countries only: regional indicators also carry their NUTS 2 regions.
-    values: all.filter((entry) => isCountry(entry.geo)),
-    eu: all.find((entry) => entry.geo === EU_AGGREGATE),
-  };
+  const eu = all.find((entry) => entry.geo === EU_AGGREGATE);
+  // Countries only at NUTS 0: regional indicators also carry their NUTS 2 regions.
+  if (level === 0) return { values: all.filter((entry) => isCountry(entry.geo)), eu };
+  if (meta.levels.includes(2)) {
+    const onMap = new Set(regions);
+    return { values: all.filter((entry) => onMap.has(entry.geo)), eu };
+  }
+  // A national indicator at NUTS 2: each region takes its country's value (spec.md, rule 5).
+  const countries = new Map(all.map((entry) => [entry.geo, entry]));
+  const values = [...regions]
+    .sort((a, b) => a.localeCompare(b))
+    .flatMap((geo): GeoValue[] => {
+      const country = countries.get(geo.slice(0, 2));
+      return country ? [{ ...country, geo, national: true }] : [];
+    });
+  return { values, eu };
 }
 
 export type Theme = IndicatorMeta['theme'];

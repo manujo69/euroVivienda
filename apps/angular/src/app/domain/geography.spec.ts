@@ -1,5 +1,5 @@
 import type { Geography } from './ports';
-import { codesOf } from './geography';
+import { codesOf, namesOf } from './geography';
 
 const square = {
   type: 'Polygon' as const,
@@ -23,5 +23,22 @@ describe('codesOf', () => {
       ],
     };
     expect(codesOf(layer)).toEqual(['ES', 'PT']);
+  });
+});
+
+describe('namesOf', () => {
+  it('maps each named feature to its name', () => {
+    const layer: Geography = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: { code: 'ES30', name: 'Comunidad de Madrid' },
+          geometry: square,
+        },
+        { type: 'Feature', properties: { code: 'ES' }, geometry: square },
+      ],
+    };
+    expect(namesOf(layer)).toEqual({ ES30: 'Comunidad de Madrid' });
   });
 });

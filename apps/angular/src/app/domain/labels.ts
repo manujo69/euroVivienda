@@ -33,9 +33,9 @@ const COUNTRY_NAMES: Readonly<Record<string, string>> = {
   EU27_2020: 'Media UE',
 };
 
-/** Spanish name of an EU country or the EU aggregate; regions keep their code for now. */
-export function geoName(code: string): string {
-  return COUNTRY_NAMES[code] ?? code;
+/** Spanish name of an EU country or the EU aggregate; regions take theirs from the map, if given. */
+export function geoName(code: string, regions: Readonly<Record<string, string>> = {}): string {
+  return COUNTRY_NAMES[code] ?? regions[code] ?? code;
 }
 
 /** Eurostat flags (spec.md, «Mapa»). */

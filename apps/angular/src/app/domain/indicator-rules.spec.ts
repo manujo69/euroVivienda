@@ -128,6 +128,41 @@ describe('valuesByGeo', () => {
   });
 });
 
+describe('valuesByGeo at NUTS 2', () => {
+  const regions = ['ES30', 'ES51', 'EL30'];
+
+  it('gives the regions of a regional indicator, only those on the map', () => {
+    const unemployment = meta('scalar', { levels: [0, 2] });
+    const data: IndicatorData = {
+      ES: { '2024': { total: { v: 11 } } },
+      ES30: { '2024': { total: { v: 9 } } },
+      ES51: { '2024': { total: { v: 8.5, f: 'p' } } },
+      ES43: { '2024': { total: { v: 17 } } },
+      EU27_2020: { '2024': { total: { v: 6 } } },
+    };
+    expect(valuesByGeo(unemployment, data, 2024, 'total', 2, regions)).toEqual({
+      values: [
+        { geo: 'ES30', value: 9, flags: undefined },
+        { geo: 'ES51', value: 8.5, flags: 'p' },
+      ],
+      eu: { geo: 'EU27_2020', value: 6, flags: undefined },
+    });
+  });
+
+  it('paints each region of a national indicator with its country, marked as national', () => {
+    const overburden = meta('scalar', { levels: [0] });
+    const data: IndicatorData = {
+      ES: { '2024': { total: { v: 7.8, n: 'Nota.' } } },
+      EL: { '2024': { total: { v: 26 } } },
+    };
+    expect(valuesByGeo(overburden, data, 2024, 'total', 2, regions).values).toEqual([
+      { geo: 'EL30', value: 26, flags: undefined, national: true },
+      { geo: 'ES30', value: 7.8, flags: undefined, note: 'Nota.', national: true },
+      { geo: 'ES51', value: 7.8, flags: undefined, note: 'Nota.', national: true },
+    ]);
+  });
+});
+
 describe('byTheme', () => {
   const indicator = (id: string, theme: IndicatorMeta['theme']) => ({
     ...meta('scalar'),

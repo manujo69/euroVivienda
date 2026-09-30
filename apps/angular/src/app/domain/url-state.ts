@@ -12,7 +12,7 @@ export interface UrlState {
   /** Selected region. */
   readonly geo: string | undefined;
   readonly year: number | undefined;
-  /** NUTS level: 0 until NUTS 2 arrives (hito 5). */
+  /** NUTS level: 0 (countries) or 2 (regions). */
   readonly level: number;
   /** Breakdown by indicator, only where it is not the first one. */
   readonly bd: Readonly<Record<string, string>>;
@@ -84,7 +84,7 @@ export function normalizeUrlState(
     main: state.main && ind.includes(state.main) ? state.main : ind.at(-1),
     geo: state.geo && geos.includes(state.geo) ? state.geo : undefined,
     year,
-    level: 0,
+    level: state.level === 2 ? 2 : 0,
     bd,
   };
 }

@@ -143,7 +143,8 @@ describe('normalizeUrlState', () => {
     expect(normalize({ bd: { overburden: 'rent_mkt' } }).bd).toEqual({});
   });
 
-  it('shows countries only until NUTS 2 arrives', () => {
-    expect(normalize({ level: 2 }).level).toBe(0);
+  it('keeps NUTS 0 or NUTS 2, and falls back to countries for any other level', () => {
+    expect(normalize({ level: 2 }).level).toBe(2);
+    expect(normalize({ level: 3 }).level).toBe(0);
   });
 });

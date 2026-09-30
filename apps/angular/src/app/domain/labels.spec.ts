@@ -10,6 +10,11 @@ describe('geoName', () => {
   it('falls back to the code for anything else', () => {
     expect(geoName('ES30')).toBe('ES30');
   });
+
+  it('names the regions it is given', () => {
+    expect(geoName('ES30', { ES30: 'Comunidad de Madrid' })).toBe('Comunidad de Madrid');
+    expect(geoName('ES', { ES30: 'Comunidad de Madrid' })).toBe('España');
+  });
 });
 
 describe('flagLabels', () => {
