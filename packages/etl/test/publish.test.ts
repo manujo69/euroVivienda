@@ -184,14 +184,17 @@ describe('publish.geo_nuts0', () => {
 });
 
 describe('publish.geo_nuts2', () => {
-  it('holds the EU NUTS 2 regions without the outermost ones', async () => {
+  it('holds the EU NUTS 2 regions, named, without the outermost ones', async () => {
     const [row] = await publish(cleanData(), (c) =>
       rows(c, 'SELECT geojson::VARCHAR AS geojson FROM publish.geo_nuts2'),
     );
     const collection = JSON.parse(row?.geojson as string) as {
-      features: { properties: { code: string }; geometry: { type: string } }[];
+      features: { properties: { code: string; name: string }; geometry: { type: string } }[];
     };
-    expect(collection.features.map((feature) => feature.properties.code)).toEqual(['ES30', 'ES51']);
+    expect(collection.features.map((feature) => feature.properties)).toEqual([
+      { code: 'ES30', name: 'Comunidad de Madrid' },
+      { code: 'ES51', name: 'Cataluña' },
+    ]);
     expect(collection.features[0]?.geometry.type).toBe('Polygon');
   });
 });

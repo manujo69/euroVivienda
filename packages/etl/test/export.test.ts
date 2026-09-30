@@ -73,9 +73,12 @@ describe('exportPublished', () => {
     await exportPublished({ database, out });
 
     const topology = (await read('geo/nuts2.json')) as {
-      objects: Record<string, { geometries: { id: string }[] }>;
+      objects: Record<string, { geometries: { id: string; properties?: { name?: string } }[] }>;
     };
-    expect(topology.objects.nuts2?.geometries.map((g) => g.id)).toEqual(['ES30', 'ES51']);
+    expect(topology.objects.nuts2?.geometries.map((g) => [g.id, g.properties?.name])).toEqual([
+      ['ES30', 'Comunidad de Madrid'],
+      ['ES51', 'Cataluña'],
+    ]);
     expect(topology.objects.context?.geometries.map((g) => g.id)).toEqual(['AD', 'MA']);
   });
 
