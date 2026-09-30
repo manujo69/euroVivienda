@@ -5,6 +5,7 @@ import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from '../../../
 import type { MapGeography } from '../../../domain/ports';
 import { By } from '@angular/platform-browser';
 import { CardComponent } from '../card-component/card.component';
+import { ScatterComponent } from '../scatter-component/scatter.component';
 import { PanelComponent } from './panel.component';
 
 const indicator = (id: string): IndicatorMeta => ({
@@ -109,5 +110,28 @@ describe('PanelComponent', () => {
     (second?.componentInstance as CardComponent).breakdownChosen.emit('total');
 
     expect(spy).toHaveBeenCalledWith('b', 'total');
+  });
+
+  it('adds the scatter card after the cards, with two numeric indicators active', async () => {
+    const { element: alone } = await render([]);
+    expect(alone.querySelector('app-scatter')).toBeNull();
+    TestBed.resetTestingModule();
+
+    const { element } = await render(['b']);
+    expect(element.querySelector('app-card + app-scatter, app-card ~ app-scatter')).not.toBeNull();
+  });
+
+  it('passes the pair and the region the scatter card picks to the store', async () => {
+    const { fixture, store } = await render(['b']);
+    const scatter = fixture.debugElement.query(By.directive(ScatterComponent))
+      .componentInstance as ScatterComponent;
+    const setPair = spyOn(store, 'setScatterPair');
+    const pair = { x: { id: 'b', breakdown: 'total' }, y: { id: 'a', breakdown: 'total' } };
+
+    scatter.pairChosen.emit(pair);
+    scatter.regionPicked.emit('ES');
+
+    expect(setPair).toHaveBeenCalledWith(pair);
+    expect(store.selected()).toBe('ES');
   });
 });

@@ -788,6 +788,15 @@ describe('ExplorerStore', () => {
         y: { id: 'emancipation', breakdown: 'total' },
       };
 
+      expect(store.scatter()?.suggested.map((option) => option.label)).toEqual([
+        'Sobrecarga por coste de vivienda (Jóvenes (20–29 años)) frente a Edad media de emancipación',
+      ]);
+      expect(store.scatter()?.axes.map((axis) => [axis.id, axis.breakdown])).toEqual([
+        ['overburden', 'total'],
+        ['emancipation', 'total'],
+        ['hpi', 'total'],
+      ]);
+
       store.setScatterPair(chosen);
       expect(store.scatter()?.pair).toEqual(chosen);
 

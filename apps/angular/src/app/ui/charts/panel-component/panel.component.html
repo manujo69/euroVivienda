@@ -10,4 +10,11 @@
   } @empty {
     <p class="empty">Activa indicadores en el catálogo para ver sus gráficos.</p>
   }
+  @if (store.scatter(); as scatter) {
+    <app-scatter
+      [scatter]="scatter"
+      (pairChosen)="store.setScatterPair($event)"
+      (regionPicked)="store.select($event)"
+    />
+  }
 </section>

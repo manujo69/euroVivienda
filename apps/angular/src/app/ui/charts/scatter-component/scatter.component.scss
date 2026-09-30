@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+
+article {
+  padding: 12px 0 16px;
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+}
+
+h3 {
+  margin: 0 0 8px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  font-size: var(--size-text-small);
+  color: var(--color-ink-muted);
+}
+
+select {
+  font: inherit;
+  color: var(--color-ink);
+}
+
+details {
+  margin-top: 8px;
+  font-size: var(--size-text-small);
+}
+
+summary {
+  cursor: pointer;
+  color: var(--color-ink-muted);
+}
+
+.correlation {
+  margin: 8px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.warning {
+  margin: 4px 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--size-text-small);
+}

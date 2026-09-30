@@ -36,6 +36,9 @@ import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from './tokens'
 
 export type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+/** The scatter card, when there is one. */
+export type Scatter = NonNullable<ReturnType<ExplorerStore['scatter']>>;
+
 /** One card of the chart panel. */
 export interface Card {
   readonly meta: IndicatorMeta;
@@ -195,8 +198,17 @@ export class ExplorerStore {
     const points = scatterPoints(x.values, y.values);
     return {
       pair,
-      suggested,
-      axes,
+      // Named from the catalogue, for the selectors of the card.
+      suggested: suggested.map((option) => ({
+        pair: option,
+        label: pairLabel(option, this.catalogState()),
+      })),
+      axes: axes.map((meta) => ({
+        id: meta.id,
+        breakdown: this.breakdownOf(meta),
+        label: meta.label,
+      })),
+      level: this.level(),
       label: pairLabel(pair, this.catalogState()),
       x,
       y,

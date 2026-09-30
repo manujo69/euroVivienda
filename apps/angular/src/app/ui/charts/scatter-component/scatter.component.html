@@ -1,0 +1,56 @@
+<article>
+  <h3 class="section-title">{{ scatter().label }}</h3>
+
+  @if (scatter().suggested.length) {
+    <label>
+      Pareja sugerida
+      <select (change)="chooseSuggested($event)">
+        @if (suggestedIndex() === -1) {
+          <option value="" selected disabled>Ejes elegidos a mano</option>
+        }
+        @for (option of scatter().suggested; track $index) {
+          <option [value]="$index" [selected]="$index === suggestedIndex()">
+            {{ option.label }}
+          </option>
+        }
+      </select>
+    </label>
+  }
+
+  <details>
+    <summary>Elegir los ejes</summary>
+    <label>
+      Eje horizontal
+      <select (change)="chooseAxis('x', $event)">
+        @for (axis of scatter().axes; track axis.id) {
+          <option [value]="axis.id" [selected]="axis.id === scatter().pair.x.id">
+            {{ axis.label }}
+          </option>
+        }
+      </select>
+    </label>
+    <label>
+      Eje vertical
+      <select (change)="chooseAxis('y', $event)">
+        @for (axis of scatter().axes; track axis.id) {
+          <option [value]="axis.id" [selected]="axis.id === scatter().pair.y.id">
+            {{ axis.label }}
+          </option>
+        }
+      </select>
+    </label>
+  </details>
+
+  <!-- ECharts loads apart, as in the map. -->
+  @defer (on immediate) {
+    <app-chart
+      [option]="chart().option"
+      [label]="chart().label"
+      [height]="280"
+      (picked)="pickPoint($event)"
+    />
+  }
+
+  <p class="correlation">{{ correlation() }}</p>
+  <p class="warning">Correlación no implica causa: la relación es solo descriptiva.</p>
+</article>
