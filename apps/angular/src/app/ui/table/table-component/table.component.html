@@ -1,0 +1,50 @@
+<table class="tabular">
+  <colgroup>
+    <col class="rank" />
+    <col class="country" />
+    <col class="value" />
+    <col />
+  </colgroup>
+  <caption class="section-title">
+    Datos del mapa ·
+    {{
+      store.shownYear()
+    }}
+  </caption>
+  <thead>
+    <tr>
+      <th scope="col" class="number">Puesto</th>
+      <th scope="col">País</th>
+      <th scope="col" class="number" aria-sort="descending">Valor</th>
+      <th scope="col" class="notes">Notas</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows(); track row.geo; let i = $index) {
+      <tr [class.selected]="row.geo === store.selected()">
+        <td class="number">{{ i + 1 }}</td>
+        <th scope="row">
+          <button
+            type="button"
+            [attr.aria-pressed]="row.geo === store.selected()"
+            (click)="store.select(row.geo)"
+          >
+            {{ row.name }}
+          </button>
+        </th>
+        <td class="number">{{ row.value }}</td>
+        <td class="notes">{{ row.flags }}</td>
+      </tr>
+    }
+  </tbody>
+  @if (eu(); as eu) {
+    <tfoot>
+      <tr>
+        <td></td>
+        <th scope="row">Media UE</th>
+        <td class="number">{{ eu.value }}</td>
+        <td class="notes">{{ eu.flags }}</td>
+      </tr>
+    </tfoot>
+  }
+</table>

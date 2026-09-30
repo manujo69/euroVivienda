@@ -1,0 +1,16 @@
+<div
+  class="chart"
+  echarts
+  role="img"
+  [attr.aria-label]="
+    'Mapa de ' + (store.meta()?.label ?? '') + '. Los datos están en la tabla.'
+  "
+  [options]="option()"
+  (chartClick)="onClick($any($event).name)"
+></div>
+<ul class="legend" aria-label="Leyenda">
+  @for (item of legend(); track item.label) {
+    <li><span class="swatch" [style.background]="item.colour"></span>{{ item.label }}</li>
+  }
+  <li><span class="swatch no-data"></span>Sin dato</li>
+</ul>

@@ -1,0 +1,60 @@
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--size-text);
+}
+caption {
+  text-align: left;
+}
+th,
+td {
+  padding: 4px 8px;
+  text-align: left;
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+}
+thead th {
+  border-bottom: var(--rule-thin) solid var(--color-rule-strong);
+  font-weight: 600;
+}
+/* Narrow figure columns next to the country, so values sit by their row, not by the notes. */
+.rank {
+  width: 4.5em;
+}
+.country {
+  width: 14em;
+}
+.value {
+  width: 7em;
+}
+th.number,
+td.number {
+  text-align: right;
+}
+.notes {
+  padding-left: 24px;
+}
+tr.selected {
+  background: var(--color-selected);
+}
+tr.selected th,
+tr.selected td {
+  border-bottom-color: var(--color-rule-strong);
+}
+tfoot th,
+tfoot td {
+  border-top: var(--rule-thin) dashed var(--color-rule-strong);
+  border-bottom: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+button:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
