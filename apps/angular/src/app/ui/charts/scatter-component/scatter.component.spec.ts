@@ -152,4 +152,10 @@ describe('ScatterComponent', () => {
 
     expect(picked).toHaveBeenCalledWith('PT');
   });
+
+  it('says so instead of an empty chart when no region has both values', async () => {
+    const { element } = await render(scatter({ points: [], r: undefined }));
+    expect(element.querySelector('app-chart')).toBeNull();
+    expect(text(element, '.empty')).toBe('Ninguna región tiene dato en los dos ejes.');
+  });
 });

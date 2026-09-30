@@ -64,9 +64,17 @@ export class CardComponent {
     const lines = [region, eu].filter((line): line is Line => !!line && line.points.length > 0);
     const shown = region?.points.length ? `${region.name} frente a la media UE` : 'media UE';
     const index = meta.kind === 'index';
+    // Nothing to draw: without an EU mean (population growth), a selection brings a line.
+    const place = this.card().level === 2 ? 'una región' : 'un país';
+    const empty = lines.length
+      ? undefined
+      : region
+        ? `Sin datos de ${region.name}.`
+        : `Sin media de la UE: selecciona ${place} para ver su evolución.`;
     return {
       option: lineOption({ unit: index ? '' : meta.unit, lines, ...(index ? { base: 100 } : {}) }),
       label: `Evolución de ${meta.label}: ${shown}`,
+      empty,
     };
   });
 

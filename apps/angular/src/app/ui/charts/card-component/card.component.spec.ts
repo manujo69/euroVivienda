@@ -43,6 +43,7 @@ const card = (extra: Partial<Card> = {}): Card => ({
   eu: { geo: 'EU27_2020', value: 8.2, flags: undefined },
   selected: undefined,
   names: {},
+  level: 0,
   ...extra,
 });
 
@@ -167,7 +168,9 @@ describe('CardComponent', () => {
     };
 
     it('shows the evolution of the EU mean and the ranking when open', async () => {
-      const { fixture, element } = await render(card({ data: series }));
+      const { fixture, element } = await render(
+        card({ data: series, values: [{ geo: 'ES', value: 8.4, flags: undefined }] }),
+      );
       const titles = [...element.querySelectorAll('h4')].map((title) => title.textContent?.trim());
       expect(titles).toEqual(['Evolución', 'Ranking 2024']);
       expect(lines(fixture)).toEqual({
@@ -204,7 +207,9 @@ describe('CardComponent', () => {
     });
 
     it('marks derived indicators as own elaboration', async () => {
-      const { element } = await render(card({ meta: { ...overburden, kind: 'derived' } }));
+      const { element } = await render(
+        card({ meta: { ...overburden, kind: 'derived' }, data: series }),
+      );
       expect(text(element, '.own')).toBe('Elaboración propia');
       expect(element.querySelector('app-chart')).not.toBeNull();
     });
@@ -347,6 +352,33 @@ describe('CardComponent', () => {
       const titles = [...element.querySelectorAll('h4')].map((title) => title.textContent?.trim());
       expect(titles).toEqual(['Reparto', 'Comparación entre países']);
       expect(element.querySelector('app-ranking')).toBeNull();
+    });
+  });
+
+  describe('empty states', () => {
+    const noEu: IndicatorData = {
+      ES: { '2023': { total: { v: 3.2 } }, '2024': { total: { v: 3.5 } } },
+    };
+
+    it('asks to select a country when there is no EU mean to draw', async () => {
+      const { element } = await render(card({ data: noEu, eu: undefined, headline: undefined }));
+      expect(element.querySelector('app-chart')).toBeNull();
+      expect(text(element, '.empty')).toBe(
+        'Sin media de la UE: selecciona un país para ver su evolución.',
+      );
+    });
+
+    it('says which region has no series', async () => {
+      const { element } = await render(
+        card({ data: noEu, eu: undefined, headline: undefined, selected: 'PT' }),
+      );
+      expect(text(element, '.empty')).toBe('Sin datos de Portugal.');
+    });
+
+    it('says so when no country has a value for the ranking', async () => {
+      const { element } = await render(card({ data: series, values: [] }));
+      expect(element.querySelector('app-ranking')).toBeNull();
+      expect(text(element, '.empty')).toBe('Sin datos en 2024.');
     });
   });
 });

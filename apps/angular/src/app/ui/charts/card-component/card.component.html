@@ -51,21 +51,33 @@
       <!-- ECharts loads apart, as in the map. -->
       @defer (on immediate) {
         <h4 class="chart-title">Evolución</h4>
-        <app-chart [option]="evolution().option" [label]="evolution().label" />
+        @if (evolution().empty; as empty) {
+          <p class="empty">{{ empty }}</p>
+        } @else {
+          <app-chart [option]="evolution().option" [label]="evolution().label" />
+        }
         <h4 class="chart-title">Ranking {{ card().year }}</h4>
-        <app-ranking
-          [values]="card().values"
-          [eu]="card().eu"
-          [selected]="card().selected"
-          [unit]="card().meta.unit"
-          [names]="card().names"
-          (picked)="regionPicked.emit($event)"
-        />
+        @if (card().values.length) {
+          <app-ranking
+            [values]="card().values"
+            [eu]="card().eu"
+            [selected]="card().selected"
+            [unit]="card().meta.unit"
+            [names]="card().names"
+            (picked)="regionPicked.emit($event)"
+          />
+        } @else {
+          <p class="empty">Sin datos{{ card().year ? ' en ' + card().year : '' }}.</p>
+        }
       }
     } @else if (card().meta.kind === 'index') {
       @defer (on immediate) {
         <h4 class="chart-title">Evolución</h4>
-        <app-chart [option]="evolution().option" [label]="evolution().label" />
+        @if (evolution().empty; as empty) {
+          <p class="empty">{{ empty }}</p>
+        } @else {
+          <app-chart [option]="evolution().option" [label]="evolution().label" />
+        }
       }
     } @else if (card().meta.kind === 'composition') {
       @defer (on immediate) {

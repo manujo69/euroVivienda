@@ -55,6 +55,8 @@ export interface Card {
   readonly selected: string | undefined;
   /** Names of the regions on the map, for the NUTS 2 level. */
   readonly names: Readonly<Record<string, string>>;
+  /** Level the card is shown at: national indicators stay by country on a NUTS 2 map. */
+  readonly level: Level;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -156,6 +158,7 @@ export class ExplorerStore {
           eu,
           selected,
           names: this.names(),
+          level,
         },
       ];
     });

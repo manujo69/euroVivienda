@@ -35,6 +35,10 @@
         <td class="number">{{ row.value }}</td>
         <td class="notes">{{ row.flags }}</td>
       </tr>
+    } @empty {
+      <tr>
+        <td colspan="4" class="empty">Sin datos en este año.</td>
+      </tr>
     }
   </tbody>
   @if (eu(); as eu) {

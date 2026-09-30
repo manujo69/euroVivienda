@@ -46,14 +46,18 @@
     <li><span class="axis">Eje horizontal:</span> {{ axisNames().x }}</li>
   </ul>
 
-  <!-- ECharts loads apart, as in the map. -->
-  @defer (on immediate) {
-    <app-chart
-      [option]="chart().option"
-      [label]="chart().label"
-      [height]="280"
-      (picked)="pickPoint($event)"
-    />
+  @if (scatter().points.length) {
+    <!-- ECharts loads apart, as in the map. -->
+    @defer (on immediate) {
+      <app-chart
+        [option]="chart().option"
+        [label]="chart().label"
+        [height]="280"
+        (picked)="pickPoint($event)"
+      />
+    }
+  } @else {
+    <p class="empty">Ninguna región tiene dato en los dos ejes.</p>
   }
 
   <p class="correlation">{{ correlation() }}</p>

@@ -185,4 +185,13 @@ describe('TableComponent', () => {
     const [row] = [...table.querySelectorAll('tbody tr')].map(cells);
     expect(row).toEqual(['1', 'Comunidad de Madrid', '9,1 %', '']);
   });
+
+  it('says so when no country has a value', async () => {
+    const { table } = await render({ ES: { '2016': { total: { v: 7 } } } });
+    const store = TestBed.inject(ExplorerStore);
+    store.setYear(2015);
+    TestBed.tick();
+    const rows = [...table.querySelectorAll('tbody tr')].map((row) => row.textContent?.trim());
+    expect(rows).toEqual(['Sin datos en este año.']);
+  });
 });

@@ -56,3 +56,9 @@ summary {
 .axis {
   color: var(--color-ink-muted);
 }
+
+.empty {
+  margin: 12px 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--size-text-small);
+}
