@@ -9,10 +9,11 @@ import {
   headline,
   openCards,
   resolveYear,
+  type Level,
   valuesByGeo,
   yearRange,
 } from '../domain/indicator-rules';
-import { codesOf } from '../domain/geography';
+import { codesOf, namesOf } from '../domain/geography';
 import type { MapGeography } from '../domain/ports';
 import {
   normalizeUrlState,
@@ -65,7 +66,21 @@ export class ExplorerStore {
   readonly failed = this.failedIds.asReadonly();
 
   readonly status = signal<LoadStatus>('idle');
-  readonly geography = signal<MapGeography | undefined>(undefined);
+  private readonly levelState = signal<Level>(0);
+  /** Geometries loaded so far: NUTS 2 only once the user asks for it. */
+  private readonly geographiesByLevel = signal<Partial<Record<Level, MapGeography>>>({});
+  /** NUTS level on the map: countries (0) or regions (2). */
+  readonly level = this.levelState.asReadonly();
+  readonly geography = computed(() => this.geographiesByLevel()[this.level()]);
+  /** Names of the regions on the map; countries are named by the domain. */
+  readonly names = computed(() => {
+    const geography = this.geography();
+    return geography ? namesOf(geography.regions) : {};
+  });
+  private readonly regionCodes = computed(() => {
+    const geography = this.geography();
+    return this.level() === 2 && geography ? codesOf(geography.regions) : [];
+  });
   readonly year = signal(0);
   readonly selected = signal<string | undefined>(undefined);
 
@@ -84,7 +99,7 @@ export class ExplorerStore {
     const meta = this.meta();
     const year = this.shownYear();
     if (!meta || year === undefined) return { values: [], eu: undefined };
-    return valuesByGeo(meta, this.data(), year, this.breakdown());
+    return valuesByGeo(meta, this.data(), year, this.breakdown(), this.level(), this.regionCodes());
   });
   readonly values = computed(() => this.current().values);
   readonly eu = computed(() => this.current().eu);
@@ -105,7 +120,7 @@ export class ExplorerStore {
       const { values, eu } =
         year === undefined
           ? { values: [], eu: undefined }
-          : valuesByGeo(meta, data, year, breakdown);
+          : valuesByGeo(meta, data, year, breakdown, this.level(), this.regionCodes());
       const selected = this.selected();
       return [
         {
@@ -129,7 +144,7 @@ export class ExplorerStore {
     main: this.mainId(),
     geo: this.selected(),
     year: this.year(),
-    level: 0,
+    level: this.level(),
     // Only breakdowns other than the default, to keep the URL short.
     bd: Object.fromEntries(
       this.catalogState()
@@ -158,13 +173,17 @@ export class ExplorerStore {
   async load(): Promise<void> {
     this.status.set('loading');
     try {
-      const [catalog, geography, query] = await Promise.all([
+      const [catalog, nuts0, query] = await Promise.all([
         this.indicators.catalog(),
         this.geographies.nuts0(),
         this.url.read(),
       ]);
       if (!catalog.length) throw new Error('empty catalogue');
-      const state = normalizeUrlState(parseUrlState(query), catalog, codesOf(geography.regions));
+      const requested = parseUrlState(query);
+      // The region in the URL is checked against the map of its level.
+      const nuts2 = requested.level === 2 ? await this.geographies.nuts2() : undefined;
+      const geography = nuts2 ?? nuts0;
+      const state = normalizeUrlState(requested, catalog, codesOf(geography.regions));
       const results = await Promise.allSettled(state.ind.map((id) => this.indicators.data(id)));
       const loaded: Record<string, IndicatorData> = {};
       const failed = new Set<string>();
@@ -179,7 +198,8 @@ export class ExplorerStore {
       this.catalogState.set(catalog);
       this.loaded.set(loaded);
       this.failedIds.set(failed);
-      this.geography.set(geography);
+      this.geographiesByLevel.set(nuts2 ? { 0: nuts0, 2: nuts2 } : { 0: nuts0 });
+      this.levelState.set(nuts2 ? 2 : 0);
       this.activeIds.set(active);
       this.recency.set(active);
       this.mainId.set(state.main && active.includes(state.main) ? state.main : active.at(-1));
@@ -217,6 +237,24 @@ export class ExplorerStore {
     this.activeIds.update((ids) => [...ids, id]);
     this.recency.update((ids) => [...ids, id]);
     this.mainId.set(id);
+  }
+
+  /**
+   * Shows countries or NUTS 2 regions, loading the NUTS 2 geometry the first time. A country is
+   * not a region: the selection goes.
+   */
+  async setLevel(level: Level): Promise<void> {
+    if (level === this.level()) return;
+    if (!this.geographiesByLevel()[level]) {
+      try {
+        const geography = await (level === 2 ? this.geographies.nuts2() : this.geographies.nuts0());
+        this.geographiesByLevel.update((loaded) => ({ ...loaded, [level]: geography }));
+      } catch {
+        return;
+      }
+    }
+    this.selected.set(undefined);
+    this.levelState.set(level);
   }
 
   /** Opens a card, folding the one used least recently if four are already open. */

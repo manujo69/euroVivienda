@@ -104,6 +104,7 @@ function setup(indicators: Partial<IndicatorRepository> = {}, query: QueryParams
     nuts0: () => Promise.resolve(geography),
     nuts2: () => Promise.resolve(regional),
   };
+  const nuts2Spy = spyOn(geographies, 'nuts2').and.callThrough();
   const url = {
     read: () => Promise.resolve(query),
     write: jasmine.createSpy('write').and.resolveTo(),
@@ -119,6 +120,7 @@ function setup(indicators: Partial<IndicatorRepository> = {}, query: QueryParams
   return Object.assign(TestBed.inject(ExplorerStore), {
     repository: { data: dataSpy },
     urlPort: url,
+    nuts2: nuts2Spy,
   });
 }
 
@@ -496,7 +498,7 @@ describe('ExplorerStore', () => {
     });
 
     it('opens an invalid URL on the nearest valid state, and writes that one back', async () => {
-      const store = setup({}, { ind: 'hpi', geo: 'XX', year: '1990', level: '2' });
+      const store = setup({}, { ind: 'hpi', geo: 'XX', year: '1990', level: '3' });
       await store.load();
 
       expect(store.active()).toEqual(['overburden']);
@@ -555,6 +557,70 @@ describe('ExplorerStore', () => {
       await store.load();
 
       expect(written(store)).toBeUndefined();
+    });
+  });
+
+  describe('NUTS 2', () => {
+    it('shows the regions, each with its country value for a national indicator', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.setLevel(2);
+
+      expect(store.level()).toBe(2);
+      expect(store.geography()).toBe(regional);
+      expect(store.values()).toEqual([
+        { geo: 'ES30', value: 7.8, flags: undefined, national: true },
+        { geo: 'ES51', value: 7.8, flags: undefined, national: true },
+        { geo: 'PT17', value: 5.1, flags: undefined, national: true },
+      ]);
+      expect(store.cards()[0]?.values.map((entry) => entry.geo)).toEqual(['ES30', 'ES51', 'PT17']);
+    });
+
+    it('names the regions from their geometry', async () => {
+      const store = setup();
+      await store.load();
+      expect(store.names()['ES30']).toBeUndefined();
+
+      await store.setLevel(2);
+
+      expect(store.names()['ES30']).toBe('Comunidad de Madrid');
+    });
+
+    it('loads the NUTS 2 geometry once, and goes back to the countries', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.setLevel(2);
+      await store.setLevel(0);
+      await store.setLevel(2);
+
+      expect(store.nuts2).toHaveBeenCalledTimes(1);
+      await store.setLevel(0);
+      expect(store.geography()).toBe(geography);
+      expect(store.values().map((entry) => entry.geo)).toEqual(['ES', 'PT']);
+    });
+
+    it('clears the selection when the level changes', async () => {
+      const store = setup();
+      await store.load();
+      store.select('ES');
+
+      await store.setLevel(2);
+
+      expect(store.selected()).toBeUndefined();
+    });
+
+    it('opens a URL at NUTS 2 with its region, and keeps the level in the URL', async () => {
+      const store = setup({}, { ind: 'overburden', level: '2', geo: 'ES51' });
+      await store.load();
+
+      expect(store.level()).toBe(2);
+      expect(store.selected()).toBe('ES51');
+      TestBed.tick();
+      expect(store.urlPort.write.calls.mostRecent()?.args[0]).toEqual(
+        jasmine.objectContaining({ level: '2', geo: 'ES51' }),
+      );
     });
   });
 });
