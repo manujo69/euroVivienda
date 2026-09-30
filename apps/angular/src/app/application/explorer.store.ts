@@ -23,6 +23,15 @@ import {
   serializeUrlState,
   type UrlState,
 } from '../domain/url-state';
+import {
+  type Axis,
+  type Pair,
+  isOffered,
+  pairLabel,
+  pairOptions,
+  pearson,
+  scatterPoints,
+} from '../domain/scatter';
 import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from './tokens';
 
 export type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -60,6 +69,8 @@ export class ExplorerStore {
   private readonly failedIds = signal<ReadonlySet<string>>(new Set());
   /** Breakdown chosen for each indicator; the first one it declares until the user picks. */
   private readonly chosenBreakdowns = signal<Readonly<Record<string, string>>>({});
+  /** Axes the user chose for the scatter card, if any. */
+  private readonly chosenPair = signal<Pair | undefined>(undefined);
   /** Active indicators, the card used least recently first. */
   private readonly recency = signal<readonly string[]>([]);
 
@@ -145,6 +156,55 @@ export class ExplorerStore {
         },
       ];
     });
+  });
+
+  /** Active indicators in activation order. */
+  private readonly activeMetas = computed(() =>
+    this.activeIds().flatMap((id) => this.catalogState().filter((meta) => meta.id === id)),
+  );
+
+  /**
+   * The scatter card, with two numeric indicators active or more (spec.md, rule 4): the chosen
+   * pair if it is still on offer, else the first suggested one, else the last two indicators.
+   */
+  readonly scatter = computed(() => {
+    const { suggested, axes } = pairOptions(this.activeMetas(), this.level());
+    if (axes.length < 2) return undefined;
+    const chosen = this.chosenPair();
+    const [previous, last] = axes.slice(-2).map((meta) => ({
+      id: meta.id,
+      breakdown: this.breakdownOf(meta),
+    }));
+    const pair =
+      chosen && isOffered(axes, chosen)
+        ? chosen
+        : (suggested[0] ?? (previous && last ? { x: previous, y: last } : undefined));
+    if (!pair) return undefined;
+
+    const side = (axis: Axis) => {
+      const meta = axes.find((item) => item.id === axis.id) as IndicatorMeta;
+      const data = this.loaded()[axis.id] ?? {};
+      const year = resolveYear(data, this.year());
+      const values =
+        year === undefined
+          ? []
+          : valuesByGeo(meta, data, year, axis.breakdown, this.level(), this.regionCodes()).values;
+      return { meta, breakdown: axis.breakdown, year, values };
+    };
+    const [x, y] = [side(pair.x), side(pair.y)];
+    const points = scatterPoints(x.values, y.values);
+    return {
+      pair,
+      suggested,
+      axes,
+      label: pairLabel(pair, this.catalogState()),
+      x,
+      y,
+      points,
+      r: pearson(points.map((point) => [point.x, point.y] as const)),
+      selected: this.selected(),
+      names: this.names(),
+    };
   });
 
   /** The shareable state, as the URL holds it. */
@@ -287,6 +347,12 @@ export class ExplorerStore {
       this.selected.set(undefined);
       this.levelState.set(0);
     }
+  }
+
+  /** Chooses the axes of the scatter card among the ones it offers; any other pair is ignored. */
+  setScatterPair(pair: Pair): void {
+    const { axes } = pairOptions(this.activeMetas(), this.level());
+    if (isOffered(axes, pair)) this.chosenPair.set(pair);
   }
 
   /** Chooses the breakdown of an indicator; ids it does not declare are ignored. */

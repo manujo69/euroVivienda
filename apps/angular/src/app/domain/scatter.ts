@@ -66,11 +66,16 @@ export function pairOptions(
   const axes = active.filter(
     (meta) => meta.kind !== 'composition' && (level === 0 || meta.levels.includes(2)),
   );
+  return { suggested: SUGGESTED.filter((pair) => isOffered(axes, pair)), axes };
+}
+
+/** A pair of two different indicators among the axes, each on a breakdown it declares. */
+export function isOffered(axes: readonly IndicatorMeta[], pair: Pair): boolean {
   const offers = (axis: Axis) =>
     axes.some(
       (meta) => meta.id === axis.id && meta.breakdowns.some((b) => b.id === axis.breakdown),
     );
-  return { suggested: SUGGESTED.filter((pair) => offers(pair.x) && offers(pair.y)), axes };
+  return pair.x.id !== pair.y.id && offers(pair.x) && offers(pair.y);
 }
 
 /** «Y frente a X», with the catalogue labels and the breakdown when it is not the first one. */

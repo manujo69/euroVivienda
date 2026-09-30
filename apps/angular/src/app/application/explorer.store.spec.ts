@@ -697,4 +697,102 @@ describe('ExplorerStore', () => {
       expect(store.selected()).toBeUndefined();
     });
   });
+
+  describe('scatter', () => {
+    const emancipation: IndicatorMeta = {
+      ...overburden,
+      id: 'emancipation',
+      label: 'Edad media de emancipación',
+      breakdowns: [{ id: 'total', label: 'Total' }],
+      breaks: { total: [25, 28] },
+      years: [2015, 2023],
+    };
+    const hpi: IndicatorMeta = {
+      ...overburden,
+      id: 'hpi',
+      label: 'Variación del precio de la vivienda',
+      kind: 'index',
+      breakdowns: [{ id: 'total', label: 'Total' }],
+      breaks: { total: [0, 50] },
+    };
+    const byIndicator: Record<string, IndicatorData> = {
+      overburden: {
+        ES: { '2024': { total: { v: 7.8 }, youth: { v: 12 } } },
+        PT: { '2024': { total: { v: 5.1 }, youth: { v: 9 } } },
+        FR: { '2024': { total: { v: 4.9 }, youth: { v: 10 } } },
+      },
+      emancipation: {
+        ES: { '2023': { total: { v: 30 } } },
+        PT: { '2023': { total: { v: 29 } } },
+        FR: { '2023': { total: { v: 24 } } },
+      },
+      hpi: {
+        ES: { '2024': { total: { v: 150 } } },
+        PT: { '2024': { total: { v: 190 } } },
+      },
+    };
+
+    function withScatter(ind: string) {
+      return setup(
+        {
+          catalog: () => Promise.resolve([overburden, emancipation, hpi, tenure]),
+          data: (id) => Promise.resolve(byIndicator[id] ?? tenureData),
+        },
+        { ind },
+      );
+    }
+
+    it('appears only with two numeric indicators active', async () => {
+      const store = withScatter('overburden,tenure');
+      await store.load();
+      expect(store.scatter()).toBeUndefined();
+    });
+
+    it('opens on a suggested pair, with its points, r and years', async () => {
+      const store = withScatter('overburden,emancipation');
+      await store.load();
+
+      const scatter = store.scatter();
+      expect(scatter?.pair).toEqual({
+        x: { id: 'emancipation', breakdown: 'total' },
+        y: { id: 'overburden', breakdown: 'youth' },
+      });
+      expect(scatter?.label).toBe(
+        'Sobrecarga por coste de vivienda (Jóvenes (20–29 años)) frente a Edad media de emancipación',
+      );
+      expect(scatter?.points.map((point) => [point.geo, point.x, point.y])).toEqual([
+        ['ES', 30, 12],
+        ['FR', 24, 10],
+        ['PT', 29, 9],
+      ]);
+      expect(scatter?.r).toBeCloseTo(0.3, 1);
+      expect([scatter?.x.year, scatter?.y.year]).toEqual([2023, 2024]);
+    });
+
+    it('puts the last two numeric indicators when no pair is suggested', async () => {
+      const store = withScatter('hpi,overburden');
+      await store.load();
+
+      expect(store.scatter()?.pair).toEqual({
+        x: { id: 'hpi', breakdown: 'total' },
+        y: { id: 'overburden', breakdown: 'total' },
+      });
+      expect(store.scatter()?.r).toBeUndefined();
+    });
+
+    it('lets the user choose the axes among the numeric active indicators', async () => {
+      const store = withScatter('overburden,emancipation,hpi');
+      await store.load();
+      const chosen = {
+        x: { id: 'hpi', breakdown: 'total' },
+        y: { id: 'emancipation', breakdown: 'total' },
+      };
+
+      store.setScatterPair(chosen);
+      expect(store.scatter()?.pair).toEqual(chosen);
+
+      store.setScatterPair({ x: { id: 'tenure', breakdown: 'total' }, y: chosen.y });
+      expect(store.scatter()?.pair).toEqual(chosen);
+    });
+  });
 });
