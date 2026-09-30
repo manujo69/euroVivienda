@@ -90,7 +90,7 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 
 ## Hito 5 — Resto del catálogo y NUTS 2
 
-- [ ] Exportar el resto de indicadores del catálogo y las geometrías NUTS 2.
+- [x] Exportar el resto de indicadores del catálogo y las geometrías NUTS 2. Los diez indicadores en `publish.published`, en orden de catálogo (el primero, `overburden`, es el de inicio). `geo/nuts2.json` a 20M sin simplificar, sin ultraperiféricas y con la capa `context` (114 KB; presupuesto 130 KB). La app filtra los países en `valuesByGeo` y muestra los índices como variación desde 2015 también en el mapa, la tabla y la cifra de entrada.
 - [ ] Nivel NUTS 2 con herencia del dato nacional (pasa del hito 4: necesita las geometrías NUTS 2 y los indicadores regionales publicados).
 - [ ] Tarjeta de dispersión con parejas sugeridas, selector libre y coeficiente r.
 - [ ] Estados vacíos y diseño móvil con pestañas.
