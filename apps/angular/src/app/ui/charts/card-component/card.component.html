@@ -46,6 +46,7 @@
           [eu]="card().eu"
           [selected]="card().selected"
           [unit]="card().meta.unit"
+          (picked)="regionPicked.emit($event)"
         />
       }
     } @else if (card().meta.kind === 'index') {
@@ -74,6 +75,7 @@
             [option]="comparison.option"
             [label]="comparison.label"
             [height]="comparison.height"
+            (picked)="pickBar($event)"
           />
         }
       }

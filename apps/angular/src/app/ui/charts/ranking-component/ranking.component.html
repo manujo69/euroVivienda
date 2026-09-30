@@ -12,7 +12,15 @@
         @case ('value') {
           <tr [class.selected]="row.selected">
             <td class="number">{{ row.rank }}</td>
-            <th scope="row">{{ row.name }}</th>
+            <th scope="row">
+              <button
+                type="button"
+                [attr.aria-pressed]="row.selected"
+                (click)="picked.emit(row.geo)"
+              >
+                {{ row.name }}
+              </button>
+            </th>
             <td class="number">{{ row.value }}</td>
           </tr>
         }

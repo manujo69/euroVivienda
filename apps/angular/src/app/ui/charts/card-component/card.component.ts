@@ -29,6 +29,8 @@ const SIGNED = new Intl.NumberFormat('es-ES', {
 export class CardComponent {
   readonly card = input.required<Card>();
   readonly opened = output<void>();
+  /** A country picked in the ranking or the bars, to select it everywhere. */
+  readonly regionPicked = output<string>();
 
   protected readonly figure = computed(() => {
     const { meta, headline, year } = this.card();
@@ -94,6 +96,7 @@ export class CardComponent {
     const rows = [...values]
       .sort((a, b) => b.value - a.value)
       .map((entry) => ({
+        geo: entry.geo,
         name: geoName(entry.geo),
         slices: slicesOf(meta, data, entry.geo, year, breakdown),
       }));
@@ -103,9 +106,16 @@ export class CardComponent {
         rows,
         selected: selected && geoName(selected),
       }),
+      geos: rows.map((row) => row.geo),
       label: `${meta.label} por país en ${year}`,
       // A readable bar per country, plus room for the legend.
       height: rows.length * 18 + 72,
     };
   });
+
+  /** The bars chart reports the row clicked; only a country's row selects it. */
+  protected pickBar(index: number): void {
+    const geo = this.comparison()?.geos[index];
+    if (geo) this.regionPicked.emit(geo);
+  }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { type GeoValue, shortRanking } from '../../../domain/indicator-rules';
 import { geoName } from '../../../domain/labels';
 import { formatColumn } from '../../map/map-option';
@@ -20,6 +20,8 @@ export class RankingComponent {
   readonly eu = input.required<GeoValue | undefined>();
   readonly selected = input.required<string | undefined>();
   readonly unit = input.required<string>();
+  /** Code of the country the user picks. */
+  readonly picked = output<string>();
 
   protected readonly rows = computed((): Row[] => {
     const ranked = shortRanking(this.values(), this.selected());

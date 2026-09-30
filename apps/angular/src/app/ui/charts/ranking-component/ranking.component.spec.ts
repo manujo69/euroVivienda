@@ -22,7 +22,9 @@ describe('RankingComponent', () => {
       [...element.querySelectorAll('tbody tr')].map((row) =>
         [...row.querySelectorAll('th, td')].map((cell) => cell.textContent?.trim()),
       );
-    return { element, rows };
+    const picked = jasmine.createSpy('picked');
+    fixture.componentInstance.picked.subscribe(picked);
+    return { element, rows, picked };
   }
 
   it('lists the top and bottom three with their position, marking the gap between them', () => {
@@ -48,5 +50,23 @@ describe('RankingComponent', () => {
     const { element, rows } = render(undefined);
     expect(rows()[3]).toEqual(['', 'Media UE', '5,0 %']);
     expect(element.querySelector('tr.eu')).not.toBeNull();
+  });
+
+  it('selects a country with its button, pressed on the selected one', () => {
+    const { element, picked } = render('DE', null);
+    const buttons = [...element.querySelectorAll<HTMLButtonElement>('tbody button')];
+    expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual([
+      'false',
+      'false',
+      'false',
+      'true',
+      'false',
+      'false',
+      'false',
+    ]);
+
+    buttons[0]?.click();
+
+    expect(picked).toHaveBeenCalledWith('IT');
   });
 });

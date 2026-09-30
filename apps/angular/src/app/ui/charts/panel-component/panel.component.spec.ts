@@ -3,6 +3,8 @@ import type { Catalog, IndicatorData, IndicatorMeta } from '@eurovivienda/contra
 import { ExplorerStore } from '../../../application/explorer.store';
 import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from '../../../application/tokens';
 import type { MapGeography } from '../../../domain/ports';
+import { By } from '@angular/platform-browser';
+import { CardComponent } from '../card-component/card.component';
 import { PanelComponent } from './panel.component';
 
 const indicator = (id: string): IndicatorMeta => ({
@@ -82,5 +84,16 @@ describe('PanelComponent', () => {
     expect(element.textContent).toContain(
       'Activa indicadores en el catálogo para ver sus gráficos.',
     );
+  });
+
+  it('selects the region a card picks, as the map and the table do', async () => {
+    const { fixture, store } = await render([]);
+    const card = fixture.debugElement.query(By.directive(CardComponent));
+
+    (card.componentInstance as CardComponent).regionPicked.emit('ES');
+    expect(store.selected()).toBe('ES');
+
+    (card.componentInstance as CardComponent).regionPicked.emit('ES');
+    expect(store.selected()).toBeUndefined();
   });
 });

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { EChartsCoreOption } from 'echarts/core';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import { echarts } from '../echarts';
@@ -18,4 +18,6 @@ export class ChartComponent {
   readonly label = input.required<string>();
   /** In px: a chart needs a fixed height, its width follows the card. */
   readonly height = input(200);
+  /** Index of the data item clicked, e.g. the row of a bar chart. */
+  readonly picked = output<number>();
 }

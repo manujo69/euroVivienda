@@ -4,6 +4,8 @@ import type { IndicatorData } from '@eurovivienda/contract';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { IndicatorMeta } from '@eurovivienda/contract';
 import type { Card } from '../../../application/explorer.store';
+import { ChartComponent } from '../chart-component/chart.component';
+import { RankingComponent } from '../ranking-component/ranking.component';
 import { CardComponent } from './card.component';
 
 const overburden: IndicatorMeta = {
@@ -51,7 +53,9 @@ describe('CardComponent', () => {
     fixture.detectChanges();
     for (const block of await fixture.getDeferBlocks())
       await block.render(DeferBlockState.Complete);
-    return { fixture, element: fixture.nativeElement as HTMLElement };
+    const picked = jasmine.createSpy('regionPicked');
+    fixture.componentInstance.regionPicked.subscribe(picked);
+    return { fixture, element: fixture.nativeElement as HTMLElement, picked };
   }
 
   const text = (element: HTMLElement, selector: string) =>
@@ -130,6 +134,15 @@ describe('CardComponent', () => {
           ['Media UE', [9.9, 9.5]],
         ],
       });
+    });
+
+    it('selects a country from the ranking', async () => {
+      const { fixture, picked } = await render(
+        card({ data: series, values: [{ geo: 'ES', value: 7.8, flags: undefined }] }),
+      );
+      const ranking = fixture.debugElement.query(By.directive(RankingComponent));
+      (ranking.componentInstance as RankingComponent).picked.emit('ES');
+      expect(picked).toHaveBeenCalledWith('ES');
     });
 
     it('draws no charts while folded', async () => {
@@ -250,6 +263,24 @@ describe('CardComponent', () => {
         { name: 'Propietarios', value: 75.3 },
         { name: 'Inquilinos a precio de mercado', value: 15.9 },
       ]);
+    });
+
+    it('selects the country whose bar is clicked', async () => {
+      const { fixture, picked } = await render(tenureCard());
+      const bars = fixture.debugElement.queryAll(By.directive(ChartComponent))[1];
+
+      (bars?.componentInstance as ChartComponent).picked.emit(1);
+
+      expect(picked).toHaveBeenCalledWith('ES');
+    });
+
+    it('ignores clicks outside the bars of a country', async () => {
+      const { fixture, picked } = await render(tenureCard());
+      const bars = fixture.debugElement.queryAll(By.directive(ChartComponent))[1];
+
+      (bars?.componentInstance as ChartComponent).picked.emit(7);
+
+      expect(picked).not.toHaveBeenCalled();
     });
 
     it('compares the countries in bars, in the order of the map category', async () => {

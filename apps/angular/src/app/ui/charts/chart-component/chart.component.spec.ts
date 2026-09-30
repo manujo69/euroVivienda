@@ -34,4 +34,14 @@ describe('ChartComponent', () => {
     expect((render().nativeElement as HTMLElement).style.height).toBe('200px');
     expect((render(420).nativeElement as HTMLElement).style.height).toBe('420px');
   });
+
+  it('tells which item was clicked', () => {
+    const chart = render();
+    const picked = jasmine.createSpy('picked');
+    (chart.parent?.componentInstance as ChartComponent).picked.subscribe(picked);
+
+    chart.triggerEventHandler('chartClick', { dataIndex: 2, name: 'Portugal' });
+
+    expect(picked).toHaveBeenCalledWith(2);
+  });
 });
