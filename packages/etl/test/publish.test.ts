@@ -81,14 +81,35 @@ describe('publish.catalog and publish.data', () => {
       'SELECT indicator_id, meta::VARCHAR AS meta, data::VARCHAR AS data FROM publish.catalog JOIN publish.data USING (indicator_id) ORDER BY 1',
     );
 
-  it('publishes overburden and tenure as JSON that the contract accepts', async () => {
+  const of = (result: Record<string, unknown>[], id: string) =>
+    result.find((row) => row.indicator_id === id);
+
+  it('publishes every indicator of the catalogue, overburden first', async () => {
+    const order = await publish(cleanData(), (c) =>
+      rows(c, 'SELECT indicator_id FROM publish.published ORDER BY position'),
+    );
+    expect(order.map((row) => row.indicator_id)).toEqual([
+      'overburden',
+      'hpi',
+      'rent',
+      'price_income',
+      'tenure',
+      'emancipation',
+      'unemployment',
+      'income',
+      'tourism',
+      'popgrowth',
+    ]);
+  });
+
+  it('publishes every indicator as JSON that the contract accepts', async () => {
     const result = await publish(cleanData(), published);
-    expect(result.map((row) => row.indicator_id)).toEqual(['overburden', 'tenure']);
+    expect(result).toHaveLength(10);
 
     const catalog = catalogSchema.parse(
       result.map((row) => JSON.parse(row.meta as string) as unknown),
     );
-    const tenure = catalog[1] as IndicatorMeta;
+    const tenure = catalog.find((meta) => meta.id === 'tenure');
     expect(tenure).toMatchObject({
       years: [2015, 2016],
       mapCategory: { id: 'rent', label: 'Inquilinos (mercado y reducido)' },
@@ -99,12 +120,12 @@ describe('publish.catalog and publish.data', () => {
         lastUpdate: '2026-09-17',
       },
     });
-    expect(catalog[0]).not.toHaveProperty('categories');
+    expect(catalog.find((meta) => meta.id === 'overburden')).not.toHaveProperty('categories');
 
     for (const [i, row] of result.entries()) {
       indicatorDataSchema(catalog[i] as IndicatorMeta).parse(JSON.parse(row.data as string));
     }
-    expect(JSON.parse(result[1]?.data as string)).toMatchObject({
+    expect(JSON.parse(of(result, 'tenure')?.data as string)).toMatchObject({
       ES: {
         '2016': { total: { v: { own_l: 20, own_nl: 20, rent_mkt: 20, rent_fr: 20, rent: 20 } } },
       },
@@ -120,7 +141,7 @@ describe('publish.catalog and publish.data', () => {
       ],
     };
     const result = await publish(data, published);
-    const overburden = JSON.parse(result[0]?.data as string) as IndicatorData;
+    const overburden = JSON.parse(of(result, 'overburden')?.data as string) as IndicatorData;
     expect(overburden).toMatchObject({
       ES: { '2015': { total: { v: 10.46 } }, '2017': { total: { v: 8, f: 'p' } } },
     });
@@ -140,7 +161,7 @@ describe('publish.catalog and publish.data', () => {
       ],
     };
     const result = await withModel(data, ['model', 'publish'], published, ':memory:', ['RO']);
-    const overburden = JSON.parse(result[0]?.data as string) as IndicatorData;
+    const overburden = JSON.parse(of(result, 'overburden')?.data as string) as IndicatorData;
     expect(overburden.RO?.['2016']?.rent_mkt).toEqual({
       v: 56,
       n: 'Solo el 2,3 % de la población está en este grupo: estimación con una muestra pequeña.',
@@ -158,6 +179,19 @@ describe('publish.geo_nuts0', () => {
       features: { properties: { code: string }; geometry: { type: string } }[];
     };
     expect(collection.features.map((feature) => feature.properties.code)).toEqual(['ES']);
+    expect(collection.features[0]?.geometry.type).toBe('Polygon');
+  });
+});
+
+describe('publish.geo_nuts2', () => {
+  it('holds the EU NUTS 2 regions without the outermost ones', async () => {
+    const [row] = await publish(cleanData(), (c) =>
+      rows(c, 'SELECT geojson::VARCHAR AS geojson FROM publish.geo_nuts2'),
+    );
+    const collection = JSON.parse(row?.geojson as string) as {
+      features: { properties: { code: string }; geometry: { type: string } }[];
+    };
+    expect(collection.features.map((feature) => feature.properties.code)).toEqual(['ES30', 'ES51']);
     expect(collection.features[0]?.geometry.type).toBe('Polygon');
   });
 });

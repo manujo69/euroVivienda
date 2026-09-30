@@ -96,6 +96,138 @@
     "notes": "Población que vive en hogares que dedican más del 40 % de su renta disponible a la vivienda."
   },
   {
+    "id": "hpi",
+    "label": "Variación del precio de la vivienda",
+    "theme": "prices",
+    "kind": "index",
+    "unit": "Índice (2015 = 100)",
+    "levels": [
+      0
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "prc_hpi_a",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/prc_hpi_a/default/table",
+      "lastUpdate": "2026-07-02"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Todas las viviendas"
+      },
+      {
+        "id": "new",
+        "label": "Vivienda nueva"
+      },
+      {
+        "id": "existing",
+        "label": "Vivienda existente"
+      }
+    ],
+    "scale": "diverging",
+    "breaks": {
+      "existing": [
+        -2.03,
+        -0.68,
+        0,
+        21.95,
+        52.93
+      ],
+      "new": [
+        -3.57,
+        -0.62,
+        0,
+        20.15,
+        47.58
+      ],
+      "total": [
+        -1.26,
+        -0.87,
+        0,
+        21.46,
+        51.12
+      ]
+    },
+    "notes": "Eurostat no publica el índice de Grecia."
+  },
+  {
+    "id": "rent",
+    "label": "Variación del alquiler",
+    "theme": "prices",
+    "kind": "index",
+    "unit": "Índice (2015 = 100)",
+    "levels": [
+      0
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "prc_hicp_ainr",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_ainr/default/table",
+      "lastUpdate": "2026-09-17"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      }
+    ],
+    "scale": "diverging",
+    "breaks": {
+      "total": [
+        -6.55,
+        -1.73,
+        0,
+        6.59,
+        18.1
+      ]
+    },
+    "notes": "Alquileres pagados por los inquilinos por su vivienda principal, incluidos los regulados y sociales: no es el precio de mercado."
+  },
+  {
+    "id": "price_income",
+    "label": "Precio de la vivienda frente a renta",
+    "theme": "prices",
+    "kind": "derived",
+    "unit": "Índice (2015 = 100)",
+    "levels": [
+      0
+    ],
+    "years": [
+      2015,
+      2023
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "prc_hpi_a, nama_10r_2hhinc",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/prc_hpi_a/default/table",
+      "lastUpdate": "2026-07-02"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      }
+    ],
+    "scale": "sequential",
+    "breaks": {
+      "total": [
+        97.6,
+        100,
+        105.43,
+        113.84
+      ]
+    },
+    "notes": "Elaboración propia: índice de precios de la vivienda entre índice de renta disponible por habitante en moneda nacional, ambos con base 2015."
+  },
+  {
     "id": "tenure",
     "label": "Régimen de tenencia",
     "theme": "access",
@@ -152,5 +284,221 @@
       ]
     },
     "notes": "El mapa pinta el alquiler total (mercado más reducido). Países Bajos reclasifica en 2021 el alquiler social de mercado a reducido."
+  },
+  {
+    "id": "emancipation",
+    "label": "Edad media de emancipación",
+    "theme": "access",
+    "kind": "scalar",
+    "unit": "años",
+    "levels": [
+      0
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "yth_demo_030",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/yth_demo_030/default/table",
+      "lastUpdate": "2026-04-16"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      },
+      {
+        "id": "women",
+        "label": "Mujeres"
+      },
+      {
+        "id": "men",
+        "label": "Hombres"
+      }
+    ],
+    "scale": "sequential",
+    "breaks": {
+      "men": [
+        24.4,
+        27,
+        28.76,
+        30.7
+      ],
+      "total": [
+        23.7,
+        26.2,
+        27.66,
+        29.58
+      ],
+      "women": [
+        22.9,
+        25.3,
+        26.4,
+        28.3
+      ]
+    },
+    "notes": "Estimación de Eurostat de la edad a la que los jóvenes dejan el hogar familiar."
+  },
+  {
+    "id": "unemployment",
+    "label": "Tasa de paro",
+    "theme": "context",
+    "kind": "scalar",
+    "unit": "%",
+    "levels": [
+      0,
+      2
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "lfst_r_lfu3rt",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/lfst_r_lfu3rt/default/table",
+      "lastUpdate": "2026-09-10"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      }
+    ],
+    "scale": "sequential",
+    "breaks": {
+      "total": [
+        4.2,
+        5.6,
+        6.76,
+        8.48
+      ]
+    },
+    "notes": "Población activa de 15 a 74 años."
+  },
+  {
+    "id": "income",
+    "label": "Renta disponible de los hogares por habitante",
+    "theme": "context",
+    "kind": "scalar",
+    "unit": "PPS por habitante",
+    "levels": [
+      0,
+      2
+    ],
+    "years": [
+      2015,
+      2023
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "nama_10r_2hhinc",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/nama_10r_2hhinc/default/table",
+      "lastUpdate": "2026-05-20"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      }
+    ],
+    "scale": "sequential",
+    "breaks": {
+      "total": [
+        12140,
+        14500,
+        16820,
+        18960
+      ]
+    },
+    "notes": "En paridad de poder de compra, para comparar entre países. Último año completo: 2023."
+  },
+  {
+    "id": "tourism",
+    "label": "Intensidad turística",
+    "theme": "context",
+    "kind": "scalar",
+    "unit": "noches por habitante",
+    "levels": [
+      0,
+      2
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "tour_occ_nin2",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/tour_occ_nin2/default/table",
+      "lastUpdate": "2026-09-22"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Total"
+      }
+    ],
+    "scale": "sequential",
+    "breaks": {
+      "total": [
+        2.88,
+        4.38,
+        5.99,
+        8.9
+      ]
+    },
+    "notes": "Noches en alojamientos turísticos por habitante. Caída en 2020–2021 por la pandemia."
+  },
+  {
+    "id": "popgrowth",
+    "label": "Crecimiento de la población",
+    "theme": "context",
+    "kind": "scalar",
+    "unit": "‰",
+    "levels": [
+      0,
+      2
+    ],
+    "years": [
+      2015,
+      2025
+    ],
+    "source": {
+      "name": "Eurostat",
+      "code": "demo_r_gind3",
+      "url": "https://ec.europa.eu/eurostat/databrowser/view/demo_r_gind3/default/table",
+      "lastUpdate": "2026-07-21"
+    },
+    "breakdowns": [
+      {
+        "id": "total",
+        "label": "Crecimiento total"
+      },
+      {
+        "id": "migration",
+        "label": "Saldo migratorio"
+      }
+    ],
+    "scale": "diverging",
+    "breaks": {
+      "migration": [
+        -4.9,
+        -1.23,
+        0,
+        3.4,
+        6.5
+      ],
+      "total": [
+        -5.9,
+        -2.1,
+        0,
+        3.3,
+        8.4
+      ]
+    },
+    "notes": "Eurostat no publica la media de la UE."
   }
 ]

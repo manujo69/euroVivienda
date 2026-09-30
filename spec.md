@@ -116,7 +116,7 @@ Sin backend en tiempo de ejecución: un ETL mensual (GitHub Actions) descarga Eu
 
 1. Descargas crudas en `data/raw/AAAA-MM-DD/` con manifiesto. No se versionan.
 2. Base `vivienda.duckdb`, reconstruible y sin versionar. Esquemas `staging` (una tabla por dataset), `model` y `publish` (vistas por indicador).
-3. Salida JSON y TopoJSON, versionada, en `apps/angular/public/`: `catalog.json`, `data/[id].json` y `geo/nuts0.json`.
+3. Salida JSON y TopoJSON, versionada, en `apps/angular/public/`: `catalog.json`, `data/[id].json`, `geo/nuts0.json` y `geo/nuts2.json` (20M sin simplificar, con la capa `context`: 114 KB, 35 KB comprimido; presupuesto 130 KB).
 
 Las transformaciones viven en ficheros `.sql` numerados por capa, ejecutables también desde la CLI de DuckDB; Node solo orquesta. El ETL publica únicamente si pasan los tests de calidad.
 

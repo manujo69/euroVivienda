@@ -106,14 +106,20 @@ const years = (geo: string, values: Record<string, number>, extra: Row = {}): Ro
     ...extra,
   }));
 
-const regional = (values: Record<string, number>): Row[] =>
-  ['ES', 'ES30', 'ES51'].flatMap((geo) => years(geo, values));
+const regional = (values: Record<string, number>, extra: Row = {}): Row[] =>
+  ['ES', 'ES30', 'ES51'].flatMap((geo) => years(geo, values, extra));
 
-/** One plausible series per indicator for Spain, its regions and the EU: passes every check. */
+/**
+ * One plausible series per indicator and breakdown for Spain, its regions and the EU: passes every
+ * check, and the contract asks for class breaks on every declared breakdown.
+ */
 export function cleanData(): Record<string, Row[]> {
   const index = { '2015': 80, '2016': 88 };
   return {
-    prc_hpi_a: [...years('ES', index), ...years('EU27_2020', index)],
+    prc_hpi_a: ['TOTAL', 'DW_NEW', 'DW_EXST'].flatMap((purchase) => [
+      ...years('ES', index, { purchase }),
+      ...years('EU27_2020', index, { purchase }),
+    ]),
     prc_hicp_ainr: [...years('ES', index), ...years('EU27_2020', index)],
     nama_10r_2hhinc: ['ES', 'ES30', 'ES51', 'EU27_2020'].flatMap((geo) => [
       ...years(geo, { '2015': 16000, '2016': 16500 }, { unit: 'PPS_EU27_2020_HAB' }),
@@ -130,9 +136,13 @@ export function cleanData(): Record<string, Row[]> {
     ilc_lvho02: ['OWN_L', 'OWN_NL', 'RENT_MKT', 'RENT_FR', 'RENT'].flatMap((tenure) =>
       years('ES', { '2015': 20, '2016': 20 }, { tenure }),
     ),
-    yth_demo_030: years('ES', { '2015': 29, '2016': 29.5 }, { sex: 'T' }),
+    yth_demo_030: ['T', 'F', 'M'].flatMap((sex) =>
+      years('ES', { '2015': 29, '2016': 29.5 }, { sex }),
+    ),
     lfst_r_lfu3rt: regional({ '2015': 20, '2016': 18 }),
     tour_occ_nin2: regional({ '2015': 9000, '2016': 9500 }),
-    demo_r_gind3: regional({ '2015': 1, '2016': 2 }),
+    demo_r_gind3: ['GROWRT', 'CNMIGRATRT'].flatMap((indic_de) =>
+      regional({ '2015': 1, '2016': 2 }, { indic_de }),
+    ),
   };
 }

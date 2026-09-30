@@ -21,6 +21,21 @@ CREATE OR REPLACE VIEW publish.geo_nuts0 AS
   CROSS JOIN outermost AS o
   WHERE g.level = 0 AND NOT g.is_aggregate;
 
+-- EU NUTS 2 regions as a GeoJSON FeatureCollection (EPSG:3035). The outermost regions are NUTS 2
+-- regions themselves: they stay off the map, as in NUTS 0.
+CREATE OR REPLACE VIEW publish.geo_nuts2 AS
+  SELECT json_object(
+    'type', 'FeatureCollection',
+    'features', to_json(list(json_object(
+      'type', 'Feature',
+      'properties', json_object('code', n.NUTS_ID),
+      'geometry', ST_AsGeoJSON(n.geom)::JSON
+    ) ORDER BY n.NUTS_ID))
+  ) AS geojson
+  FROM staging.geo_nuts AS n
+  JOIN model.geo AS g ON g.code = n.NUTS_ID
+  WHERE g.level = 2 AND NOT g.is_aggregate AND NOT g.is_outermost;
+
 -- Non-EU countries around the EU, drawn in grey without interaction (spec.md, «Mapa»): GISCO
 -- countries outside the EU, cut at a frame 300 km beyond the EU countries shown on the map.
 CREATE OR REPLACE VIEW publish.geo_context AS

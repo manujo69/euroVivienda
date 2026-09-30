@@ -31,17 +31,29 @@ describe('exportPublished', () => {
   const read = async (file: string) =>
     JSON.parse(await readFile(join(out, file), 'utf8')) as unknown;
 
-  it('writes the catalogue, one data file per indicator and the NUTS 0 topology', async () => {
+  const order = [
+    'overburden',
+    'hpi',
+    'rent',
+    'price_income',
+    'tenure',
+    'emancipation',
+    'unemployment',
+    'income',
+    'tourism',
+    'popgrowth',
+  ];
+
+  it('writes the catalogue in its order, one data file per indicator and the NUTS 0 topology', async () => {
     await mkdir(join(out, 'data'), { recursive: true });
     await writeFile(join(out, 'data', 'retired.json'), '{}');
 
     await exportPublished({ database, out });
 
-    expect(catalogSchema.parse(await read('catalog.json')).map((meta) => meta.id)).toEqual([
-      'overburden',
-      'tenure',
-    ]);
-    expect((await readdir(join(out, 'data'))).sort()).toEqual(['overburden.json', 'tenure.json']);
+    expect(catalogSchema.parse(await read('catalog.json')).map((meta) => meta.id)).toEqual(order);
+    expect((await readdir(join(out, 'data'))).sort()).toEqual(
+      order.map((id) => `${id}.json`).sort(),
+    );
     expect(await read('data/overburden.json')).toMatchObject({
       ES: { '2015': { total: { v: 10 } } },
     });
@@ -54,6 +66,16 @@ describe('exportPublished', () => {
       ['ES', 'Polygon'],
     ]);
     // Non-EU countries share the topology, so common borders line up.
+    expect(topology.objects.context?.geometries.map((g) => g.id)).toEqual(['AD', 'MA']);
+  });
+
+  it('writes the NUTS 2 topology, sharing the context of NUTS 0', async () => {
+    await exportPublished({ database, out });
+
+    const topology = (await read('geo/nuts2.json')) as {
+      objects: Record<string, { geometries: { id: string }[] }>;
+    };
+    expect(topology.objects.nuts2?.geometries.map((g) => g.id)).toEqual(['ES30', 'ES51']);
     expect(topology.objects.context?.geometries.map((g) => g.id)).toEqual(['AD', 'MA']);
   });
 
