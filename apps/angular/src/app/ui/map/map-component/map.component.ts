@@ -4,7 +4,7 @@ import type { EChartsOption } from 'echarts';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import { ExplorerStore } from '../../../application/explorer.store';
 import { codesOf } from '../../../domain/geography';
-import { echarts, registerNuts0 } from '../echarts';
+import { echarts, registerMap } from '../echarts';
 import { displayUnit, legendItems, mapOption } from '../map-option';
 
 @Component({
@@ -23,8 +23,11 @@ export class MapComponent {
     const meta = this.store.meta();
     // ECharts cannot frame a map without features.
     if (!geography?.regions.features.length || !meta) return {};
-    registerNuts0(geography);
+    const map = this.store.level() === 2 ? 'nuts2' : 'nuts0';
+    registerMap(map, geography);
     return mapOption({
+      map,
+      names: this.store.names(),
       codes: this.regions(),
       context: codesOf(geography.context),
       values: this.store.values(),
@@ -50,4 +53,7 @@ export class MapComponent {
   protected readonly legend = computed(() =>
     legendItems(this.store.breaks(), this.store.meta()?.scale ?? 'sequential'),
   );
+
+  /** At NUTS 2, national indicators paint regions with their country's value, hatched. */
+  protected readonly national = computed(() => this.store.values().some((entry) => entry.national));
 }

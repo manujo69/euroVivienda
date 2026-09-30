@@ -97,9 +97,21 @@ const HATCH = {
   dashArrayY: [2, 4],
   rotation: Math.PI / 4,
 };
+/**
+ * Light hatching the other way for a national value on the NUTS 2 map (spec.md, rule 5): the
+ * colour of the class stays readable, and it does not look like «sin dato».
+ */
+export const NATIONAL_HATCH = {
+  color: 'rgba(255, 255, 255, 0.6)',
+  dashArrayX: [1, 0],
+  dashArrayY: [1.5, 4],
+  rotation: -Math.PI / 4,
+};
 
 export interface MapInput {
-  /** Codes of the regions that carry data, registered in the 'nuts0' map. */
+  /** Name of the ECharts map: 'nuts0' (default) or 'nuts2'. */
+  readonly map?: string;
+  /** Codes of the regions that carry data, registered in that map. */
   readonly codes: readonly string[];
   /** Codes of the non-EU countries around them, registered in the same map. */
   readonly context: readonly string[];
@@ -111,6 +123,8 @@ export interface MapInput {
   /** Values are the change since 2015 of an index: signed in the tooltip. */
   readonly signed?: boolean;
   readonly year: number | undefined;
+  /** Names of the NUTS 2 regions; countries are named by the domain. */
+  readonly names?: Readonly<Record<string, string>>;
 }
 
 /** WCAG relative luminance of a `#rrggbb` colour, from 0 (black) to 1 (white). */
@@ -136,7 +150,7 @@ interface ItemStyle {
   areaColor: string;
   borderColor: string;
   borderWidth: number;
-  decal?: typeof HATCH;
+  decal?: typeof HATCH | typeof NATIONAL_HATCH;
 }
 
 interface Label {
@@ -176,6 +190,7 @@ export function mapOption(input: MapInput) {
       borderColor: selected ? INK : borderColour(areaColor),
       borderWidth: selected ? 2 : 0.6,
       ...(entry ? {} : { decal: HATCH }),
+      ...(entry?.national ? { decal: NATIONAL_HATCH } : {}),
     };
     return {
       name: code,
@@ -198,7 +213,7 @@ export function mapOption(input: MapInput) {
 
   const tooltip = ({ name }: { name: string }): string => {
     const entry = byGeo.get(name);
-    const title = `<strong>${geoName(name)}</strong>`;
+    const title = `<strong>${geoName(name, input.names)}</strong>`;
     if (!entry) return `${title}<br>Sin dato`;
     const flags = flagLabels(entry.flags);
     const since = input.signed ? ' desde 2015' : '';
@@ -207,6 +222,7 @@ export function mapOption(input: MapInput) {
       title,
       line,
       ...(flags.length ? [flags.join(', ')] : []),
+      ...(entry.national ? ['Dato nacional'] : []),
       ...(entry.note ? [`<em>${entry.note}</em>`] : []),
     ].join('<br>');
   };
@@ -228,7 +244,7 @@ export function mapOption(input: MapInput) {
     series: [
       {
         type: 'map' as const,
-        map: 'nuts0',
+        map: input.map ?? 'nuts0',
         nameProperty: 'code',
         // Geometries arrive projected (EPSG:3035): 1 keeps metres square.
         aspectScale: 1,

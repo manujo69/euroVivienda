@@ -11,4 +11,7 @@
     <li><span class="swatch" [style.background]="item.colour"></span>{{ item.label }}</li>
   }
   <li><span class="swatch no-data"></span>Sin dato</li>
+  @if (national()) {
+    <li><span class="swatch national"></span>Dato nacional</li>
+  }
 </ul>

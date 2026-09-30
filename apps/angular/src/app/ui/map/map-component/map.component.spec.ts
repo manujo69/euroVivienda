@@ -57,6 +57,18 @@ function layer(...codes: string[]): Geography {
 const drawn: MapGeography = { regions: layer('ES', 'PT'), context: layer('CH') };
 const blank: MapGeography = { regions: layer(), context: layer() };
 
+/** Madrid and Cataluña, named as in geo/nuts2.json. */
+const regional: MapGeography = {
+  regions: {
+    type: 'FeatureCollection',
+    features: layer('ES30', 'ES51').features.map((feature, i) => ({
+      ...feature,
+      properties: { ...feature.properties, name: ['Comunidad de Madrid', 'Cataluña'][i] },
+    })),
+  },
+  context: layer('CH'),
+};
+
 describe('MapComponent', () => {
   async function render(geography: MapGeography = drawn) {
     TestBed.configureTestingModule({
@@ -69,7 +81,13 @@ describe('MapComponent', () => {
             data: () => Promise.resolve(data),
           },
         },
-        { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
+        {
+          provide: GEOGRAPHY_REPOSITORY,
+          useValue: {
+            nuts0: () => Promise.resolve(geography),
+            nuts2: () => Promise.resolve(regional),
+          },
+        },
         {
           provide: URL_STATE,
           useValue: { read: () => Promise.resolve({}), write: () => Promise.resolve() },
@@ -83,6 +101,7 @@ describe('MapComponent', () => {
     await fixture.whenStable();
     const chart = fixture.debugElement.query(By.directive(NgxEchartsDirective));
     return {
+      fixture,
       store,
       chart,
       options: () => chart.injector.get(NgxEchartsDirective).options() as Record<string, unknown>,
@@ -127,5 +146,36 @@ describe('MapComponent', () => {
     const { store, chart } = await render();
     chart.triggerEventHandler('chartClick', { name: 'CH' });
     expect(store.selected()).toBeUndefined();
+  });
+
+  describe('at NUTS 2', () => {
+    async function atNuts2() {
+      const rendered = await render();
+      await rendered.store.setLevel(2);
+      rendered.fixture.detectChanges();
+      return rendered;
+    }
+
+    it('draws the regions, each named, on the NUTS 2 map', async () => {
+      const { options } = await atNuts2();
+      const [series] = options()['series'] as { map: string; data: { name: string }[] }[];
+      expect(series?.map).toBe('nuts2');
+      expect(series?.data.map((item) => item.name).sort()).toEqual(['CH', 'ES30', 'ES51']);
+      const tooltip = (options()['tooltip'] as { formatter: (p: { name: string }) => string })
+        .formatter;
+      expect(tooltip({ name: 'ES30' })).toContain('Comunidad de Madrid');
+    });
+
+    it('explains the hatching of national values in the legend', async () => {
+      const { map } = await atNuts2();
+      const items = [...map.querySelectorAll('.legend li')].map((item) => item.textContent?.trim());
+      expect(items.at(-1)).toBe('Dato nacional');
+    });
+
+    it('has no national values to explain at country level', async () => {
+      const { map } = await render();
+      const items = [...map.querySelectorAll('.legend li')].map((item) => item.textContent?.trim());
+      expect(items).not.toContain('Dato nacional');
+    });
   });
 });

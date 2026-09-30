@@ -12,13 +12,13 @@ export { echarts };
 
 const registered = new WeakSet<MapGeography>();
 
-/** Registers regions and context as one 'nuts0' map, so both share its frame. */
-export function registerNuts0(geography: MapGeography): void {
+/** Registers regions and context as one map ('nuts0' or 'nuts2'), so both share its frame. */
+export function registerMap(name: 'nuts0' | 'nuts2', geography: MapGeography): void {
   if (registered.has(geography)) return;
   const map: Geography = {
     type: 'FeatureCollection',
     features: [...geography.regions.features, ...geography.context.features],
   };
-  echarts.registerMap('nuts0', map as Parameters<typeof echarts.registerMap>[1]);
+  echarts.registerMap(name, map as Parameters<typeof echarts.registerMap>[1]);
   registered.add(geography);
 }

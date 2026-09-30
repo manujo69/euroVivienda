@@ -29,3 +29,8 @@
 .no-data {
   background: repeating-linear-gradient(45deg, var(--color-no-data) 0 3px, #c9c9c9 3px 4px);
 }
+
+// The hatching of NATIONAL_HATCH (map-option.ts) over a mid colour of the palette.
+.national {
+  background: repeating-linear-gradient(-45deg, #41b6c4 0 3px, rgba(255, 255, 255, 0.6) 3px 4.5px);
+}
