@@ -3,7 +3,13 @@ import type { Card } from '../../../application/explorer.store';
 import { EU_AGGREGATE, slicesOf, timeSeries } from '../../../domain/indicator-rules';
 import { flagLabels, geoName } from '../../../domain/labels';
 import { formatValue } from '../../map/map-option';
-import { type Line, lineOption, pieOption, stackedBarsOption } from '../chart-options';
+import {
+  CATEGORY_COLOURS,
+  type Line,
+  lineOption,
+  pieOption,
+  stackedBarsOption,
+} from '../chart-options';
 import { ChartComponent } from '../chart-component/chart.component';
 import { RankingComponent } from '../ranking-component/ranking.component';
 
@@ -70,6 +76,12 @@ export class CardComponent {
       ? [geoName(selected ?? ''), own]
       : ['media UE', slicesOf(meta, data, EU_AGGREGATE, year, breakdown)];
     return {
+      // The legend of both charts: each category with its colour and its share in the pie.
+      categories: slices.map((slice, i) => ({
+        label: slice.label,
+        colour: CATEGORY_COLOURS[i] ?? '',
+        value: formatValue(slice.value, meta.unit),
+      })),
       option: pieOption({ unit: meta.unit, slices }),
       label: `Reparto de ${meta.label}: ${geo} en ${year}`,
     };

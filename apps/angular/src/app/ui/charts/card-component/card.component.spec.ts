@@ -220,6 +220,18 @@ describe('CardComponent', () => {
       );
     });
 
+    it('names each category once, with its colour and its share in the pie', async () => {
+      const { element } = await render(tenureCard('ES'));
+      const items = [...element.querySelectorAll('.categories li')].map((item) => [
+        item.querySelector<HTMLElement>('.swatch')?.style.background,
+        item.textContent?.replace(/\s+/g, ' ').trim(),
+      ]);
+      expect(items).toEqual([
+        ['rgb(0, 114, 178)', 'Propietarios 75,3 %'],
+        ['rgb(86, 180, 233)', 'Inquilinos a precio de mercado 15,9 %'],
+      ]);
+    });
+
     it('shows the EU split as a pie when no region is selected', async () => {
       const { fixture } = await render(tenureCard());
       const [pie] = charts(fixture);

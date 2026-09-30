@@ -81,3 +81,28 @@ sup {
   font-weight: 600;
   text-transform: uppercase;
 }
+
+.categories {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--size-text-small);
+}
+
+.categories li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.swatch {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+.share {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}

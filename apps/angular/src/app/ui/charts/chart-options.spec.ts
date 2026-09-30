@@ -95,10 +95,8 @@ describe('pieOption', () => {
     expect(option.color).toEqual(CATEGORY_COLOURS.slice(0, 2));
   });
 
-  it('labels each slice with its name and share, in Spanish', () => {
-    expect(pie?.label.formatter({ name: 'Propietarios', value: 75.3 })).toBe(
-      'Propietarios\n75,3 %',
-    );
+  it('labels each slice with its share only: the card names the categories', () => {
+    expect(pie?.label.formatter({ value: 75.3 })).toBe('75,3 %');
   });
 });
 
@@ -124,7 +122,8 @@ describe('stackedBarsOption', () => {
       ['Propietarios', 'share', [75.3, 70]],
       ['Inquilinos', 'share', [24.7, null]],
     ]);
-    expect(option.legend.data).toEqual(['Propietarios', 'Inquilinos']);
+    // The card names the categories once, above both charts.
+    expect('legend' in option).toBeFalse();
     expect(option.color).toEqual(CATEGORY_COLOURS.slice(0, 2));
   });
 

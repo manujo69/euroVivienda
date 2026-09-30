@@ -79,7 +79,7 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 
 - [x] Catálogo por temas con activar y desactivar. `CatalogComponent` a la izquierda del mapa: un `fieldset` por tema (Precios, Acceso, Contexto; los vacíos no salen) y una casilla por indicador. El store guarda los activos en orden de activación y carga los datos de cada indicador la primera vez; si fallan, la casilla queda sin marcar y avisa. Al cargar, el primer indicador del catálogo está activo.
 - [x] Indicador principal y su efecto en el mapa. Por defecto, el último activado; al desactivar el principal, el mapa pasa al último que sigue activo, y sin ninguno activo se pide activar uno. Botón «Ver en el mapa» (`aria-pressed`) en cada indicador activo del catálogo. Cada principal empieza en su primer desglose.
-- [ ] Tarjetas por tipo: escalar, índice, composición y derivado; máximo cuatro abiertas.
+- [x] Tarjetas por tipo: escalar, índice, composición y derivado; máximo cuatro abiertas. Panel a la derecha con una tarjeta por indicador activo y su cifra principal (región seleccionada o media UE); abiertas las cuatro usadas más recientemente, el resto plegadas. Escalar y derivado: evolución frente a la media UE y ranking corto (derivado con «elaboración propia»); índice: variación desde 2015 y líneas con base 100; composición: pastel y barras apiladas al 100 %, con una leyenda común. Gráficos en `@defer`. El contrato nombra las categorías (`categories` y `mapCategory` como `{ id, label }`).
 - [ ] Selección sincronizada entre mapa y gráficos.
 
 ## Hito 4 — Año, NUTS 2, desgloses y URL

@@ -114,8 +114,8 @@ export function pieOption(input: PieInput) {
         radius: ['0%', '62%'],
         data: input.slices.map((slice) => ({ name: slice.label, value: slice.value })),
         label: {
-          formatter: ({ name, value }: { name: string; value: number }) =>
-            `${name}\n${formatValue(value, input.unit)}`,
+          // Shares only: the card names each category once, above the charts.
+          formatter: ({ value }: { value: number }) => formatValue(value, input.unit),
           fontSize: 11,
         },
       },
@@ -136,8 +136,7 @@ export function stackedBarsOption(input: BarsInput) {
   return {
     animation: false,
     color: CATEGORY_COLOURS.slice(0, input.categories.length),
-    legend: { data: input.categories.map((category) => category.label), top: 0, left: 0 },
-    grid: { left: 8, right: 16, top: 56, bottom: 8, containLabel: true },
+    grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
     tooltip: {
       trigger: 'axis' as const,
       axisPointer: { type: 'shadow' as const },

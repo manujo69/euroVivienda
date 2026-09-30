@@ -57,6 +57,15 @@
       @defer (on immediate) {
         @if (split(); as split) {
           <h4 class="chart-title">Reparto</h4>
+          <ul class="categories">
+            @for (category of split.categories; track category.label) {
+              <li>
+                <span class="swatch" [style.background]="category.colour"></span>
+                {{ category.label }}
+                <span class="share">{{ category.value }}</span>
+              </li>
+            }
+          </ul>
           <app-chart [option]="split.option" [label]="split.label" />
         }
         @if (comparison(); as comparison) {
