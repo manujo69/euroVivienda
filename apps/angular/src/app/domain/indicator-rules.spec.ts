@@ -7,6 +7,7 @@ import {
   openCards,
   resolveYear,
   shortRanking,
+  slicesOf,
   timeSeries,
   valuesByGeo,
 } from './indicator-rules';
@@ -237,5 +238,30 @@ describe('shortRanking', () => {
       [3, 'BE'],
       [4, 'AT'],
     ]);
+  });
+});
+
+describe('slicesOf', () => {
+  const tenure = meta('composition', {
+    categories: [
+      { id: 'own', label: 'Propietarios' },
+      { id: 'rent_mkt', label: 'Inquilinos a precio de mercado' },
+    ],
+    mapCategory: { id: 'rent', label: 'Inquilinos' },
+  });
+  const data: IndicatorData = {
+    ES: { '2024': { total: { v: { own: 75.3, rent_mkt: 15.9, rent: 24.7 } } } },
+  };
+
+  it('gives the slices of a region in catalogue order, named, without the map category', () => {
+    expect(slicesOf(tenure, data, 'ES', 2024, 'total')).toEqual([
+      { id: 'own', label: 'Propietarios', value: 75.3 },
+      { id: 'rent_mkt', label: 'Inquilinos a precio de mercado', value: 15.9 },
+    ]);
+  });
+
+  it('is empty without data for that region and year', () => {
+    expect(slicesOf(tenure, data, 'PT', 2024, 'total')).toEqual([]);
+    expect(slicesOf(tenure, data, 'ES', 2023, 'total')).toEqual([]);
   });
 });

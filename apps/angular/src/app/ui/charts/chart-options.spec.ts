@@ -1,4 +1,4 @@
-import { lineOption } from './chart-options';
+import { CATEGORY_COLOURS, lineOption, pieOption, stackedBarsOption } from './chart-options';
 
 const point = (year: number, value: number) => ({ year, value, flags: undefined });
 
@@ -75,5 +75,61 @@ describe('lineOption', () => {
     it('draws no reference line without a base', () => {
       expect(option.series.every((line) => line.markLine === undefined)).toBeTrue();
     });
+  });
+});
+
+const slices = [
+  { id: 'own', label: 'Propietarios', value: 75.3 },
+  { id: 'rent', label: 'Inquilinos', value: 24.7 },
+];
+
+describe('pieOption', () => {
+  const option = pieOption({ unit: '%', slices });
+  const [pie] = option.series;
+
+  it('draws one slice per category, in catalogue order and colour', () => {
+    expect(pie?.data.map((slice) => [slice.name, slice.value])).toEqual([
+      ['Propietarios', 75.3],
+      ['Inquilinos', 24.7],
+    ]);
+    expect(option.color).toEqual(CATEGORY_COLOURS.slice(0, 2));
+  });
+
+  it('labels each slice with its name and share, in Spanish', () => {
+    expect(pie?.label.formatter({ name: 'Propietarios', value: 75.3 })).toBe(
+      'Propietarios\n75,3 %',
+    );
+  });
+});
+
+describe('stackedBarsOption', () => {
+  const categories = slices.map(({ id, label }) => ({ id, label }));
+  const option = stackedBarsOption({
+    categories,
+    rows: [
+      { name: 'España', slices },
+      { name: 'Portugal', slices: [{ id: 'own', label: 'Propietarios', value: 70 }] },
+    ],
+    selected: 'España',
+  });
+
+  it('draws a bar per country, first on top, over the full 100 %', () => {
+    expect(option.yAxis.data).toEqual(['España', 'Portugal']);
+    expect(option.yAxis.inverse).toBeTrue();
+    expect(option.xAxis.max).toBe(100);
+  });
+
+  it('stacks one series per category, with gaps where a country lacks one', () => {
+    expect(option.series.map((series) => [series.name, series.stack, series.data])).toEqual([
+      ['Propietarios', 'share', [75.3, 70]],
+      ['Inquilinos', 'share', [24.7, null]],
+    ]);
+    expect(option.legend.data).toEqual(['Propietarios', 'Inquilinos']);
+    expect(option.color).toEqual(CATEGORY_COLOURS.slice(0, 2));
+  });
+
+  it('stresses the name of the selected country', () => {
+    expect(option.yAxis.axisLabel.formatter('España')).toBe('{selected|España}');
+    expect(option.yAxis.axisLabel.formatter('Portugal')).toBe('Portugal');
   });
 });

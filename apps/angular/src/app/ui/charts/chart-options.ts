@@ -1,6 +1,6 @@
 // ECharts options for the panel cards, built from the state as pure functions.
 
-import type { Point } from '../../domain/indicator-rules';
+import type { Point, Slice } from '../../domain/indicator-rules';
 import { formatValue } from '../map/map-option';
 
 /** Dark end of the map palette for the region; muted ink for the EU mean. */
@@ -79,5 +79,90 @@ export function lineOption(input: LineInput) {
         typeof value === 'number' ? formatValue(value, input.unit) : 'Sin dato',
     },
     series,
+  };
+}
+
+/**
+ * Okabe–Ito colours, safe for colour-blind readers, one per category in catalogue order. In tenure
+ * the owners come first (blues) and the tenants after (oranges).
+ */
+export const CATEGORY_COLOURS: readonly string[] = [
+  '#0072b2',
+  '#56b4e9',
+  '#e69f00',
+  '#d55e00',
+  '#009e73',
+  '#cc79a7',
+];
+
+export interface PieInput {
+  readonly unit: string;
+  readonly slices: readonly Slice[];
+}
+
+export function pieOption(input: PieInput) {
+  return {
+    animation: false,
+    color: CATEGORY_COLOURS.slice(0, input.slices.length),
+    tooltip: {
+      trigger: 'item' as const,
+      valueFormatter: (value: number) => formatValue(value, input.unit),
+    },
+    series: [
+      {
+        type: 'pie' as const,
+        radius: ['0%', '62%'],
+        data: input.slices.map((slice) => ({ name: slice.label, value: slice.value })),
+        label: {
+          formatter: ({ name, value }: { name: string; value: number }) =>
+            `${name}\n${formatValue(value, input.unit)}`,
+          fontSize: 11,
+        },
+      },
+    ],
+  };
+}
+
+export interface BarsInput {
+  readonly categories: readonly { id: string; label: string }[];
+  /** One bar per region, in the order they are drawn from the top. */
+  readonly rows: readonly { name: string; slices: readonly Slice[] }[];
+  /** Name of the selected region, stressed on the axis. */
+  readonly selected: string | undefined;
+}
+
+/** Bars stacked to 100 % to compare the composition across regions. */
+export function stackedBarsOption(input: BarsInput) {
+  return {
+    animation: false,
+    color: CATEGORY_COLOURS.slice(0, input.categories.length),
+    legend: { data: input.categories.map((category) => category.label), top: 0, left: 0 },
+    grid: { left: 8, right: 16, top: 56, bottom: 8, containLabel: true },
+    tooltip: {
+      trigger: 'axis' as const,
+      axisPointer: { type: 'shadow' as const },
+      valueFormatter: (value: number | null) =>
+        typeof value === 'number' ? formatValue(value, '%') : 'Sin dato',
+    },
+    xAxis: { type: 'value' as const, max: 100, axisLabel: { formatter: '{value} %' } },
+    yAxis: {
+      type: 'category' as const,
+      data: input.rows.map((row) => row.name),
+      inverse: true,
+      axisTick: { show: false },
+      axisLabel: {
+        formatter: (name: string) => (name === input.selected ? `{selected|${name}}` : name),
+        rich: { selected: { fontWeight: 'bold' as const } },
+      },
+    },
+    series: input.categories.map((category) => ({
+      type: 'bar' as const,
+      name: category.label,
+      stack: 'share',
+      barWidth: '70%',
+      data: input.rows.map(
+        (row) => row.slices.find((slice) => slice.id === category.id)?.value ?? null,
+      ),
+    })),
   };
 }

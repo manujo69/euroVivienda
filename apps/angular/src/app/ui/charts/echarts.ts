@@ -1,9 +1,10 @@
 // ECharts with only what the panel cards use, to keep the bundle small.
 
-import { LineChart } from 'echarts/charts';
+import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import {
   AriaComponent,
   GridComponent,
+  LegendComponent,
   MarkLineComponent,
   TooltipComponent,
 } from 'echarts/components';
@@ -12,7 +13,10 @@ import { SVGRenderer } from 'echarts/renderers';
 
 echarts.use([
   LineChart,
+  PieChart,
+  BarChart,
   GridComponent,
+  LegendComponent,
   MarkLineComponent,
   TooltipComponent,
   AriaComponent,

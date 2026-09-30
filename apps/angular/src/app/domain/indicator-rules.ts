@@ -118,3 +118,24 @@ export function shortRanking(
     (entry, i) => i < size || i >= ranked.length - size || entry.geo === selected,
   );
 }
+
+export interface Slice {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number;
+}
+
+/** Slices of a composition for one region and year, in catalogue order. */
+export function slicesOf(
+  meta: IndicatorMeta,
+  data: IndicatorData,
+  geo: string,
+  year: number,
+  breakdown: string,
+): Slice[] {
+  const v = data[geo]?.[String(year)]?.[breakdown]?.v;
+  if (v === undefined || typeof v === 'number') return [];
+  return (meta.categories ?? []).flatMap(({ id, label }) =>
+    v[id] === undefined ? [] : [{ id, label, value: v[id] }],
+  );
+}

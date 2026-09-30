@@ -174,4 +174,84 @@ describe('CardComponent', () => {
       expect(element.querySelector('app-ranking')).toBeNull();
     });
   });
+
+  describe('composition charts', () => {
+    const tenure: IndicatorMeta = {
+      ...overburden,
+      id: 'tenure',
+      label: 'Régimen de tenencia',
+      kind: 'composition',
+      categories: [
+        { id: 'own', label: 'Propietarios' },
+        { id: 'rent_mkt', label: 'Inquilinos a precio de mercado' },
+      ],
+      mapCategory: { id: 'rent', label: 'Inquilinos (mercado y reducido)' },
+    };
+    const composition: IndicatorData = {
+      ES: { '2024': { total: { v: { own: 75.3, rent_mkt: 15.9, rent: 24.7 } } } },
+      PT: { '2024': { total: { v: { own: 70, rent_mkt: 20, rent: 30 } } } },
+      EU27_2020: { '2024': { total: { v: { own: 69, rent_mkt: 21, rent: 31 } } } },
+    };
+    const tenureCard = (selected?: string) =>
+      card({
+        meta: tenure,
+        data: composition,
+        values: [
+          { geo: 'ES', value: 24.7, flags: undefined },
+          { geo: 'PT', value: 30, flags: undefined },
+        ],
+        eu: { geo: 'EU27_2020', value: 31, flags: undefined },
+        headline: { geo: 'EU27_2020', value: 31, flags: undefined },
+        selected,
+      });
+    const charts = (fixture: Awaited<ReturnType<typeof render>>['fixture']) =>
+      fixture.debugElement.queryAll(By.directive(NgxEchartsDirective)).map((chart) => ({
+        label: (chart.nativeElement as HTMLElement).getAttribute('aria-label'),
+        option: chart.injector.get(NgxEchartsDirective).options() as {
+          series: { name?: string; data: unknown[] }[];
+          yAxis?: { data: string[] };
+        },
+      }));
+
+    it('says which category the figure is', async () => {
+      const { element } = await render(tenureCard());
+      expect(text(element, '.headline .explanation')).toBe(
+        'Media UE en 2024 · Inquilinos (mercado y reducido)',
+      );
+    });
+
+    it('shows the EU split as a pie when no region is selected', async () => {
+      const { fixture } = await render(tenureCard());
+      const [pie] = charts(fixture);
+      expect(pie?.label).toBe('Reparto de Régimen de tenencia: media UE en 2024');
+      expect(pie?.option.series[0]?.data).toEqual([
+        { name: 'Propietarios', value: 69 },
+        { name: 'Inquilinos a precio de mercado', value: 21 },
+      ]);
+    });
+
+    it('shows the split of the selected region', async () => {
+      const { fixture } = await render(tenureCard('ES'));
+      const [pie] = charts(fixture);
+      expect(pie?.label).toBe('Reparto de Régimen de tenencia: España en 2024');
+      expect(pie?.option.series[0]?.data).toEqual([
+        { name: 'Propietarios', value: 75.3 },
+        { name: 'Inquilinos a precio de mercado', value: 15.9 },
+      ]);
+    });
+
+    it('compares the countries in bars, in the order of the map category', async () => {
+      const { fixture, element } = await render(tenureCard());
+      const [, bars] = charts(fixture);
+      expect(bars?.label).toBe('Régimen de tenencia por país en 2024');
+      expect(bars?.option.yAxis?.data).toEqual(['Portugal', 'España']);
+      expect(bars?.option.series.map((series) => series.name)).toEqual([
+        'Propietarios',
+        'Inquilinos a precio de mercado',
+      ]);
+      const titles = [...element.querySelectorAll('h4')].map((title) => title.textContent?.trim());
+      expect(titles).toEqual(['Reparto', 'Comparación entre países']);
+      expect(element.querySelector('app-ranking')).toBeNull();
+    });
+  });
 });

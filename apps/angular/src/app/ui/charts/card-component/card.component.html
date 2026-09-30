@@ -53,6 +53,21 @@
         <h4 class="chart-title">Evolución</h4>
         <app-chart [option]="evolution().option" [label]="evolution().label" />
       }
+    } @else if (card().meta.kind === 'composition') {
+      @defer (on immediate) {
+        @if (split(); as split) {
+          <h4 class="chart-title">Reparto</h4>
+          <app-chart [option]="split.option" [label]="split.label" />
+        }
+        @if (comparison(); as comparison) {
+          <h4 class="chart-title">Comparación entre países</h4>
+          <app-chart
+            [option]="comparison.option"
+            [label]="comparison.label"
+            [height]="comparison.height"
+          />
+        }
+      }
     }
   }
 </article>
