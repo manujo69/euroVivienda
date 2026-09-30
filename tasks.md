@@ -85,7 +85,7 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 ## Hito 4 — Año, desgloses y URL
 
 - [x] Selector de año con fallback por indicador. Desplegable «Año» en la cabecera con los años de los indicadores activos; si uno no tiene dato ese año, el mapa, la tabla y cada tarjeta muestran el último anterior, y la cabecera lo avisa («último disponible: 2016»). Al desactivar indicadores, el año vuelve al rango que queda.
-- [ ] Selector de desglose en las tarjetas (edad y régimen de tenencia en la sobrecarga).
+- [x] Selector de desglose en las tarjetas (edad y régimen de tenencia en la sobrecarga). Cada indicador recuerda su desglose (por defecto, el primero); las tarjetas abiertas con más de uno llevan el selector «Desglose», y el mapa usa el del principal. El selector de la cabecera edita el mismo estado.
 - [ ] Estado en la URL y normalización de combinaciones inválidas.
 
 ## Hito 5 — Resto del catálogo y NUTS 2

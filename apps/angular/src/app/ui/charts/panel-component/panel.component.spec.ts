@@ -96,4 +96,14 @@ describe('PanelComponent', () => {
     (card.componentInstance as CardComponent).regionPicked.emit('ES');
     expect(store.selected()).toBeUndefined();
   });
+
+  it('sets the breakdown a card asks for, on its indicator', async () => {
+    const { fixture, store } = await render(['b']);
+    const [, second] = fixture.debugElement.queryAll(By.directive(CardComponent));
+    const spy = spyOn(store, 'setBreakdown');
+
+    (second?.componentInstance as CardComponent).breakdownChosen.emit('total');
+
+    expect(spy).toHaveBeenCalledWith('b', 'total');
+  });
 });

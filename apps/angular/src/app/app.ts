@@ -37,6 +37,7 @@ export class App {
   }
 
   protected onBreakdown(event: Event): void {
-    this.store.setBreakdown((event.target as HTMLSelectElement).value);
+    const meta = this.store.meta();
+    if (meta) this.store.setBreakdown(meta.id, (event.target as HTMLSelectElement).value);
   }
 }

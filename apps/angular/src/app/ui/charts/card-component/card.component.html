@@ -17,6 +17,18 @@
       </button>
     }
   </header>
+  @if (card().open && card().meta.breakdowns.length > 1) {
+    <label class="breakdown">
+      Desglose
+      <select (change)="chooseBreakdown($event)">
+        @for (breakdown of card().meta.breakdowns; track breakdown.id) {
+          <option [value]="breakdown.id" [selected]="breakdown.id === card().breakdown">
+            {{ breakdown.label }}
+          </option>
+        }
+      </select>
+    </label>
+  }
   <p class="headline">
     @if (figure(); as figure) {
       <span class="figure"

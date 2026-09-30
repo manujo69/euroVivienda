@@ -106,3 +106,17 @@ sup {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
 }
+
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  font-size: var(--size-text-small);
+  color: var(--color-ink-muted);
+}
+
+.breakdown select {
+  font: inherit;
+  color: var(--color-ink);
+}

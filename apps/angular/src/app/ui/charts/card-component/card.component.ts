@@ -31,6 +31,8 @@ export class CardComponent {
   readonly opened = output<void>();
   /** A country picked in the ranking or the bars, to select it everywhere. */
   readonly regionPicked = output<string>();
+  /** Breakdown the user picks for this indicator. */
+  readonly breakdownChosen = output<string>();
 
   protected readonly figure = computed(() => {
     const { meta, headline, year } = this.card();
@@ -117,5 +119,9 @@ export class CardComponent {
   protected pickBar(index: number): void {
     const geo = this.comparison()?.geos[index];
     if (geo) this.regionPicked.emit(geo);
+  }
+
+  protected chooseBreakdown(event: Event): void {
+    this.breakdownChosen.emit((event.target as HTMLSelectElement).value);
   }
 }

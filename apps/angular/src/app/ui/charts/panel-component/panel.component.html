@@ -5,6 +5,7 @@
       [card]="card"
       (opened)="store.openCard(card.meta.id)"
       (regionPicked)="store.select($event)"
+      (breakdownChosen)="store.setBreakdown(card.meta.id, $event)"
     />
   } @empty {
     <p class="empty">Activa indicadores en el catálogo para ver sus gráficos.</p>

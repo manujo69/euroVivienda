@@ -45,6 +45,8 @@ export class ExplorerStore {
   private readonly data = computed(() => this.loaded()[this.mainId() ?? ''] ?? {});
   private readonly activeIds = signal<readonly string[]>([]);
   private readonly failedIds = signal<ReadonlySet<string>>(new Set());
+  /** Breakdown chosen for each indicator; the first one it declares until the user picks. */
+  private readonly chosenBreakdowns = signal<Readonly<Record<string, string>>>({});
   /** Active indicators, the card used least recently first. */
   private readonly recency = signal<readonly string[]>([]);
 
@@ -57,13 +59,17 @@ export class ExplorerStore {
   readonly status = signal<LoadStatus>('idle');
   readonly geography = signal<MapGeography | undefined>(undefined);
   readonly year = signal(0);
-  readonly breakdown = signal('total');
   readonly selected = signal<string | undefined>(undefined);
 
   /** The main indicator: it colours the map. */
   readonly meta = computed(() => this.catalogState().find((meta) => meta.id === this.mainId()));
   /** The year on screen: the chosen one, or the latest earlier one with data. */
   readonly shownYear = computed(() => resolveYear(this.data(), this.year()));
+  /** The map shows the breakdown of the main indicator. */
+  readonly breakdown = computed(() => {
+    const meta = this.meta();
+    return meta ? this.breakdownOf(meta) : 'total';
+  });
   readonly breaks = computed(() => this.meta()?.breaks[this.breakdown()] ?? []);
 
   private readonly current = computed(() => {
@@ -87,9 +93,7 @@ export class ExplorerStore {
       if (!meta) return [];
       const data = this.loaded()[id] ?? {};
       const year = resolveYear(data, this.year());
-      // Until each card has its own selector (hito 4), only the main one follows the map breakdown.
-      const breakdown =
-        id === this.mainId() ? this.breakdown() : (meta.breakdowns[0]?.id ?? 'total');
+      const breakdown = this.breakdownOf(meta);
       const { values, eu } =
         year === undefined
           ? { values: [], eu: undefined }
@@ -127,7 +131,7 @@ export class ExplorerStore {
       this.geography.set(geography);
       this.activeIds.set([main.id]);
       this.recency.set([main.id]);
-      this.makeMain(main.id);
+      this.mainId.set(main.id);
       this.year.set(main.years[1]);
       this.status.set('ready');
     } catch {
@@ -143,7 +147,7 @@ export class ExplorerStore {
       this.recency.update((ids) => ids.filter((active) => active !== id));
       this.keepYearInRange();
       // The map goes to the last indicator still active, if any.
-      if (this.mainId() === id) this.makeMain(this.activeIds().at(-1));
+      if (this.mainId() === id) this.mainId.set(this.activeIds().at(-1));
       return;
     }
     if (!(id in this.loaded())) {
@@ -158,7 +162,7 @@ export class ExplorerStore {
     this.failedIds.update((failed) => new Set([...failed].filter((other) => other !== id)));
     this.activeIds.update((ids) => [...ids, id]);
     this.recency.update((ids) => [...ids, id]);
-    this.makeMain(id);
+    this.mainId.set(id);
   }
 
   /** Opens a card, folding the one used least recently if four are already open. */
@@ -169,17 +173,18 @@ export class ExplorerStore {
 
   /** Puts an active indicator on the map; inactive ones are ignored. */
   setMain(id: string): void {
-    if (this.activeIds().includes(id)) this.makeMain(id);
+    if (this.activeIds().includes(id)) this.mainId.set(id);
   }
 
-  /** Each main indicator starts on its own first breakdown. */
-  private makeMain(id: string | undefined): void {
-    this.mainId.set(id);
-    this.breakdown.set(this.meta()?.breakdowns[0]?.id ?? 'total');
+  /** Chooses the breakdown of an indicator; ids it does not declare are ignored. */
+  setBreakdown(indicatorId: string, breakdownId: string): void {
+    const meta = this.catalogState().find((item) => item.id === indicatorId);
+    if (!meta?.breakdowns.some((breakdown) => breakdown.id === breakdownId)) return;
+    this.chosenBreakdowns.update((chosen) => ({ ...chosen, [indicatorId]: breakdownId }));
   }
 
-  setBreakdown(id: string): void {
-    if (this.meta()?.breakdowns.some((breakdown) => breakdown.id === id)) this.breakdown.set(id);
+  private breakdownOf(meta: IndicatorMeta): string {
+    return this.chosenBreakdowns()[meta.id] ?? meta.breakdowns[0]?.id ?? 'total';
   }
 
   setYear(year: number): void {

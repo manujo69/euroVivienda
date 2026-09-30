@@ -55,7 +55,9 @@ describe('CardComponent', () => {
       await block.render(DeferBlockState.Complete);
     const picked = jasmine.createSpy('regionPicked');
     fixture.componentInstance.regionPicked.subscribe(picked);
-    return { fixture, element: fixture.nativeElement as HTMLElement, picked };
+    const chosen = jasmine.createSpy('breakdownChosen');
+    fixture.componentInstance.breakdownChosen.subscribe(chosen);
+    return { fixture, element: fixture.nativeElement as HTMLElement, picked, chosen };
   }
 
   const text = (element: HTMLElement, selector: string) =>
@@ -82,6 +84,45 @@ describe('CardComponent', () => {
   it('says so when there is no figure to show', async () => {
     const { element } = await render(card({ headline: undefined }));
     expect(text(element, '.headline')).toBe('Sin dato');
+  });
+
+  describe('breakdown', () => {
+    const withBreakdowns: IndicatorMeta = {
+      ...overburden,
+      breakdowns: [
+        { id: 'total', label: 'Toda la población' },
+        { id: 'youth', label: 'Jóvenes de 20 a 29 años' },
+      ],
+    };
+    const selector = (element: HTMLElement) =>
+      [...element.querySelectorAll('label')]
+        .find((label) => label.textContent?.includes('Desglose'))
+        ?.querySelector('select');
+
+    it('offers the breakdowns of the indicator, on the one chosen', async () => {
+      const { element } = await render(card({ meta: withBreakdowns, breakdown: 'youth' }));
+      const select = selector(element);
+      expect([...(select?.options ?? [])].map((option) => option.text.trim())).toEqual([
+        'Toda la población',
+        'Jóvenes de 20 a 29 años',
+      ]);
+      expect(select?.value).toBe('youth');
+    });
+
+    it('asks for the breakdown chosen', async () => {
+      const { element, chosen } = await render(card({ meta: withBreakdowns }));
+      const select = selector(element);
+      if (select) select.value = 'youth';
+      select?.dispatchEvent(new Event('change'));
+      expect(chosen).toHaveBeenCalledWith('youth');
+    });
+
+    it('offers no choice with a single breakdown, nor while folded', async () => {
+      expect(selector((await render(card())).element)).toBeUndefined();
+      expect(
+        selector((await render(card({ meta: withBreakdowns, open: false }))).element),
+      ).toBeUndefined();
+    });
   });
 
   it('offers no button to open a card that is already open', async () => {

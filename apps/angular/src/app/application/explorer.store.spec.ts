@@ -101,11 +101,11 @@ describe('ExplorerStore', () => {
     const store = setup();
     await store.load();
 
-    store.setBreakdown('youth');
+    store.setBreakdown('overburden', 'youth');
     expect(store.values()).toEqual([{ geo: 'ES', value: 7.2, flags: undefined }]);
     expect(store.breaks()).toEqual([6, 10]);
 
-    store.setBreakdown('unknown');
+    store.setBreakdown('overburden', 'unknown');
     expect(store.breakdown()).toBe('youth');
   });
 
@@ -247,17 +247,16 @@ describe('ExplorerStore', () => {
       expect(store.meta()?.id).toBe('overburden');
     });
 
-    it('starts the new main indicator on its first breakdown', async () => {
+    it('maps each indicator on its own breakdown, kept while it is not the main one', async () => {
       const store = setup();
       await store.load();
-      store.setBreakdown('youth');
+      store.setBreakdown('overburden', 'youth');
 
       await store.toggle('tenure');
       expect(store.breakdown()).toBe('total');
 
-      store.setBreakdown('youth');
       store.setMain('overburden');
-      expect(store.breakdown()).toBe('total');
+      expect(store.breakdown()).toBe('youth');
     });
   });
 
@@ -362,13 +361,20 @@ describe('ExplorerStore', () => {
       expect(store.cards()[0]?.year).toBe(2024);
     });
 
-    it('follows the map breakdown on the card of the main indicator', async () => {
+    it('draws each card on the breakdown chosen for its indicator', async () => {
       const store = setup();
       await store.load();
-      store.setBreakdown('youth');
+      await store.toggle('tenure');
       store.select('ES');
 
-      expect(store.cards()[0]?.headline?.value).toBe(7.2);
+      store.setBreakdown('overburden', 'youth');
+
+      expect(store.cards().map((card) => [card.breakdown, card.headline?.value])).toEqual([
+        ['youth', 7.2],
+        ['total', 24.7],
+      ]);
+      expect(store.meta()?.id).toBe('tenure');
+      expect(store.breakdown()).toBe('total');
     });
   });
 
