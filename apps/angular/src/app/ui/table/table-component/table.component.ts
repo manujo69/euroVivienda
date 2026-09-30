@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { ExplorerStore } from '../../../application/explorer.store';
 import type { GeoValue } from '../../../domain/indicator-rules';
 import { flagLabels, geoName } from '../../../domain/labels';
-import { formatColumn } from '../../map/map-option';
+import { displayUnit, formatColumn } from '../../map/map-option';
 
 /** Accessible alternative to the map: every country, highest value first, selectable by keyboard. */
 @Component({
@@ -16,11 +16,13 @@ export class TableComponent {
 
   // Countries and EU mean share one format, so every figure has the same decimals.
   private readonly formatted = computed(() => {
+    const meta = this.store.meta();
     const sorted = [...this.store.values()].sort((a, b) => b.value - a.value);
     const eu = this.store.eu();
     const figures = formatColumn(
       [...sorted, ...(eu ? [eu] : [])].map((entry) => entry.value),
-      this.store.meta()?.unit ?? '',
+      meta ? displayUnit(meta) : '',
+      meta?.kind === 'index',
     );
     const row = (entry: GeoValue, i: number) => ({
       geo: entry.geo,

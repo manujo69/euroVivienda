@@ -35,6 +35,22 @@ const data: IndicatorData = {
   EU27_2020: { '2024': { total: { v: 8.2 } } },
 };
 
+const hpi: IndicatorMeta = {
+  ...overburden,
+  id: 'hpi',
+  label: 'Variación del precio de la vivienda',
+  theme: 'prices',
+  kind: 'index',
+  unit: 'Índice (2015 = 100)',
+  breakdowns: [{ id: 'total', label: 'Total' }],
+  breaks: { total: [0, 10] },
+};
+
+const hpiData: IndicatorData = {
+  ES: { '2024': { total: { v: 112 } } },
+  EU27_2020: { '2024': { total: { v: 104.3 } } },
+};
+
 const empty = { type: 'FeatureCollection' as const, features: [] };
 const geography: MapGeography = { regions: empty, context: empty };
 
@@ -48,8 +64,8 @@ describe('App', () => {
         {
           provide: INDICATOR_REPOSITORY,
           useValue: {
-            catalog: () => Promise.resolve([overburden] as Catalog),
-            data: () => Promise.resolve(data),
+            catalog: () => Promise.resolve([overburden, hpi] as Catalog),
+            data: (id: string) => Promise.resolve(id === 'hpi' ? hpiData : data),
           },
         },
         { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
@@ -157,6 +173,19 @@ describe('App', () => {
     expect(TestBed.inject(ExplorerStore).year()).toBe(2020);
     expect(page.querySelector('app-table caption')?.textContent).toContain('2016');
     expect(page.querySelector('.head')?.textContent).toContain('último disponible: 2016');
+  });
+
+  it('leads the map of an index with the change of the EU mean since 2015', async () => {
+    const page = await render();
+    const store = TestBed.inject(ExplorerStore);
+    await store.toggle('hpi');
+    fixture.detectChanges();
+
+    // The unit sits apart by its margin, not by a space.
+    expect(page.querySelector('.entry-value')?.textContent?.replace(/\s+/g, '')).toBe('+4,3%');
+    expect(page.querySelector('.entry-text')?.textContent?.trim()).toBe(
+      'Media de la UE en 2024, desde 2015',
+    );
   });
 
   it('asks for an indicator when none is active', async () => {

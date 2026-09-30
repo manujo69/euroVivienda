@@ -48,9 +48,11 @@
           @if (euFigure(); as figure) {
             <p class="entry">
               <span class="figure entry-value"
-                >{{ figure }}<span class="entry-unit">{{ meta.unit }}</span></span
+                >{{ figure.value }}<span class="entry-unit">{{ figure.unit }}</span></span
               >
-              <span class="entry-text">Media de la UE en {{ store.shownYear() }}</span>
+              <span class="entry-text"
+                >Media de la UE en {{ store.shownYear() }}{{ figure.since }}</span
+              >
             </p>
           }
 

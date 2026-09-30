@@ -6,7 +6,7 @@ import {
   inject,
 } from '@angular/core';
 import { ExplorerStore } from './application/explorer.store';
-import { formatValue } from './ui/map/map-option';
+import { displayUnit, formatValue } from './ui/map/map-option';
 import { CatalogComponent } from './ui/catalog/catalog-component/catalog.component';
 import { PanelComponent } from './ui/charts/panel-component/panel.component';
 import { MapComponent } from './ui/map/map-component/map.component';
@@ -22,9 +22,17 @@ import { TableComponent } from './ui/table/table-component/table.component';
 export class App {
   protected readonly store = inject(ExplorerStore);
 
+  /** EU mean as the entry figure; an index shows its change since 2015. */
   protected readonly euFigure = computed(() => {
     const eu = this.store.eu();
-    return eu && formatValue(eu.value);
+    const meta = this.store.meta();
+    if (!eu || !meta) return undefined;
+    const index = meta.kind === 'index';
+    return {
+      value: formatValue(eu.value, undefined, index),
+      unit: displayUnit(meta),
+      since: index ? ', desde 2015' : '',
+    };
   });
 
   constructor() {

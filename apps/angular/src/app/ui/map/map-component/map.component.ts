@@ -5,7 +5,7 @@ import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import { ExplorerStore } from '../../../application/explorer.store';
 import { codesOf } from '../../../domain/geography';
 import { echarts, registerNuts0 } from '../echarts';
-import { legendItems, mapOption } from '../map-option';
+import { displayUnit, legendItems, mapOption } from '../map-option';
 
 @Component({
   selector: 'app-map',
@@ -31,7 +31,8 @@ export class MapComponent {
       breaks: this.store.breaks(),
       scale: meta.scale,
       selected: this.store.selected(),
-      unit: meta.unit,
+      unit: displayUnit(meta),
+      signed: meta.kind === 'index',
       year: this.store.shownYear(),
     }) as EChartsOption;
   });

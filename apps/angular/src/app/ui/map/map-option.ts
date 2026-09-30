@@ -1,3 +1,4 @@
+import type { IndicatorMeta } from '@eurovivienda/contract';
 import { classOf } from '../../domain/indicator-rules';
 import type { GeoValue } from '../../domain/indicator-rules';
 import { flagLabels, geoName } from '../../domain/labels';
@@ -32,20 +33,32 @@ export function palette(scale: Scale, classes: number): readonly string[] {
 }
 
 const NUMBER = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 });
+const SIGNED = new Intl.NumberFormat('es-ES', {
+  maximumFractionDigits: 1,
+  signDisplay: 'exceptZero',
+});
 
-export function formatValue(value: number, unit?: string): string {
-  return unit ? `${NUMBER.format(value)} ${unit}` : NUMBER.format(value);
+/** A figure in Spanish with its unit; signed for the change since 2015 of an index. */
+export function formatValue(value: number, unit?: string, signed = false): string {
+  const figure = (signed ? SIGNED : NUMBER).format(value);
+  return unit ? `${figure} ${unit}` : figure;
+}
+
+/** The map, the tables and the figures show an index as its change since 2015, in %. */
+export function displayUnit(meta: Pick<IndicatorMeta, 'kind' | 'unit'>): string {
+  return meta.kind === 'index' ? '%' : meta.unit;
 }
 
 /**
  * Figures of one table column with the same decimals (one, unless all are whole) and their unit,
  * so they line up on the decimal comma.
  */
-export function formatColumn(values: readonly number[], unit: string): string[] {
+export function formatColumn(values: readonly number[], unit: string, signed = false): string[] {
   const decimals = values.some((value) => Math.round(value * 10) % 10 !== 0) ? 1 : 0;
   const format = new Intl.NumberFormat('es-ES', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
+    signDisplay: signed ? 'exceptZero' : 'auto',
   });
   return values.map((value) => `${format.format(value)} ${unit}`);
 }
@@ -95,6 +108,8 @@ export interface MapInput {
   readonly scale: Scale;
   readonly selected: string | undefined;
   readonly unit: string;
+  /** Values are the change since 2015 of an index: signed in the tooltip. */
+  readonly signed?: boolean;
   readonly year: number | undefined;
 }
 
@@ -186,7 +201,8 @@ export function mapOption(input: MapInput) {
     const title = `<strong>${geoName(name)}</strong>`;
     if (!entry) return `${title}<br>Sin dato`;
     const flags = flagLabels(entry.flags);
-    const line = `${formatValue(entry.value, input.unit)} · ${input.year ?? ''}`;
+    const since = input.signed ? ' desde 2015' : '';
+    const line = `${formatValue(entry.value, input.unit, input.signed)}${since} · ${input.year ?? ''}`;
     return [
       title,
       line,

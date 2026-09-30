@@ -35,14 +35,14 @@ const empty = { type: 'FeatureCollection' as const, features: [] };
 const geography: MapGeography = { regions: empty, context: empty };
 
 describe('TableComponent', () => {
-  async function render(data: IndicatorData = withEu) {
+  async function render(data: IndicatorData = withEu, meta: IndicatorMeta = overburden) {
     TestBed.configureTestingModule({
       imports: [TableComponent],
       providers: [
         {
           provide: INDICATOR_REPOSITORY,
           useValue: {
-            catalog: () => Promise.resolve([overburden] as Catalog),
+            catalog: () => Promise.resolve([meta] as Catalog),
             data: () => Promise.resolve(data),
           },
         },
@@ -127,5 +127,17 @@ describe('TableComponent', () => {
     fixture.detectChanges();
     expect(store.selected()).toBeUndefined();
     expect(table.querySelector('tr.selected')).toBeNull();
+  });
+
+  it('shows the change since 2015 of an index, signed', async () => {
+    const hpi: IndicatorMeta = { ...overburden, kind: 'index', unit: 'Índice (2015 = 100)' };
+    const { table } = await render(
+      { ES: { '2024': { total: { v: 108.2 } } }, PT: { '2024': { total: { v: 97 } } } },
+      hpi,
+    );
+    const figures = [...table.querySelectorAll('tbody td.number:not(:first-child)')].map((cell) =>
+      cell.textContent?.trim(),
+    );
+    expect(figures).toEqual(['+8,2 %', '-3,0 %']);
   });
 });

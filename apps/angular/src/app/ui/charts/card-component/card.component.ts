@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import type { Card } from '../../../application/explorer.store';
 import { EU_AGGREGATE, slicesOf, timeSeries } from '../../../domain/indicator-rules';
 import { flagLabels, geoName } from '../../../domain/labels';
-import { formatValue } from '../../map/map-option';
+import { displayUnit, formatValue } from '../../map/map-option';
 import {
   CATEGORY_COLOURS,
   type Line,
@@ -12,11 +12,6 @@ import {
 } from '../chart-options';
 import { ChartComponent } from '../chart-component/chart.component';
 import { RankingComponent } from '../ranking-component/ranking.component';
-
-const SIGNED = new Intl.NumberFormat('es-ES', {
-  maximumFractionDigits: 1,
-  signDisplay: 'exceptZero',
-});
 
 /** One active indicator in the panel: its headline figure, and its charts when open. */
 @Component({
@@ -40,8 +35,8 @@ export class CardComponent {
     // An index leads with its change since 2015, as the map paints it.
     const index = meta.kind === 'index';
     return {
-      value: index ? SIGNED.format(headline.value) : formatValue(headline.value),
-      unit: index ? '%' : meta.unit,
+      value: formatValue(headline.value, undefined, index),
+      unit: displayUnit(meta),
       flags: headline.flags ?? '',
       flagText: flagLabels(headline.flags).join(', '),
       explanation:

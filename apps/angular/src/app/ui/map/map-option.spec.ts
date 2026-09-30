@@ -1,5 +1,12 @@
 import type { GeoValue } from '../../domain/indicator-rules';
-import { formatColumn, legendItems, mapOption, palette } from './map-option';
+import {
+  displayUnit,
+  formatColumn,
+  formatValue,
+  legendItems,
+  mapOption,
+  palette,
+} from './map-option';
 
 const values: GeoValue[] = [
   { geo: 'ES', value: 7.8, flags: undefined },
@@ -123,6 +130,28 @@ describe('formatColumn', () => {
 
   it('keeps whole numbers whole', () => {
     expect(formatColumn([31500, 9600], 'PPS')).toEqual(['31.500 PPS', '9600 PPS']);
+  });
+});
+
+describe('signed figures of an index', () => {
+  it('sign the change since 2015', () => {
+    expect(formatValue(8.2, '%', true)).toBe('+8,2 %');
+    expect(formatValue(-3.1, '%', true)).toBe('-3,1 %');
+    expect(formatColumn([8.2, -3], '%', true)).toEqual(['+8,2 %', '-3,0 %']);
+  });
+
+  it('show an index as a percentage change, and anything else in its own unit', () => {
+    expect(displayUnit({ kind: 'index', unit: 'Índice (2015 = 100)' })).toBe('%');
+    expect(displayUnit({ kind: 'derived', unit: 'Índice (2015 = 100)' })).toBe(
+      'Índice (2015 = 100)',
+    );
+  });
+
+  it('explain the change in the map tooltip', () => {
+    const option = mapOption({ ...input, unit: '%', signed: true });
+    expect(option.tooltip.formatter({ name: 'ES' })).toBe(
+      '<strong>España</strong><br>+7,8 % desde 2015 · 2024',
+    );
   });
 });
 
