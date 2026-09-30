@@ -48,8 +48,8 @@
   @if (card().open) {
     <!-- Scalar and derived indicators (spec.md, «Gráficos por tipo de indicador»). -->
     @if (card().meta.kind === 'scalar' || card().meta.kind === 'derived') {
-      <!-- ECharts loads apart, as in the map. -->
-      @defer (on immediate) {
+      <!-- ECharts loads apart, once the chart is on screen (not in a hidden tab on a phone). -->
+      @defer (on viewport) {
         <h4 class="chart-title">Evolución</h4>
         @if (evolution().empty; as empty) {
           <p class="empty">{{ empty }}</p>
@@ -69,18 +69,22 @@
         } @else {
           <p class="empty">Sin datos{{ card().year ? ' en ' + card().year : '' }}.</p>
         }
+      } @placeholder {
+        <div class="chart-placeholder" aria-hidden="true"></div>
       }
     } @else if (card().meta.kind === 'index') {
-      @defer (on immediate) {
+      @defer (on viewport) {
         <h4 class="chart-title">Evolución</h4>
         @if (evolution().empty; as empty) {
           <p class="empty">{{ empty }}</p>
         } @else {
           <app-chart [option]="evolution().option" [label]="evolution().label" />
         }
+      } @placeholder {
+        <div class="chart-placeholder" aria-hidden="true"></div>
       }
     } @else if (card().meta.kind === 'composition') {
-      @defer (on immediate) {
+      @defer (on viewport) {
         @if (split(); as split) {
           <h4 class="chart-title">Reparto</h4>
           <ul class="categories">
@@ -103,6 +107,8 @@
             (picked)="pickBar($event)"
           />
         }
+      } @placeholder {
+        <div class="chart-placeholder" aria-hidden="true"></div>
       }
     }
   }

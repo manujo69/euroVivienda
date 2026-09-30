@@ -47,14 +47,16 @@
   </ul>
 
   @if (scatter().points.length) {
-    <!-- ECharts loads apart, as in the map. -->
-    @defer (on immediate) {
+    <!-- ECharts loads apart, once the chart is on screen (not in a hidden tab on a phone). -->
+    @defer (on viewport) {
       <app-chart
         [option]="chart().option"
         [label]="chart().label"
         [height]="280"
         (picked)="pickPoint($event)"
       />
+    } @placeholder {
+      <div class="chart-placeholder" aria-hidden="true"></div>
     }
   } @else {
     <p class="empty">Ninguna región tiene dato en los dos ejes.</p>

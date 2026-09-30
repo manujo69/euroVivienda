@@ -1,46 +1,93 @@
 // Catalogue on the left, map in the centre and chart panel on the right (spec.md, «Experiencia de
-// usuario»). The minimum widths add up to 1136 px: below 1152 px the panel goes under the map, and
-// below 768 px everything goes in one column.
+// usuario»), the header over the map. The minimum widths add up to 1136 px: below 1152 px the panel
+// goes under the map. On a phone, tabs show one zone at a time under the header.
 .explorer {
   display: grid;
   grid-template-columns: minmax(240px, 280px) minmax(480px, 1fr) minmax(320px, 400px);
-  gap: 32px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'catalogue head panel'
+    'catalogue main panel';
+  gap: 24px 32px;
   max-width: 1600px;
   margin: 0 auto;
   padding: 24px 16px 48px;
 }
 
+.tabs {
+  grid-area: tabs;
+}
+
+.head {
+  grid-area: head;
+}
+
 .catalogue {
-  grid-column: 1;
+  grid-area: catalogue;
 }
 
 main {
-  grid-column: 2;
+  grid-area: main;
 }
 
 .panel {
-  grid-column: 3;
+  grid-area: panel;
 }
 
 @media (max-width: 1151px) {
   .explorer {
     grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
-  }
-
-  .panel {
-    grid-column: 2;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      'catalogue head'
+      'catalogue main'
+      'catalogue panel';
   }
 }
 
-@media (max-width: 767px) {
-  .explorer {
-    grid-template-columns: minmax(0, 1fr);
+// Phones: the zones share one place and the tabs show one of them.
+.explorer.phone {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    'tabs'
+    'head'
+    'zone';
+  gap: 16px;
+
+  .catalogue,
+  main,
+  .panel {
+    grid-area: zone;
+  }
+}
+
+.tabs {
+  display: flex;
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+
+  button {
+    flex: 1;
+    padding: 10px 4px;
+    font: inherit;
+    font-family: var(--font-figures);
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    background: none;
+    border: none;
+    border-bottom: var(--rule-section) solid transparent;
+    cursor: pointer;
   }
 
-  main,
-  .catalogue,
-  .panel {
-    grid-column: 1;
+  button[aria-selected='true'] {
+    color: var(--color-ink);
+    border-bottom-color: var(--color-ink);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: -2px;
   }
 }
 

@@ -1,4 +1,4 @@
-<div class="explorer">
+<div class="explorer" [class.phone]="phone()">
   @switch (store.status()) {
     @case ('error') {
       <main>
@@ -6,62 +6,98 @@
       </main>
     }
     @case ('ready') {
-      <aside class="catalogue">
-        <app-catalog />
-      </aside>
+      <!-- On a phone, one zone at a time (spec.md, «Experiencia de usuario»). -->
+      @if (phone()) {
+        <div class="tabs" role="tablist" aria-label="Secciones">
+          @for (tab of tabs; track tab.id; let i = $index) {
+            <button
+              #tabButton
+              type="button"
+              role="tab"
+              [id]="'tab-' + tab.id"
+              [attr.aria-selected]="tab.id === currentTab()"
+              [attr.aria-controls]="'zone-' + tab.id"
+              [tabIndex]="tab.id === currentTab() ? 0 : -1"
+              (click)="currentTab.set(tab.id)"
+              (keydown)="onTabKey($event, i)"
+            >
+              {{ tab.label }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Outside the zones: on a phone the year stays at hand on every tab. -->
       @if (store.meta(); as meta) {
-        <main>
-          <header class="head">
-            <div class="title">
-              <h1 class="screen-title">{{ meta.label }}</h1>
-              @if (meta.notes) {
-                <p class="subtitle">{{ meta.notes }}</p>
-              }
-            </div>
-            <div class="controls">
-              @if (meta.breakdowns.length > 1) {
-                <label>
-                  Desglose
-                  <select [value]="store.breakdown()" (change)="onBreakdown($event)">
-                    @for (breakdown of meta.breakdowns; track breakdown.id) {
-                      <option [value]="breakdown.id">{{ breakdown.label }}</option>
-                    }
-                  </select>
-                </label>
-              }
+        <header class="head">
+          <div class="title">
+            <h1 class="screen-title">{{ meta.label }}</h1>
+            @if (meta.notes) {
+              <p class="subtitle">{{ meta.notes }}</p>
+            }
+          </div>
+          <div class="controls">
+            @if (meta.breakdowns.length > 1) {
               <label>
-                Nivel
-                <select (change)="onLevel($event)">
-                  <option value="0" [selected]="store.level() === 0">Países</option>
-                  <option
-                    value="2"
-                    [selected]="store.level() === 2"
-                    [disabled]="!store.canShowRegions()"
-                  >
-                    {{
-                      store.canShowRegions()
-                        ? 'Regiones (NUTS 2)'
-                        : 'Regiones (NUTS 2): sin datos regionales'
-                    }}
-                  </option>
-                </select>
-              </label>
-              <label>
-                Año
-                <select class="tabular" (change)="onYear($event)">
-                  @for (year of store.years(); track year) {
-                    <option [value]="year" [selected]="year === store.year()">{{ year }}</option>
+                Desglose
+                <select [value]="store.breakdown()" (change)="onBreakdown($event)">
+                  @for (breakdown of meta.breakdowns; track breakdown.id) {
+                    <option [value]="breakdown.id">{{ breakdown.label }}</option>
                   }
                 </select>
               </label>
-              @if (store.shownYear(); as shown) {
-                @if (shown !== store.year()) {
-                  <span class="note">(último disponible: {{ shown }})</span>
+            }
+            <label>
+              Nivel
+              <select (change)="onLevel($event)">
+                <option value="0" [selected]="store.level() === 0">Países</option>
+                <option
+                  value="2"
+                  [selected]="store.level() === 2"
+                  [disabled]="!store.canShowRegions()"
+                >
+                  {{
+                    store.canShowRegions()
+                      ? 'Regiones (NUTS 2)'
+                      : 'Regiones (NUTS 2): sin datos regionales'
+                  }}
+                </option>
+              </select>
+            </label>
+            <label>
+              Año
+              <select class="tabular" (change)="onYear($event)">
+                @for (year of store.years(); track year) {
+                  <option [value]="year" [selected]="year === store.year()">{{ year }}</option>
                 }
+              </select>
+            </label>
+            @if (store.shownYear(); as shown) {
+              @if (shown !== store.year()) {
+                <span class="note">(último disponible: {{ shown }})</span>
               }
-            </div>
-          </header>
+            }
+          </div>
+        </header>
+      }
 
+      <aside
+        class="catalogue"
+        id="zone-catalog"
+        [attr.role]="phone() ? 'tabpanel' : null"
+        [attr.aria-labelledby]="phone() ? 'tab-catalog' : null"
+        [hidden]="hidden('catalog')"
+      >
+        <app-catalog />
+      </aside>
+
+      <main
+        id="zone-map"
+        [attr.role]="phone() ? 'tabpanel' : null"
+        [attr.aria-labelledby]="phone() ? 'tab-map' : null"
+        [hidden]="hidden('map')"
+      >
+        @if (store.meta(); as meta) {
           @if (euFigure(); as figure) {
             <p class="entry">
               <span class="figure entry-value"
@@ -90,13 +126,18 @@
           </p>
 
           <app-table />
-        </main>
-      } @else {
-        <main>
+        } @else {
           <p class="empty">Activa un indicador en el catálogo para verlo en el mapa.</p>
-        </main>
-      }
-      <aside class="panel">
+        }
+      </main>
+
+      <aside
+        class="panel"
+        id="zone-charts"
+        [attr.role]="phone() ? 'tabpanel' : null"
+        [attr.aria-labelledby]="phone() ? 'tab-charts' : null"
+        [hidden]="hidden('charts')"
+      >
         <app-panel />
       </aside>
     }

@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Catalog, IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
 import { App } from './app';
+import { Viewport } from './ui/shell/viewport.service';
 import { ExplorerStore } from './application/explorer.store';
 import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from './application/tokens';
 import type { MapGeography } from './domain/ports';
@@ -82,10 +84,11 @@ const regional: MapGeography = {
 describe('App', () => {
   let fixture: ComponentFixture<App>;
 
-  async function render() {
+  async function render(phone = false) {
     TestBed.configureTestingModule({
       imports: [App],
       providers: [
+        { provide: Viewport, useValue: { mobile: signal(phone) } },
         {
           provide: INDICATOR_REPOSITORY,
           useValue: {
@@ -242,5 +245,76 @@ describe('App', () => {
   it('warns that the outermost regions are not drawn', async () => {
     const page = await render();
     expect(page.textContent).toContain('ultraperiféricas');
+  });
+
+  describe('on a phone', () => {
+    const tabs = (page: HTMLElement) => [...page.querySelectorAll<HTMLElement>('[role="tab"]')];
+    const visible = (page: HTMLElement) =>
+      ['.catalogue', 'main', '.panel'].filter(
+        (zone) => !page.querySelector<HTMLElement>(zone)?.closest('[hidden]'),
+      );
+    const press = (tab: HTMLElement | undefined, key: string) => {
+      tab?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      fixture.detectChanges();
+    };
+
+    it('shows the three zones side by side, without tabs, on a wider screen', async () => {
+      const page = await render();
+      expect(tabs(page)).toEqual([]);
+      expect(visible(page)).toEqual(['.catalogue', 'main', '.panel']);
+    });
+
+    it('offers the catalogue, the map and the charts as tabs, on the map first', async () => {
+      const page = await render(true);
+      expect(
+        tabs(page).map((tab) => [tab.textContent?.trim(), tab.getAttribute('aria-selected')]),
+      ).toEqual([
+        ['Catálogo', 'false'],
+        ['Mapa', 'true'],
+        ['Gráficos', 'false'],
+      ]);
+      expect(visible(page)).toEqual(['main']);
+      expect(page.querySelector('main')?.getAttribute('role')).toBe('tabpanel');
+    });
+
+    it('shows the zone of the tab chosen', async () => {
+      const page = await render(true);
+
+      tabs(page)[2]?.click();
+      fixture.detectChanges();
+
+      expect(visible(page)).toEqual(['.panel']);
+      expect(tabs(page)[2]?.getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('moves between tabs with the arrow keys, Home and End', async () => {
+      const page = await render(true);
+
+      press(tabs(page)[1], 'ArrowRight');
+      expect(visible(page)).toEqual(['.panel']);
+      expect(document.activeElement).toBe(tabs(page)[2] ?? null);
+
+      press(tabs(page)[2], 'ArrowRight');
+      expect(visible(page)).toEqual(['.catalogue']);
+
+      press(tabs(page)[0], 'End');
+      expect(visible(page)).toEqual(['.panel']);
+
+      press(tabs(page)[2], 'Home');
+      expect(visible(page)).toEqual(['.catalogue']);
+    });
+
+    it('keeps the year at hand on every tab', async () => {
+      const page = await render(true);
+
+      tabs(page)[0]?.click();
+      fixture.detectChanges();
+
+      const year = [...page.querySelectorAll('label')].find((label) =>
+        label.textContent?.includes('Año'),
+      );
+      expect(year).toBeDefined();
+      expect(year?.closest('[hidden]')).toBeNull();
+    });
   });
 });

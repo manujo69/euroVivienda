@@ -62,3 +62,8 @@ summary {
   color: var(--color-ink-muted);
   font-size: var(--size-text-small);
 }
+
+// What @defer (on viewport) watches: charts load once their place is on screen, not in a hidden tab.
+.chart-placeholder {
+  height: 200px;
+}
