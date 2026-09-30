@@ -75,6 +75,22 @@ const geography: MapGeography = {
   context: empty,
 };
 
+const regional: MapGeography = {
+  regions: {
+    type: 'FeatureCollection',
+    features: [
+      ['ES30', 'Comunidad de Madrid'],
+      ['ES51', 'Cataluña'],
+      ['PT17', 'Área Metropolitana de Lisboa'],
+    ].map(([code, name]) => ({
+      type: 'Feature' as const,
+      properties: { code, name },
+      geometry: square,
+    })),
+  },
+  context: empty,
+};
+
 const byId: Record<string, IndicatorData> = { overburden: data, tenure: tenureData };
 
 function setup(indicators: Partial<IndicatorRepository> = {}, query: QueryParams = {}) {
@@ -84,7 +100,10 @@ function setup(indicators: Partial<IndicatorRepository> = {}, query: QueryParams
     ...indicators,
   };
   const dataSpy = spyOn(repository, 'data').and.callThrough();
-  const geographies: GeographyRepository = { nuts0: () => Promise.resolve(geography) };
+  const geographies: GeographyRepository = {
+    nuts0: () => Promise.resolve(geography),
+    nuts2: () => Promise.resolve(regional),
+  };
   const url = {
     read: () => Promise.resolve(query),
     write: jasmine.createSpy('write').and.resolveTo(),

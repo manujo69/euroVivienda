@@ -21,6 +21,8 @@ export interface MapGeography {
 export interface GeographyRepository {
   /** EU-27 countries, outermost regions left out, with their non-EU context. */
   nuts0(): Promise<MapGeography>;
+  /** EU NUTS 2 regions, named, outermost ones left out, with the same context. */
+  nuts2(): Promise<MapGeography>;
 }
 
 /** The query of the page URL, where the shareable state lives. */

@@ -64,4 +64,51 @@ describe('HttpGeographyRepository', () => {
     expect(context.features.map((feature) => feature.id)).toEqual(['AD']);
     http.verify();
   });
+
+  it('turns the NUTS 2 regions into GeoJSON with their names, with the same context', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), HttpGeographyRepository],
+    });
+    const repository = TestBed.inject(HttpGeographyRepository);
+    const http = TestBed.inject(HttpTestingController);
+    const { nuts0, ...others } = topology.objects;
+    const regional = {
+      ...topology,
+      objects: {
+        ...others,
+        nuts2: {
+          ...nuts0,
+          geometries: [
+            {
+              type: 'Polygon',
+              id: 'ES30',
+              properties: { name: 'Comunidad de Madrid' },
+              arcs: [[0, 1]],
+            },
+            {
+              type: 'Polygon',
+              id: 'PT17',
+              properties: { name: 'Área Metropolitana de Lisboa' },
+              arcs: [[~0, 2]],
+            },
+          ],
+        },
+      },
+    };
+
+    const loading = repository.nuts2();
+    http.expectOne('geo/nuts2.json').flush(regional);
+    const { regions, context } = await loading;
+
+    const named = regions.features.map((feature): unknown[] => [
+      feature.id,
+      feature.properties?.['name'],
+    ]);
+    expect(named).toEqual([
+      ['ES30', 'Comunidad de Madrid'],
+      ['PT17', 'Área Metropolitana de Lisboa'],
+    ]);
+    expect(context.features.map((feature) => feature.id)).toEqual(['AD']);
+    http.verify();
+  });
 });
