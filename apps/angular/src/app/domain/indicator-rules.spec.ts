@@ -115,6 +115,17 @@ describe('valuesByGeo', () => {
       eu: { geo: 'EU27_2020', value: 8.2, flags: 'e' },
     });
   });
+
+  it('leaves out the NUTS 2 regions of regional indicators', () => {
+    const regional: IndicatorData = {
+      ...data,
+      ES30: { '2024': { total: { v: 9.9 } } },
+      PT17: { '2024': { total: { v: 3.3 } } },
+    };
+    expect(
+      valuesByGeo(overburden, regional, 2024, 'total').values.map((entry) => entry.geo),
+    ).toEqual(['ES', 'PT']);
+  });
 });
 
 describe('byTheme', () => {

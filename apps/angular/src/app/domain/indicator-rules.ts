@@ -6,6 +6,9 @@ type Cell = IndicatorData[string][string][string];
 
 export const EU_AGGREGATE = 'EU27_2020';
 
+/** NUTS 0 codes are the two letters of the country; NUTS 2 regions add two characters. */
+const isCountry = (geo: string) => geo.length === 2;
+
 export interface GeoValue {
   readonly geo: string;
   readonly value: number;
@@ -49,7 +52,8 @@ export function valuesByGeo(
   }
   all.sort((a, b) => a.geo.localeCompare(b.geo));
   return {
-    values: all.filter((entry) => entry.geo !== EU_AGGREGATE),
+    // Countries only: regional indicators also carry their NUTS 2 regions.
+    values: all.filter((entry) => isCountry(entry.geo)),
     eu: all.find((entry) => entry.geo === EU_AGGREGATE),
   };
 }
