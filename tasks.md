@@ -86,7 +86,7 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 
 - [x] Selector de año con fallback por indicador. Desplegable «Año» en la cabecera con los años de los indicadores activos; si uno no tiene dato ese año, el mapa, la tabla y cada tarjeta muestran el último anterior, y la cabecera lo avisa («último disponible: 2016»). Al desactivar indicadores, el año vuelve al rango que queda.
 - [x] Selector de desglose en las tarjetas (edad y régimen de tenencia en la sobrecarga). Cada indicador recuerda su desglose (por defecto, el primero); las tarjetas abiertas con más de uno llevan el selector «Desglose», y el mapa usa el del principal. El selector de la cabecera edita el mismo estado.
-- [ ] Estado en la URL y normalización de combinaciones inválidas.
+- [x] Estado en la URL y normalización de combinaciones inválidas. `?ind=…&main=…&geo=…&year=…&level=0&bd=indicador:desglose` (solo desgloses distintos del primero). Al cargar, la app abre el estado de la URL normalizado al válido más cercano (indicadores conocidos, principal activo, región del mapa, año en rango, desgloses declarados, nivel 0) y lo reescribe; cada cambio se escribe sin añadir entradas al historial. Reglas puras en `domain/url-state.ts`; puerto `UrlStatePort` con `RouterUrlStateAdapter`.
 
 ## Hito 5 — Resto del catálogo y NUTS 2
 

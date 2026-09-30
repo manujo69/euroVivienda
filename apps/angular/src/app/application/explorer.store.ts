@@ -1,7 +1,7 @@
 // State of the explorer: signals for what the user chose, computed for what the views show.
 // Depends only on the domain ports (spec.md, «Aplicación Angular: arquitectura hexagonal simplificada»).
 
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import type { Catalog, IndicatorData } from '@eurovivienda/contract';
 import type { IndicatorMeta } from '@eurovivienda/contract';
 import {
@@ -12,8 +12,15 @@ import {
   valuesByGeo,
   yearRange,
 } from '../domain/indicator-rules';
+import { codesOf } from '../domain/geography';
 import type { MapGeography } from '../domain/ports';
-import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from './tokens';
+import {
+  normalizeUrlState,
+  parseUrlState,
+  serializeUrlState,
+  type UrlState,
+} from '../domain/url-state';
+import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from './tokens';
 
 export type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -37,6 +44,7 @@ export interface Card {
 export class ExplorerStore {
   private readonly indicators = inject(INDICATOR_REPOSITORY);
   private readonly geographies = inject(GEOGRAPHY_REPOSITORY);
+  private readonly url = inject(URL_STATE);
 
   private readonly catalogState = signal<Catalog>([]);
   private readonly mainId = signal<string | undefined>(undefined);
@@ -115,24 +123,70 @@ export class ExplorerStore {
     });
   });
 
-  /** Loads the catalogue, the first indicator and the map. Call it in the browser only. */
+  /** The shareable state, as the URL holds it. */
+  private readonly urlState = computed((): UrlState => ({
+    ind: this.activeIds(),
+    main: this.mainId(),
+    geo: this.selected(),
+    year: this.year(),
+    level: 0,
+    // Only breakdowns other than the default, to keep the URL short.
+    bd: Object.fromEntries(
+      this.catalogState()
+        .filter((meta) => this.activeIds().includes(meta.id))
+        .map((meta) => [meta.id, this.breakdownOf(meta)] as const)
+        .filter(([id, breakdown]) => {
+          const meta = this.catalogState().find((item) => item.id === id);
+          return breakdown !== meta?.breakdowns[0]?.id;
+        }),
+    ),
+  }));
+
+  constructor() {
+    // Once the data is in, every change of the state goes to the URL.
+    effect(() => {
+      if (this.status() !== 'ready') return;
+      const params = serializeUrlState(this.urlState());
+      untracked(() => void this.url.write(params));
+    });
+  }
+
+  /**
+   * Loads the catalogue, the map and the indicators of the URL, normalised to the nearest valid
+   * state (the first indicator of the catalogue if the URL names none). Call it in the browser only.
+   */
   async load(): Promise<void> {
     this.status.set('loading');
     try {
-      const [catalog, geography] = await Promise.all([
+      const [catalog, geography, query] = await Promise.all([
         this.indicators.catalog(),
         this.geographies.nuts0(),
+        this.url.read(),
       ]);
-      const main = catalog[0];
-      if (!main) throw new Error('empty catalogue');
-      const data = await this.indicators.data(main.id);
+      if (!catalog.length) throw new Error('empty catalogue');
+      const state = normalizeUrlState(parseUrlState(query), catalog, codesOf(geography.regions));
+      const results = await Promise.allSettled(state.ind.map((id) => this.indicators.data(id)));
+      const loaded: Record<string, IndicatorData> = {};
+      const failed = new Set<string>();
+      state.ind.forEach((id, i) => {
+        const result = results[i];
+        if (result?.status === 'fulfilled') loaded[id] = result.value;
+        else failed.add(id);
+      });
+      const active = state.ind.filter((id) => id in loaded);
+      if (!active.length) throw new Error('no indicator could be loaded');
+
       this.catalogState.set(catalog);
-      this.loaded.set({ [main.id]: data });
+      this.loaded.set(loaded);
+      this.failedIds.set(failed);
       this.geography.set(geography);
-      this.activeIds.set([main.id]);
-      this.recency.set([main.id]);
-      this.mainId.set(main.id);
-      this.year.set(main.years[1]);
+      this.activeIds.set(active);
+      this.recency.set(active);
+      this.mainId.set(state.main && active.includes(state.main) ? state.main : active.at(-1));
+      this.selected.set(state.geo);
+      this.chosenBreakdowns.set(state.bd);
+      this.year.set(state.year ?? 0);
+      this.keepYearInRange();
       this.status.set('ready');
     } catch {
       this.status.set('error');

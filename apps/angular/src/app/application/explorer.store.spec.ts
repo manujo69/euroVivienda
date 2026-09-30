@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import type { Catalog, IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
 import type { GeographyRepository, IndicatorRepository, MapGeography } from '../domain/ports';
+import type { QueryParams } from '../domain/url-state';
 import { ExplorerStore } from './explorer.store';
-import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from './tokens';
+import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from './tokens';
 
 const overburden: IndicatorMeta = {
   id: 'overburden',
@@ -51,11 +52,32 @@ const tenureData: IndicatorData = {
 };
 
 const empty = { type: 'FeatureCollection' as const, features: [] };
-const geography: MapGeography = { regions: empty, context: empty };
+const square = {
+  type: 'Polygon' as const,
+  coordinates: [
+    [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 0],
+    ],
+  ],
+};
+const geography: MapGeography = {
+  regions: {
+    type: 'FeatureCollection',
+    features: ['ES', 'PT'].map((code) => ({
+      type: 'Feature' as const,
+      properties: { code },
+      geometry: square,
+    })),
+  },
+  context: empty,
+};
 
 const byId: Record<string, IndicatorData> = { overburden: data, tenure: tenureData };
 
-function setup(indicators: Partial<IndicatorRepository> = {}) {
+function setup(indicators: Partial<IndicatorRepository> = {}, query: QueryParams = {}) {
   const repository: IndicatorRepository = {
     catalog: () => Promise.resolve([overburden, tenure] as Catalog),
     data: (id) => (byId[id] ? Promise.resolve(byId[id]) : Promise.reject(new Error('404'))),
@@ -63,14 +85,22 @@ function setup(indicators: Partial<IndicatorRepository> = {}) {
   };
   const dataSpy = spyOn(repository, 'data').and.callThrough();
   const geographies: GeographyRepository = { nuts0: () => Promise.resolve(geography) };
+  const url = {
+    read: () => Promise.resolve(query),
+    write: jasmine.createSpy('write').and.resolveTo(),
+  };
   TestBed.configureTestingModule({
     providers: [
       ExplorerStore,
       { provide: INDICATOR_REPOSITORY, useValue: repository },
       { provide: GEOGRAPHY_REPOSITORY, useValue: geographies },
+      { provide: URL_STATE, useValue: url },
     ],
   });
-  return Object.assign(TestBed.inject(ExplorerStore), { repository: { data: dataSpy } });
+  return Object.assign(TestBed.inject(ExplorerStore), {
+    repository: { data: dataSpy },
+    urlPort: url,
+  });
 }
 
 describe('ExplorerStore', () => {
@@ -416,6 +446,96 @@ describe('ExplorerStore', () => {
       await store.toggle('early');
 
       expect(store.year()).toBe(2020);
+    });
+  });
+
+  describe('URL', () => {
+    /** The query last written, once the effects have run. */
+    const written = (store: ReturnType<typeof setup>) => {
+      TestBed.tick();
+      return store.urlPort.write.calls.mostRecent()?.args[0] as QueryParams | undefined;
+    };
+
+    it('opens the state the URL describes', async () => {
+      const store = setup(
+        {},
+        {
+          ind: 'tenure,overburden',
+          main: 'tenure',
+          geo: 'ES',
+          year: '2020',
+          bd: 'overburden:youth',
+        },
+      );
+      await store.load();
+
+      expect(store.active()).toEqual(['tenure', 'overburden']);
+      expect(store.meta()?.id).toBe('tenure');
+      expect(store.selected()).toBe('ES');
+      expect(store.year()).toBe(2020);
+      expect(store.cards().map((card) => card.breakdown)).toEqual(['total', 'youth']);
+    });
+
+    it('opens an invalid URL on the nearest valid state, and writes that one back', async () => {
+      const store = setup({}, { ind: 'hpi', geo: 'XX', year: '1990', level: '2' });
+      await store.load();
+
+      expect(store.active()).toEqual(['overburden']);
+      expect(written(store)).toEqual({
+        ind: 'overburden',
+        main: 'overburden',
+        year: '2015',
+        level: '0',
+      });
+    });
+
+    it('writes every change to the URL', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.toggle('tenure');
+      store.select('ES');
+      store.setBreakdown('overburden', 'youth');
+      store.setYear(2020);
+
+      expect(written(store)).toEqual({
+        ind: 'overburden,tenure',
+        main: 'tenure',
+        geo: 'ES',
+        year: '2020',
+        level: '0',
+        bd: 'overburden:youth',
+      });
+    });
+
+    it('leaves out of the URL the breakdowns set back to the first one', async () => {
+      const store = setup();
+      await store.load();
+      store.setBreakdown('overburden', 'youth');
+      store.setBreakdown('overburden', 'total');
+
+      expect(written(store)?.['bd']).toBeUndefined();
+    });
+
+    it('drops the indicators whose data fails to load', async () => {
+      const store = setup(
+        {
+          data: (id) =>
+            id === 'tenure' ? Promise.reject(new Error('404')) : Promise.resolve(data),
+        },
+        { ind: 'overburden,tenure' },
+      );
+      await store.load();
+
+      expect(store.active()).toEqual(['overburden']);
+      expect(store.failed().has('tenure')).toBeTrue();
+    });
+
+    it('does not touch the URL when the data cannot be loaded', async () => {
+      const store = setup({ catalog: () => Promise.reject(new Error('404')) });
+      await store.load();
+
+      expect(written(store)).toBeUndefined();
     });
   });
 });

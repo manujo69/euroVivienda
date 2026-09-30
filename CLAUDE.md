@@ -13,7 +13,7 @@ Idioma del proyecto: la interfaz y la documentación en español; el código (id
 
 ## Estado actual
 
-- `apps/angular` (Angular 20, hito 3 terminado): catálogo por temas a la izquierda, mapa coroplético del indicador principal con leyenda, tooltip, tabla alternativa y contexto no UE, y panel de tarjetas a la derecha (escalar, índice, composición y derivado; máximo cuatro abiertas). La selección de región se comparte entre mapa, tabla y tarjetas (ranking y barras). SSR activado (`outputMode: "server"`, todas las rutas en `RenderMode.Prerender`), pero los datos se cargan solo en el navegador (`afterNextRender`). Tests con Karma + Jasmine en ChromeHeadless (define `CHROME_BIN` si Karma no encuentra Chrome).
+- `apps/angular` (Angular 20, hito 4 terminado): catálogo por temas a la izquierda, mapa coroplético del indicador principal con leyenda, tooltip, tabla alternativa y contexto no UE, y panel de tarjetas a la derecha (escalar, índice, composición y derivado; máximo cuatro abiertas, con selector de desglose). La selección de región se comparte entre mapa, tabla y tarjetas (ranking y barras). Selector de año en la cabecera con fallback por indicador. Todo el estado compartible vive en la URL (`domain/url-state.ts`, `UrlStatePort` sobre el router); NUTS 2 queda para el hito 5. SSR activado (`outputMode: "server"`, todas las rutas en `RenderMode.Prerender`), pero los datos se cargan solo en el navegador (`afterNextRender`). Tests con Karma + Jasmine en ChromeHeadless (define `CHROME_BIN` si Karma no encuentra Chrome).
 - El mapa y los gráficos de las tarjetas van en bloques `@defer`: ECharts (~500 KB) queda fuera del bundle inicial. ECharts se importa por piezas en `ui/map/echarts.ts` (mapa; regiones UE y contexto se registran juntos como el mapa `nuts0`) y `ui/charts/echarts.ts` (líneas, pastel y barras). En los tests de componentes con `@defer`, espera a los bloques (`getDeferBlocks` + `DeferBlockState.Complete`): Jasmine ordena los tests al azar.
 - `packages/contract` tiene los esquemas Zod del contrato; `packages/etl` cubre el hito 0: catálogos de fuentes y geometrías, `download`, `build` (staging, modelo, calidad y publicación) y `export`, que publica `overburden`, `tenure` y el TopoJSON NUTS 0 con la capa `context` de países no UE (presupuesto 80 KB). Ambos con TypeScript estricto, ESLint con tipos y Vitest.
 
@@ -22,7 +22,7 @@ Idioma del proyecto: la interfaz y la documentación en español; el código (id
 Desde la raíz (pnpm 12, Node ≥ 22.18):
 
 - `pnpm install`
-- `pnpm start`: servidor de desarrollo de Angular en `http://localhost:4200/`.
+- `pnpm start`: servidor de desarrollo de Angular en `http://localhost:4200/`. Si tras mover carpetas o cambiar dependencias la página no refleja el código (o el log muestra «There is a new version of the pre-bundle»), reinícialo.
 - `pnpm build`, `pnpm test`, `pnpm typecheck`: en todos los paquetes (`pnpm test` corre Karma en una sola pasada).
 - `pnpm lint`: ESLint sobre `packages/` y `apps/angular/src` (fronteras de capas incluidas).
 - `pnpm etl download`: descarga cruda de Eurostat y GISCO en `data/raw/AAAA-MM-DD/`.

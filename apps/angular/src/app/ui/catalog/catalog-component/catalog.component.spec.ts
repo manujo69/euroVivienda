@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import type { Catalog, IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
 import { ExplorerStore } from '../../../application/explorer.store';
-import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from '../../../application/tokens';
+import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from '../../../application/tokens';
 import type { IndicatorRepository, MapGeography } from '../../../domain/ports';
 import { CatalogComponent } from './catalog.component';
 
@@ -43,6 +43,10 @@ describe('CatalogComponent', () => {
           },
         },
         { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
+        {
+          provide: URL_STATE,
+          useValue: { read: () => Promise.resolve({}), write: () => Promise.resolve() },
+        },
       ],
     });
     const store = TestBed.inject(ExplorerStore);

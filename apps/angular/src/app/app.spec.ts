@@ -2,7 +2,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Catalog, IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
 import { App } from './app';
 import { ExplorerStore } from './application/explorer.store';
-import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from './application/tokens';
+import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from './application/tokens';
 import type { MapGeography } from './domain/ports';
 
 const overburden: IndicatorMeta = {
@@ -53,6 +53,10 @@ describe('App', () => {
           },
         },
         { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
+        {
+          provide: URL_STATE,
+          useValue: { read: () => Promise.resolve({}), write: () => Promise.resolve() },
+        },
       ],
     });
     fixture = TestBed.createComponent(App);

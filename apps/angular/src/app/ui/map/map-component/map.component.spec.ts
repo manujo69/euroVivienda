@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 import type { Catalog, IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { ExplorerStore } from '../../../application/explorer.store';
-import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from '../../../application/tokens';
+import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from '../../../application/tokens';
 import type { Geography, MapGeography } from '../../../domain/ports';
 import { MapComponent } from './map.component';
 
@@ -70,6 +70,10 @@ describe('MapComponent', () => {
           },
         },
         { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
+        {
+          provide: URL_STATE,
+          useValue: { read: () => Promise.resolve({}), write: () => Promise.resolve() },
+        },
       ],
     });
     const store = TestBed.inject(ExplorerStore);
