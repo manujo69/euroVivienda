@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import type { IndicatorData } from '@eurovivienda/contract';
 import { NgxEchartsDirective } from 'ngx-echarts';
@@ -44,46 +44,49 @@ const card = (extra: Partial<Card> = {}): Card => ({
 });
 
 describe('CardComponent', () => {
-  function render(value: Card) {
+  /** Renders the card with its deferred charts loaded, whatever order the tests run in. */
+  async function render(value: Card) {
     const fixture = TestBed.createComponent(CardComponent);
     fixture.componentRef.setInput('card', value);
     fixture.detectChanges();
+    for (const block of await fixture.getDeferBlocks())
+      await block.render(DeferBlockState.Complete);
     return { fixture, element: fixture.nativeElement as HTMLElement };
   }
 
   const text = (element: HTMLElement, selector: string) =>
     element.querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim();
 
-  it('titles the card with the indicator from the catalogue', () => {
-    const { element } = render(card());
+  it('titles the card with the indicator from the catalogue', async () => {
+    const { element } = await render(card());
     expect(text(element, 'h3')).toBe('Sobrecarga por coste de vivienda');
   });
 
-  it('leads with the figure, its unit and a sentence that explains it', () => {
-    const { element } = render(card());
+  it('leads with the figure, its unit and a sentence that explains it', async () => {
+    const { element } = await render(card());
     expect(text(element, '.headline .figure')).toBe('8,2 %');
     expect(text(element, '.headline .explanation')).toBe('Media UE en 2024');
   });
 
-  it('names the selected region and spells out its flags', () => {
-    const { element } = render(card({ headline: { geo: 'PT', value: 5.1, flags: 'p' } }));
+  it('names the selected region and spells out its flags', async () => {
+    const { element } = await render(card({ headline: { geo: 'PT', value: 5.1, flags: 'p' } }));
     expect(text(element, '.headline .explanation')).toBe('Portugal en 2024');
     expect(text(element, '.headline sup [aria-hidden="true"]')).toBe('p');
     expect(text(element, '.headline sup .visually-hidden')).toBe('provisional');
   });
 
-  it('says so when there is no figure to show', () => {
-    const { element } = render(card({ headline: undefined }));
+  it('says so when there is no figure to show', async () => {
+    const { element } = await render(card({ headline: undefined }));
     expect(text(element, '.headline')).toBe('Sin dato');
   });
 
-  it('offers no button to open a card that is already open', () => {
-    const { element } = render(card());
+  it('offers no button to open a card that is already open', async () => {
+    const { element } = await render(card());
     expect(element.querySelector('button')).toBeNull();
   });
 
-  it('asks to be opened when folded', () => {
-    const { fixture, element } = render(card({ open: false }));
+  it('asks to be opened when folded', async () => {
+    const { fixture, element } = await render(card({ open: false }));
     const opened = jasmine.createSpy('opened');
     fixture.componentInstance.opened.subscribe(opened);
 
@@ -96,7 +99,7 @@ describe('CardComponent', () => {
   });
 
   describe('scalar charts', () => {
-    const lines = (fixture: ReturnType<typeof render>['fixture']) => {
+    const lines = (fixture: Awaited<ReturnType<typeof render>>['fixture']) => {
       const chart = fixture.debugElement.query(By.directive(NgxEchartsDirective));
       const option = chart.injector.get(NgxEchartsDirective).options() as {
         series: { name: string; data: (number | null)[] }[];
@@ -107,8 +110,8 @@ describe('CardComponent', () => {
       };
     };
 
-    it('shows the evolution of the EU mean and the ranking when open', () => {
-      const { fixture, element } = render(card({ data: series }));
+    it('shows the evolution of the EU mean and the ranking when open', async () => {
+      const { fixture, element } = await render(card({ data: series }));
       const titles = [...element.querySelectorAll('h4')].map((title) => title.textContent?.trim());
       expect(titles).toEqual(['Evolución', 'Ranking 2024']);
       expect(lines(fixture)).toEqual({
@@ -118,8 +121,8 @@ describe('CardComponent', () => {
       expect(element.querySelector('app-ranking')).not.toBeNull();
     });
 
-    it('draws the selected region against the EU mean', () => {
-      const { fixture } = render(card({ data: series, selected: 'ES' }));
+    it('draws the selected region against the EU mean', async () => {
+      const { fixture } = await render(card({ data: series, selected: 'ES' }));
       expect(lines(fixture)).toEqual({
         label: 'Evolución de Sobrecarga por coste de vivienda: España frente a la media UE',
         series: [
@@ -129,14 +132,14 @@ describe('CardComponent', () => {
       });
     });
 
-    it('draws no charts while folded', () => {
-      const { element } = render(card({ data: series, open: false }));
+    it('draws no charts while folded', async () => {
+      const { element } = await render(card({ data: series, open: false }));
       expect(element.querySelector('app-line-chart')).toBeNull();
       expect(element.querySelector('app-ranking')).toBeNull();
     });
 
-    it('marks derived indicators as own elaboration', () => {
-      const { element } = render(card({ meta: { ...overburden, kind: 'derived' } }));
+    it('marks derived indicators as own elaboration', async () => {
+      const { element } = await render(card({ meta: { ...overburden, kind: 'derived' } }));
       expect(text(element, '.own')).toBe('Elaboración propia');
       expect(element.querySelector('app-line-chart')).not.toBeNull();
     });
@@ -154,14 +157,14 @@ describe('CardComponent', () => {
       EU27_2020: { '2015': { total: { v: 100 } }, '2016': { total: { v: 104.3 } } },
     };
 
-    it('leads with the change since 2015, signed', () => {
-      const { element } = render(card({ meta: hpi, data: indexData }));
+    it('leads with the change since 2015, signed', async () => {
+      const { element } = await render(card({ meta: hpi, data: indexData }));
       expect(text(element, '.headline .figure')).toBe('+8,2 %');
       expect(text(element, '.headline .explanation')).toBe('Media UE en 2024, desde 2015');
     });
 
-    it('draws the index against the base year, without a ranking', () => {
-      const { fixture, element } = render(card({ meta: hpi, data: indexData }));
+    it('draws the index against the base year, without a ranking', async () => {
+      const { fixture, element } = await render(card({ meta: hpi, data: indexData }));
       const chart = fixture.debugElement.query(By.directive(NgxEchartsDirective));
       const option = chart.injector.get(NgxEchartsDirective).options() as {
         series: { data: number[]; markLine?: { data: { yAxis: number }[] } }[];
