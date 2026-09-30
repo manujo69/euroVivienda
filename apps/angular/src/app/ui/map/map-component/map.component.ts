@@ -1,3 +1,4 @@
+/* eslint-disable no-debugger */
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import type { EChartsOption } from 'echarts';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
@@ -42,6 +43,7 @@ export class MapComponent {
   /** Only regions with data are selectable; the grey context is not. */
   protected onClick(code: string): void {
     if (this.regions().includes(code)) this.store.select(code);
+
   }
 
   protected readonly legend = computed(() =>

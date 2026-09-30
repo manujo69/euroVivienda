@@ -32,7 +32,14 @@ describe('mapOption', () => {
 
   it('draws the projected geometries without distorting them', () => {
     expect(series).toEqual(
-      jasmine.objectContaining({ type: 'map', map: 'nuts0', aspectScale: 1, nameProperty: 'code' }),
+      jasmine.objectContaining({
+        type: 'map',
+        map: 'nuts0',
+        aspectScale: 1,
+        // Without it, the four margins stretch the map to the shape of its container.
+        preserveAspect: 'contain',
+        nameProperty: 'code',
+      }),
     );
   });
 
@@ -58,6 +65,37 @@ describe('mapOption', () => {
     expect(byName.get('PT')?.itemStyle.borderWidth).toBeGreaterThan(
       byName.get('ES')?.itemStyle.borderWidth ?? 0,
     );
+  });
+
+  it('adapts label and border colours to the lightness of the fill', () => {
+    const colours = palette('sequential', 7);
+    const shaded = mapOption({
+      ...input,
+      breaks: [1, 2, 3, 4, 5, 6],
+      selected: undefined,
+      values: [
+        { geo: 'ES', value: 100, flags: undefined },
+        { geo: 'PT', value: 0, flags: undefined },
+      ],
+    });
+    const byName = new Map(shaded.series[0].data.map((item) => [item.name, item]));
+    const dark = byName.get('ES');
+    const light = byName.get('PT');
+    expect(dark?.itemStyle.areaColor).toBe(colours[6]);
+    expect(light?.itemStyle.areaColor).toBe(colours[0]);
+    // A halo in the opposite colour keeps codes of small countries readable off their polygon.
+    expect(dark?.emphasis).toEqual(
+      jasmine.objectContaining({
+        label: { color: '#ffffff', textBorderColor: '#1a1a1a', textBorderWidth: 2 },
+      }),
+    );
+    expect(light?.emphasis).toEqual(
+      jasmine.objectContaining({
+        label: { color: '#1a1a1a', textBorderColor: '#ffffff', textBorderWidth: 2 },
+      }),
+    );
+    expect(dark?.itemStyle.borderColor).toBe('#ffffff');
+    expect(light?.itemStyle.borderColor).toBe('#9e9e9e');
   });
 
   it('explains value, year and flags in the tooltip', () => {

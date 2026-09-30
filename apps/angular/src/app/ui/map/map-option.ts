@@ -1,5 +1,3 @@
-// ECharts option of the choropleth map, built as a pure function of the state (CLAUDE.md).
-
 import { classOf } from '../../domain/indicator-rules';
 import type { GeoValue } from '../../domain/indicator-rules';
 import { flagLabels, geoName } from '../../domain/labels';
@@ -75,6 +73,8 @@ export function legendItems(breaks: readonly number[], scale: Scale): LegendItem
 
 const INK = '#1a1a1a';
 const BORDER = '#ffffff';
+/** Border of light fills, where white would vanish. */
+const LIGHT_BORDER = '#9e9e9e';
 const NO_DATA = '#e3e3e3';
 const CONTEXT = '#ececec';
 /** Diagonal hatching for regions without data (spec.md: «gris con trama»). */
@@ -98,6 +98,25 @@ export interface MapInput {
   readonly year: number | undefined;
 }
 
+/** WCAG relative luminance of a `#rrggbb` colour, from 0 (black) to 1 (white). */
+function luminance(hex: string): number {
+  const [r = 0, g = 0, b = 0] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** White or ink, whichever contrasts more with the fill (WCAG crossover at 0.179). */
+function labelColour(fill: string): string {
+  return luminance(fill) < 0.179 ? BORDER : INK;
+}
+
+/** White borders disappear on light fills (contrast below 1.5:1). */
+function borderColour(fill: string): string {
+  return luminance(fill) > 0.65 ? LIGHT_BORDER : BORDER;
+}
+
 interface ItemStyle {
   areaColor: string;
   borderColor: string;
@@ -105,12 +124,27 @@ interface ItemStyle {
   decal?: typeof HATCH;
 }
 
+interface Label {
+  color: string;
+  textBorderColor: string;
+  textBorderWidth: number;
+}
+
+/**
+ * The country code ECharts shows on hover. Codes of small countries spill over the sea and their
+ * neighbours, so a halo in the opposite colour keeps them readable on any background.
+ */
+function hoverLabel(fill: string): Label {
+  const color = labelColour(fill);
+  return { color, textBorderColor: color === INK ? BORDER : INK, textBorderWidth: 2 };
+}
+
 /** One region of the ECharts map series. */
 interface MapItem {
   name: string;
   value?: number;
   itemStyle: ItemStyle;
-  emphasis: { itemStyle: ItemStyle } | { disabled: true };
+  emphasis: { itemStyle: ItemStyle; label: Label } | { disabled: true };
   tooltip?: { show: false };
 }
 
@@ -121,9 +155,10 @@ export function mapOption(input: MapInput) {
   const data = input.codes.map((code): MapItem => {
     const entry = byGeo.get(code);
     const selected = code === input.selected;
+    const areaColor = entry ? (colours[classOf(entry.value, input.breaks)] ?? NO_DATA) : NO_DATA;
     const itemStyle: ItemStyle = {
-      areaColor: entry ? (colours[classOf(entry.value, input.breaks)] ?? NO_DATA) : NO_DATA,
-      borderColor: selected ? INK : BORDER,
+      areaColor,
+      borderColor: selected ? INK : borderColour(areaColor),
       borderWidth: selected ? 2 : 0.6,
       ...(entry ? {} : { decal: HATCH }),
     };
@@ -131,7 +166,10 @@ export function mapOption(input: MapInput) {
       name: code,
       value: entry?.value,
       itemStyle,
-      emphasis: { itemStyle: { ...itemStyle, borderColor: INK, borderWidth: 1.5 } },
+      emphasis: {
+        itemStyle: { ...itemStyle, borderColor: INK, borderWidth: 1.5 },
+        label: hoverLabel(areaColor),
+      },
     };
   });
 
@@ -166,6 +204,10 @@ export function mapOption(input: MapInput) {
       borderColor: INK,
       borderWidth: 1,
       textStyle: { color: INK, fontFamily: 'Source Sans 3 Variable, sans-serif', fontSize: 13 },
+      // ECharts sets `white-space: nowrap` on the container; let long notes wrap.
+      extraCssText: 'max-width: 280px; white-space: normal; overflow-wrap: break-word;',
+      // Keep the tooltip inside the chart instead of overflowing its edges.
+      confine: true,
     },
     series: [
       {
@@ -174,6 +216,8 @@ export function mapOption(input: MapInput) {
         nameProperty: 'code',
         // Geometries arrive projected (EPSG:3035): 1 keeps metres square.
         aspectScale: 1,
+        // Fit inside the margins without stretching; otherwise they fix both width and height.
+        preserveAspect: 'contain' as const,
         roam: false,
         selectedMode: false as const,
         left: 8,
