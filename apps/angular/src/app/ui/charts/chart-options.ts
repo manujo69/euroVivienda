@@ -28,7 +28,12 @@ function baseLine(base: number) {
     symbol: 'none',
     data: [{ yAxis: base }],
     lineStyle: { color: '#1a1a1a', width: 1, type: 'solid' as const },
-    label: { position: 'insideStartTop' as const, formatter: `2015 = ${base}`, color: '#5f5f5f' },
+    // Below the line: an index that grows leaves that side free at the start.
+    label: {
+      position: 'insideStartBottom' as const,
+      formatter: `2015 = ${base}`,
+      color: '#5f5f5f',
+    },
   };
 }
 
@@ -56,6 +61,8 @@ export function lineOption(input: LineInput) {
       },
       // Direct labels instead of a legend.
       endLabel: { show: true, formatter: line.name, color: colour },
+      // Lines that end close together would print their names on top of each other.
+      labelLayout: { moveOverlap: 'shiftY' as const },
       markLine: i === 0 && input.base !== undefined ? baseLine(input.base) : undefined,
     };
   });

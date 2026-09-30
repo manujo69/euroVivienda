@@ -193,4 +193,14 @@ describe('legendItems', () => {
       '7,2 o más',
     ]);
   });
+
+  it('writes ranges with negative figures with «a», so the signs do not run together', () => {
+    expect(legendItems([-5.9, -2.1, 0, 3.3], 'diverging').map((item) => item.label)).toEqual([
+      'Menos de -5,9',
+      '-5,9 a -2,1',
+      '-2,1 a 0',
+      '0 a 3,3',
+      '3,3 o más',
+    ]);
+  });
 });

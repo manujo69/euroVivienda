@@ -37,6 +37,10 @@ describe('lineOption', () => {
     expect(region?.lineStyle.color).not.toBe(eu?.lineStyle.color);
   });
 
+  it('moves the end labels apart when the lines meet', () => {
+    expect(option.series.every((line) => line.labelLayout.moveOverlap === 'shiftY')).toBeTrue();
+  });
+
   it('names each line at its end, instead of a legend', () => {
     expect(option.series.map((line) => [line.name, line.endLabel.show])).toEqual([
       ['España', true],
@@ -71,6 +75,10 @@ describe('lineOption', () => {
           label: jasmine.objectContaining({ formatter: '2015 = 100' }),
         }),
       );
+    });
+
+    it('labels the base below the line, where an index that grows leaves room', () => {
+      expect(indexed.series[0]?.markLine?.label.position).toBe('insideStartBottom');
     });
 
     it('lets the axis start near the values instead of at zero', () => {

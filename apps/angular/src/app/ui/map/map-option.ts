@@ -71,6 +71,8 @@ export interface LegendItem {
 export function legendItems(breaks: readonly number[], scale: Scale): LegendItem[] {
   const colours = palette(scale, breaks.length + 1);
   const n = (value: number) => NUMBER.format(value);
+  // «-5,9–-2,1» runs the signs together: with negatives, ranges read «-5,9 a -2,1».
+  const to = breaks.some((limit) => limit < 0) ? ' a ' : '–';
   return colours.map((colour, i) => {
     const low = breaks[i - 1];
     const high = breaks[i];
@@ -79,7 +81,7 @@ export function legendItems(breaks: readonly number[], scale: Scale): LegendItem
         ? `Menos de ${n(high ?? 0)}`
         : high === undefined
           ? `${n(low)} o más`
-          : `${n(low)}–${n(high)}`;
+          : `${n(low)}${to}${n(high)}`;
     return { colour, label };
   });
 }
