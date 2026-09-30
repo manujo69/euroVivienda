@@ -78,7 +78,7 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 ## Hito 3 — Catálogo y panel
 
 - [x] Catálogo por temas con activar y desactivar. `CatalogComponent` a la izquierda del mapa: un `fieldset` por tema (Precios, Acceso, Contexto; los vacíos no salen) y una casilla por indicador. El store guarda los activos en orden de activación y carga los datos de cada indicador la primera vez; si fallan, la casilla queda sin marcar y avisa. Al cargar, el primer indicador del catálogo está activo.
-- [ ] Indicador principal y su efecto en el mapa.
+- [x] Indicador principal y su efecto en el mapa. Por defecto, el último activado; al desactivar el principal, el mapa pasa al último que sigue activo, y sin ninguno activo se pide activar uno. Botón «Ver en el mapa» (`aria-pressed`) en cada indicador activo del catálogo. Cada principal empieza en su primer desglose.
 - [ ] Tarjetas por tipo: escalar, índice, composición y derivado; máximo cuatro abiertas.
 - [ ] Selección sincronizada entre mapa y gráficos.
 

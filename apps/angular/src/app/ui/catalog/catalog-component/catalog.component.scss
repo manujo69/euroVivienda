@@ -36,6 +36,36 @@ input {
   margin: 0;
 }
 
+.show {
+  margin: 4px 0 0 21px;
+  padding: 0;
+  font: inherit;
+  font-size: var(--size-text-small);
+  color: var(--color-ink-muted);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+// The main indicator: it colours the map.
+.show[aria-pressed='true'] {
+  color: var(--color-ink);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: default;
+}
+
+.show:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.show,
+.error {
+  display: block;
+}
+
 .error {
   margin: 4px 0 0 21px;
   font-size: var(--size-text-small);

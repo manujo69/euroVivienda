@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Catalog, IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
 import { App } from './app';
 import { ExplorerStore } from './application/explorer.store';
@@ -39,6 +39,8 @@ const empty = { type: 'FeatureCollection' as const, features: [] };
 const geography: MapGeography = { regions: empty, context: empty };
 
 describe('App', () => {
+  let fixture: ComponentFixture<App>;
+
   async function render() {
     TestBed.configureTestingModule({
       imports: [App],
@@ -53,7 +55,7 @@ describe('App', () => {
         { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
       ],
     });
-    const fixture = TestBed.createComponent(App);
+    fixture = TestBed.createComponent(App);
     await TestBed.inject(ExplorerStore).load();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -106,6 +108,14 @@ describe('App', () => {
     expect(
       catalogue?.querySelector<HTMLInputElement>('input:checked')?.parentElement?.textContent,
     ).toContain('Sobrecarga por coste de vivienda');
+  });
+
+  it('asks for an indicator when none is active', async () => {
+    const page = await render();
+    page.querySelector<HTMLInputElement>('app-catalog input:checked')?.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(page.querySelector('main')?.textContent).toContain('Activa un indicador en el catálogo');
   });
 
   it('warns that the outermost regions are not drawn', async () => {

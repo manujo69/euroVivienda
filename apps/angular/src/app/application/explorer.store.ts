@@ -63,10 +63,9 @@ export class ExplorerStore {
       this.catalogState.set(catalog);
       this.loaded.set({ [main.id]: data });
       this.geography.set(geography);
-      this.mainId.set(main.id);
       this.activeIds.set([main.id]);
+      this.makeMain(main.id);
       this.year.set(main.years[1]);
-      this.breakdown.set(main.breakdowns[0]?.id ?? 'total');
       this.status.set('ready');
     } catch {
       this.status.set('error');
@@ -78,6 +77,8 @@ export class ExplorerStore {
     if (!this.catalogState().some((meta) => meta.id === id)) return;
     if (this.activeIds().includes(id)) {
       this.activeIds.update((ids) => ids.filter((active) => active !== id));
+      // The map goes to the last indicator still active, if any.
+      if (this.mainId() === id) this.makeMain(this.activeIds().at(-1));
       return;
     }
     if (!(id in this.loaded())) {
@@ -91,6 +92,18 @@ export class ExplorerStore {
     }
     this.failedIds.update((failed) => new Set([...failed].filter((other) => other !== id)));
     this.activeIds.update((ids) => [...ids, id]);
+    this.makeMain(id);
+  }
+
+  /** Puts an active indicator on the map; inactive ones are ignored. */
+  setMain(id: string): void {
+    if (this.activeIds().includes(id)) this.makeMain(id);
+  }
+
+  /** Each main indicator starts on its own first breakdown. */
+  private makeMain(id: string | undefined): void {
+    this.mainId.set(id);
+    this.breakdown.set(this.meta()?.breakdowns[0]?.id ?? 'total');
   }
 
   setBreakdown(id: string): void {

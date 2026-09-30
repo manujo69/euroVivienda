@@ -14,6 +14,17 @@
               />
               {{ meta.label }}
             </label>
+            @if (store.active().includes(meta.id)) {
+              <button
+                type="button"
+                class="show"
+                [attr.aria-label]="'Ver ' + meta.label + ' en el mapa'"
+                [attr.aria-pressed]="store.meta()?.id === meta.id"
+                (click)="store.setMain(meta.id)"
+              >
+                Ver en el mapa
+              </button>
+            }
             @if (store.failed().has(meta.id)) {
               <p class="error" role="alert">
                 No se han podido cargar los datos de {{ meta.label }}.

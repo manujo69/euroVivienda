@@ -186,4 +186,75 @@ describe('ExplorerStore', () => {
       expect(store.repository.data).not.toHaveBeenCalledWith('unknown');
     });
   });
+
+  describe('main indicator', () => {
+    it('makes the last indicator activated the main one', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.toggle('tenure');
+
+      expect(store.meta()?.id).toBe('tenure');
+      expect(store.values()).toEqual([{ geo: 'ES', value: 24.7, flags: undefined }]);
+      expect(store.breaks()).toEqual([20, 30]);
+    });
+
+    it('hands the map to the last active indicator when the main one is switched off', async () => {
+      const store = setup();
+      await store.load();
+      await store.toggle('tenure');
+
+      await store.toggle('tenure');
+
+      expect(store.meta()?.id).toBe('overburden');
+    });
+
+    it('keeps the main indicator when another one is switched off', async () => {
+      const store = setup();
+      await store.load();
+      await store.toggle('tenure');
+      store.setMain('overburden');
+
+      await store.toggle('tenure');
+
+      expect(store.meta()?.id).toBe('overburden');
+    });
+
+    it('has no main indicator and nothing to map when none is active', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.toggle('overburden');
+
+      expect(store.meta()).toBeUndefined();
+      expect(store.values()).toEqual([]);
+      expect(store.eu()).toBeUndefined();
+    });
+
+    it('lets the user choose the main one among the active indicators only', async () => {
+      const store = setup();
+      await store.load();
+      await store.toggle('tenure');
+
+      store.setMain('overburden');
+      expect(store.meta()?.id).toBe('overburden');
+
+      await store.toggle('tenure');
+      store.setMain('tenure');
+      expect(store.meta()?.id).toBe('overburden');
+    });
+
+    it('starts the new main indicator on its first breakdown', async () => {
+      const store = setup();
+      await store.load();
+      store.setBreakdown('youth');
+
+      await store.toggle('tenure');
+      expect(store.breakdown()).toBe('total');
+
+      store.setBreakdown('youth');
+      store.setMain('overburden');
+      expect(store.breakdown()).toBe('total');
+    });
+  });
 });

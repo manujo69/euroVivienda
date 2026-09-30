@@ -61,7 +61,13 @@ describe('CatalogComponent', () => {
       await fixture.whenStable();
       fixture.detectChanges();
     };
-    return { store, element, checkbox, click };
+    const mapButtons = () =>
+      [...element.querySelectorAll<HTMLButtonElement>('button')].map((button) => ({
+        name: button.getAttribute('aria-label'),
+        pressed: button.getAttribute('aria-pressed'),
+        button,
+      }));
+    return { fixture, store, element, checkbox, click, mapButtons };
   }
 
   it('groups the indicators by theme, in the order of the catalogue themes', async () => {
@@ -105,5 +111,25 @@ describe('CatalogComponent', () => {
     expect(element.querySelector('[role="alert"]')?.textContent).toContain(
       'No se han podido cargar los datos de Régimen de tenencia',
     );
+  });
+
+  it('offers to show on the map only the active indicators, pressed on the main one', async () => {
+    const { click, mapButtons } = await render();
+    await click('Régimen');
+    expect(mapButtons().map(({ name, pressed }) => [name, pressed])).toEqual([
+      ['Ver Sobrecarga por coste de vivienda en el mapa', 'false'],
+      ['Ver Régimen de tenencia en el mapa', 'true'],
+    ]);
+  });
+
+  it('puts an active indicator on the map with its button', async () => {
+    const { fixture, store, click, mapButtons } = await render();
+    await click('Régimen');
+
+    mapButtons()[0]?.button.click();
+    fixture.detectChanges();
+
+    expect(store.meta()?.id).toBe('overburden');
+    expect(mapButtons().map(({ pressed }) => pressed)).toEqual(['true', 'false']);
   });
 });
