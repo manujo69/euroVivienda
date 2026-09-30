@@ -340,6 +340,19 @@ describe('ExplorerStore', () => {
       ]);
     });
 
+    it('gives each card the data, values and selection its charts need', async () => {
+      const store = setup();
+      await store.load();
+      store.select('PT');
+      const [card] = store.cards();
+
+      expect(card?.data).toBe(data);
+      expect(card?.breakdown).toBe('total');
+      expect(card?.values.map((entry) => entry.geo)).toEqual(['ES', 'PT']);
+      expect(card?.eu?.value).toBe(8.2);
+      expect(card?.selected).toBe('PT');
+    });
+
     it('shows each card at its latest year with data', async () => {
       const store = setup();
       await store.load();

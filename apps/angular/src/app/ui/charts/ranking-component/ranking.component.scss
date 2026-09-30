@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--size-text-small);
+}
+
+th,
+td {
+  padding: 3px 6px;
+  text-align: left;
+  font-weight: normal;
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+}
+
+.number {
+  text-align: right;
+}
+
+td.number:first-child {
+  width: 2.5em;
+}
+
+.selected {
+  background: var(--color-selected);
+}
+
+.selected th,
+.selected td {
+  border-bottom-color: var(--color-rule-strong);
+}
+
+// The EU mean: a dashed, labelled line (spec.md, «Tablas»).
+.eu th,
+.eu td {
+  color: var(--color-ink-muted);
+  border-top: var(--rule-thin) dashed var(--color-rule-strong);
+  border-bottom: var(--rule-thin) dashed var(--color-rule-strong);
+}
+
+.gap td {
+  color: var(--color-ink-muted);
+  text-align: center;
+  border-bottom: none;
+}

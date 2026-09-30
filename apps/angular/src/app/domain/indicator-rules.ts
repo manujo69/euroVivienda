@@ -81,3 +81,40 @@ export function headline(
 ): GeoValue | undefined {
   return values.find((entry) => entry.geo === selected) ?? eu;
 }
+
+export interface Point {
+  readonly year: number;
+  readonly value: number;
+  readonly flags: string | undefined;
+}
+
+/** Values of one region and breakdown over the years, oldest first; compositions have none. */
+export function timeSeries(data: IndicatorData, geo: string, breakdown: string): Point[] {
+  return Object.entries(data[geo] ?? {})
+    .flatMap(([year, byBreakdown]) => {
+      const cell = byBreakdown[breakdown];
+      return cell && typeof cell.v === 'number'
+        ? [{ year: Number(year), value: cell.v, flags: cell.f }]
+        : [];
+    })
+    .sort((a, b) => a.year - b.year);
+}
+
+export interface RankedValue extends GeoValue {
+  /** Position from the highest value, starting at 1. */
+  readonly rank: number;
+}
+
+/** Short ranking (spec.md, «Gráficos por tipo»): top and bottom three, plus the selected region. */
+export function shortRanking(
+  values: readonly GeoValue[],
+  selected: string | undefined,
+  size = 3,
+): RankedValue[] {
+  const ranked = [...values]
+    .sort((a, b) => b.value - a.value)
+    .map((entry, i) => ({ ...entry, rank: i + 1 }));
+  return ranked.filter(
+    (entry, i) => i < size || i >= ranked.length - size || entry.geo === selected,
+  );
+}

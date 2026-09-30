@@ -1,6 +1,11 @@
 <article [class.folded]="!card().open">
   <header>
-    <h3 class="section-title">{{ card().meta.label }}</h3>
+    <div>
+      <h3 class="section-title">{{ card().meta.label }}</h3>
+      @if (card().meta.kind === 'derived') {
+        <p class="own">Elaboración propia</p>
+      }
+    </div>
     @if (!card().open) {
       <button
         type="button"
@@ -28,4 +33,21 @@
       Sin dato
     }
   </p>
+  @if (card().open) {
+    <!-- Scalar and derived indicators (spec.md, «Gráficos por tipo de indicador»). -->
+    @if (card().meta.kind === 'scalar' || card().meta.kind === 'derived') {
+      <!-- ECharts loads apart, as in the map. -->
+      @defer (on immediate) {
+        <h4 class="chart-title">Evolución</h4>
+        <app-line-chart [option]="evolution().option" [label]="evolution().label" />
+        <h4 class="chart-title">Ranking {{ card().year }}</h4>
+        <app-ranking
+          [values]="card().values"
+          [eu]="card().eu"
+          [selected]="card().selected"
+          [unit]="card().meta.unit"
+        />
+      }
+    }
+  }
 </article>

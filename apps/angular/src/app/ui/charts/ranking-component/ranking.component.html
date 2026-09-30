@@ -1,0 +1,34 @@
+<table class="tabular">
+  <thead class="visually-hidden">
+    <tr>
+      <th scope="col">Puesto</th>
+      <th scope="col">País</th>
+      <th scope="col">Valor</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows(); track $index) {
+      @switch (row.kind) {
+        @case ('value') {
+          <tr [class.selected]="row.selected">
+            <td class="number">{{ row.rank }}</td>
+            <th scope="row">{{ row.name }}</th>
+            <td class="number">{{ row.value }}</td>
+          </tr>
+        }
+        @case ('eu') {
+          <tr class="eu">
+            <td></td>
+            <th scope="row">Media UE</th>
+            <td class="number">{{ row.value }}</td>
+          </tr>
+        }
+        @default {
+          <tr class="gap">
+            <td colspan="3">…</td>
+          </tr>
+        }
+      }
+    }
+  </tbody>
+</table>

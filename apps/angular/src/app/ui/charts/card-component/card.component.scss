@@ -67,3 +67,17 @@ sup {
 .folded .figure {
   font-size: var(--size-section-title);
 }
+
+.own {
+  margin: 2px 0 0;
+  color: var(--color-ink-muted);
+  font-size: var(--size-text-small);
+}
+
+.chart-title {
+  margin: 16px 0 4px;
+  font-family: var(--font-figures);
+  font-size: var(--size-text);
+  font-weight: 600;
+  text-transform: uppercase;
+}

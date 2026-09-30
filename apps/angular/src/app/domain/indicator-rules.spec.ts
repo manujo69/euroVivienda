@@ -6,6 +6,8 @@ import {
   mapValue,
   openCards,
   resolveYear,
+  shortRanking,
+  timeSeries,
   valuesByGeo,
 } from './indicator-rules';
 
@@ -165,5 +167,69 @@ describe('headline', () => {
 
   it('has nothing to show without selection or EU mean', () => {
     expect(headline(values, undefined, undefined)).toBeUndefined();
+  });
+});
+
+describe('timeSeries', () => {
+  const data: IndicatorData = {
+    ES: {
+      '2016': { total: { v: 102 } },
+      '2015': { total: { v: 100, f: 'p' } },
+      '2017': { youth: { v: 7 } },
+    },
+    PT: { '2015': { total: { v: { own: 70, rent: 30 } } } },
+  };
+
+  it('gives the values of one region and breakdown, oldest year first', () => {
+    expect(timeSeries(data, 'ES', 'total')).toEqual([
+      { year: 2015, value: 100, flags: 'p' },
+      { year: 2016, value: 102, flags: undefined },
+    ]);
+  });
+
+  it('is empty for regions without data and for compositions', () => {
+    expect(timeSeries(data, 'FR', 'total')).toEqual([]);
+    expect(timeSeries(data, 'PT', 'total')).toEqual([]);
+  });
+});
+
+describe('shortRanking', () => {
+  const values = ['AT', 'BE', 'CZ', 'DE', 'ES', 'FI', 'FR', 'IT'].map((geo, i) => ({
+    geo,
+    value: i,
+    flags: undefined,
+  }));
+  const ranks = (rows: ReturnType<typeof shortRanking>) => rows.map((row) => [row.rank, row.geo]);
+
+  it('lists the top three and the bottom three, highest value first', () => {
+    expect(ranks(shortRanking(values, undefined))).toEqual([
+      [1, 'IT'],
+      [2, 'FR'],
+      [3, 'FI'],
+      [6, 'CZ'],
+      [7, 'BE'],
+      [8, 'AT'],
+    ]);
+  });
+
+  it('adds the selected region in its place when it is in the middle', () => {
+    expect(ranks(shortRanking(values, 'DE'))).toEqual([
+      [1, 'IT'],
+      [2, 'FR'],
+      [3, 'FI'],
+      [5, 'DE'],
+      [6, 'CZ'],
+      [7, 'BE'],
+      [8, 'AT'],
+    ]);
+  });
+
+  it('lists everyone when there are six or fewer', () => {
+    expect(ranks(shortRanking(values.slice(0, 4), undefined))).toEqual([
+      [1, 'DE'],
+      [2, 'CZ'],
+      [3, 'BE'],
+      [4, 'AT'],
+    ]);
   });
 });

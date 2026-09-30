@@ -23,6 +23,13 @@ export interface Card {
   /** Latest year with data up to the one chosen. */
   readonly year: number | undefined;
   readonly headline: GeoValue | undefined;
+  readonly breakdown: string;
+  /** Every value of the indicator, for its series. */
+  readonly data: IndicatorData;
+  /** Countries and EU mean at the card's year. */
+  readonly values: readonly GeoValue[];
+  readonly eu: GeoValue | undefined;
+  readonly selected: string | undefined;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -81,7 +88,20 @@ export class ExplorerStore {
         year === undefined
           ? { values: [], eu: undefined }
           : valuesByGeo(meta, data, year, breakdown);
-      return [{ meta, open: open.has(id), year, headline: headline(values, eu, this.selected()) }];
+      const selected = this.selected();
+      return [
+        {
+          meta,
+          open: open.has(id),
+          year,
+          headline: headline(values, eu, selected),
+          breakdown,
+          data,
+          values,
+          eu,
+          selected,
+        },
+      ];
     });
   });
 

@@ -1,4 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import type { IndicatorData } from '@eurovivienda/contract';
+import { NgxEchartsDirective } from 'ngx-echarts';
 import type { IndicatorMeta } from '@eurovivienda/contract';
 import type { Card } from '../../../application/explorer.store';
 import { CardComponent } from './card.component';
@@ -22,11 +25,21 @@ const overburden: IndicatorMeta = {
   breaks: { total: [5, 8] },
 };
 
+const series: IndicatorData = {
+  ES: { '2015': { total: { v: 9.1 } }, '2016': { total: { v: 8.4 } } },
+  EU27_2020: { '2015': { total: { v: 9.9 } }, '2016': { total: { v: 9.5 } } },
+};
+
 const card = (extra: Partial<Card> = {}): Card => ({
   meta: overburden,
   open: true,
   year: 2024,
   headline: { geo: 'EU27_2020', value: 8.2, flags: undefined },
+  breakdown: 'total',
+  data: {},
+  values: [],
+  eu: { geo: 'EU27_2020', value: 8.2, flags: undefined },
+  selected: undefined,
   ...extra,
 });
 
@@ -80,5 +93,52 @@ describe('CardComponent', () => {
     button?.click();
 
     expect(opened).toHaveBeenCalled();
+  });
+
+  describe('scalar charts', () => {
+    const lines = (fixture: ReturnType<typeof render>['fixture']) => {
+      const chart = fixture.debugElement.query(By.directive(NgxEchartsDirective));
+      const option = chart.injector.get(NgxEchartsDirective).options() as {
+        series: { name: string; data: (number | null)[] }[];
+      };
+      return {
+        label: (chart.nativeElement as HTMLElement).getAttribute('aria-label'),
+        series: option.series.map((line) => [line.name, line.data]),
+      };
+    };
+
+    it('shows the evolution of the EU mean and the ranking when open', () => {
+      const { fixture, element } = render(card({ data: series }));
+      const titles = [...element.querySelectorAll('h4')].map((title) => title.textContent?.trim());
+      expect(titles).toEqual(['Evolución', 'Ranking 2024']);
+      expect(lines(fixture)).toEqual({
+        label: 'Evolución de Sobrecarga por coste de vivienda: media UE',
+        series: [['Media UE', [9.9, 9.5]]],
+      });
+      expect(element.querySelector('app-ranking')).not.toBeNull();
+    });
+
+    it('draws the selected region against the EU mean', () => {
+      const { fixture } = render(card({ data: series, selected: 'ES' }));
+      expect(lines(fixture)).toEqual({
+        label: 'Evolución de Sobrecarga por coste de vivienda: España frente a la media UE',
+        series: [
+          ['España', [9.1, 8.4]],
+          ['Media UE', [9.9, 9.5]],
+        ],
+      });
+    });
+
+    it('draws no charts while folded', () => {
+      const { element } = render(card({ data: series, open: false }));
+      expect(element.querySelector('app-line-chart')).toBeNull();
+      expect(element.querySelector('app-ranking')).toBeNull();
+    });
+
+    it('marks derived indicators as own elaboration', () => {
+      const { element } = render(card({ meta: { ...overburden, kind: 'derived' } }));
+      expect(text(element, '.own')).toBe('Elaboración propia');
+      expect(element.querySelector('app-line-chart')).not.toBeNull();
+    });
   });
 });

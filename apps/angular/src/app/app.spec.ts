@@ -78,8 +78,10 @@ describe('App', () => {
 
   it('lists the countries in an accessible table, highest value first', async () => {
     const page = await render();
-    const rows = [...page.querySelectorAll('table tbody tr')].map((row) => row.textContent ?? '');
-    expect(page.querySelector('table caption')).not.toBeNull();
+    const rows = [...page.querySelectorAll('app-table tbody tr')].map(
+      (row) => row.textContent ?? '',
+    );
+    expect(page.querySelector('app-table caption')).not.toBeNull();
     expect(rows.length).toBe(2);
     expect(rows[0]).toContain('España');
     expect(rows[0]).toContain('7,8 %');
@@ -88,14 +90,14 @@ describe('App', () => {
 
   it('selects a country from the table', async () => {
     const page = await render();
-    const button = page.querySelector<HTMLButtonElement>('table tbody button');
+    const button = page.querySelector<HTMLButtonElement>('app-table tbody button');
     button?.click();
     expect(TestBed.inject(ExplorerStore).selected()).toBe('ES');
   });
 
   it('shows flags and the note of each value in the table', async () => {
     const page = await render();
-    const notes = [...page.querySelectorAll('table tbody td.notes')].map((cell) =>
+    const notes = [...page.querySelectorAll('app-table tbody td.notes')].map((cell) =>
       cell.textContent?.trim(),
     );
     expect(notes).toEqual(['', 'Provisional. Muestra pequeña.']);
