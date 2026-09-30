@@ -54,6 +54,31 @@ const hpiData: IndicatorData = {
 const empty = { type: 'FeatureCollection' as const, features: [] };
 const geography: MapGeography = { regions: empty, context: empty };
 
+/** One named NUTS 2 region: Madrid. */
+const regional: MapGeography = {
+  regions: {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: { code: 'ES30', name: 'Comunidad de Madrid' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 0],
+            ],
+          ],
+        },
+      },
+    ],
+  },
+  context: empty,
+};
+
 describe('App', () => {
   let fixture: ComponentFixture<App>;
 
@@ -68,7 +93,13 @@ describe('App', () => {
             data: (id: string) => Promise.resolve(id === 'hpi' ? hpiData : data),
           },
         },
-        { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
+        {
+          provide: GEOGRAPHY_REPOSITORY,
+          useValue: {
+            nuts0: () => Promise.resolve(geography),
+            nuts2: () => Promise.resolve(regional),
+          },
+        },
         {
           provide: URL_STATE,
           useValue: { read: () => Promise.resolve({}), write: () => Promise.resolve() },
@@ -186,6 +217,23 @@ describe('App', () => {
     expect(page.querySelector('.entry-text')?.textContent?.trim()).toBe(
       'Media de la UE en 2024, desde 2015',
     );
+  });
+
+  it('switches the map between countries and NUTS 2 regions', async () => {
+    const page = await render();
+    const select = [...page.querySelectorAll('label')]
+      .find((label) => label.textContent?.includes('Nivel'))
+      ?.querySelector('select');
+    expect([...(select?.options ?? [])].map((option) => option.text.trim())).toEqual([
+      'Países',
+      'Regiones (NUTS 2)',
+    ]);
+
+    if (select) select.value = '2';
+    select?.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    expect(TestBed.inject(ExplorerStore).level()).toBe(2);
   });
 
   it('asks for an indicator when none is active', async () => {

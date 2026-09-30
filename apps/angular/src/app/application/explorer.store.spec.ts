@@ -577,6 +577,13 @@ describe('ExplorerStore', () => {
       expect(store.cards()[0]?.values.map((entry) => entry.geo)).toEqual(['ES30', 'ES51', 'PT17']);
     });
 
+    it('gives the cards the names of the regions', async () => {
+      const store = setup();
+      await store.load();
+      await store.setLevel(2);
+      expect(store.cards()[0]?.names['ES51']).toBe('Cataluña');
+    });
+
     it('names the regions from their geometry', async () => {
       const store = setup();
       await store.load();

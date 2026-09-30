@@ -39,6 +39,8 @@ export interface Card {
   readonly values: readonly GeoValue[];
   readonly eu: GeoValue | undefined;
   readonly selected: string | undefined;
+  /** Names of the regions on the map, for the NUTS 2 level. */
+  readonly names: Readonly<Record<string, string>>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -133,6 +135,7 @@ export class ExplorerStore {
           values,
           eu,
           selected,
+          names: this.names(),
         },
       ];
     });

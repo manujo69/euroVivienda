@@ -40,8 +40,9 @@ export class CardComponent {
       flags: headline.flags ?? '',
       flagText: flagLabels(headline.flags).join(', '),
       explanation:
-        `${geoName(headline.geo)} en ${year}` +
+        `${geoName(headline.geo, this.card().names)} en ${year}` +
         (index ? ', desde 2015' : '') +
+        (headline.national ? ', dato nacional' : '') +
         (meta.mapCategory ? ` · ${meta.mapCategory.label}` : ''),
     };
   });
@@ -50,7 +51,11 @@ export class CardComponent {
   protected readonly evolution = computed(() => {
     const { meta, data, breakdown, selected } = this.card();
     const region: Line | undefined = selected
-      ? { name: geoName(selected), role: 'region', points: timeSeries(data, selected, breakdown) }
+      ? {
+          name: geoName(selected, this.card().names),
+          role: 'region',
+          points: timeSeries(data, selected, breakdown),
+        }
       : undefined;
     const eu: Line = {
       name: 'Media UE',
@@ -72,7 +77,7 @@ export class CardComponent {
     if (year === undefined) return undefined;
     const own = selected ? slicesOf(meta, data, selected, year, breakdown) : [];
     const [geo, slices] = own.length
-      ? [geoName(selected ?? ''), own]
+      ? [geoName(selected ?? '', this.card().names), own]
       : ['media UE', slicesOf(meta, data, EU_AGGREGATE, year, breakdown)];
     return {
       // The legend of both charts: each category with its colour and its share in the pie.
@@ -94,14 +99,14 @@ export class CardComponent {
       .sort((a, b) => b.value - a.value)
       .map((entry) => ({
         geo: entry.geo,
-        name: geoName(entry.geo),
+        name: geoName(entry.geo, this.card().names),
         slices: slicesOf(meta, data, entry.geo, year, breakdown),
       }));
     return {
       option: stackedBarsOption({
         categories: meta.categories ?? [],
         rows,
-        selected: selected && geoName(selected),
+        selected: selected && geoName(selected, this.card().names),
       }),
       geos: rows.map((row) => row.geo),
       label: `${meta.label} por país en ${year}`,

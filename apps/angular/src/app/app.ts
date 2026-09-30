@@ -40,6 +40,10 @@ export class App {
     afterNextRender(() => void this.store.load());
   }
 
+  protected onLevel(event: Event): void {
+    void this.store.setLevel((event.target as HTMLSelectElement).value === '2' ? 2 : 0);
+  }
+
   protected onYear(event: Event): void {
     this.store.setYear(Number((event.target as HTMLSelectElement).value));
   }

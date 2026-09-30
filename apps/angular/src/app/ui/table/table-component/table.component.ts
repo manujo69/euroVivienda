@@ -26,11 +26,13 @@ export class TableComponent {
     );
     const row = (entry: GeoValue, i: number) => ({
       geo: entry.geo,
-      name: geoName(entry.geo),
+      name: geoName(entry.geo, this.store.names()),
       value: figures[i] ?? '',
       // Flags first, then the note, as one sentence-case text: «Provisional. Solo el 2,3 % …».
       flags: sentenceCase(
-        [flagLabels(entry.flags).join(', '), entry.note].filter(Boolean).join('. '),
+        [entry.national ? 'dato nacional' : '', flagLabels(entry.flags).join(', '), entry.note]
+          .filter(Boolean)
+          .join('. '),
       ),
     });
     return { rows: sorted.map(row), eu: eu && row(eu, sorted.length) };

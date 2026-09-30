@@ -34,6 +34,31 @@ const withEu: IndicatorData = {
 const empty = { type: 'FeatureCollection' as const, features: [] };
 const geography: MapGeography = { regions: empty, context: empty };
 
+/** One named NUTS 2 region: Madrid. */
+const regional: MapGeography = {
+  regions: {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: { code: 'ES30', name: 'Comunidad de Madrid' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 0],
+            ],
+          ],
+        },
+      },
+    ],
+  },
+  context: empty,
+};
+
 describe('TableComponent', () => {
   async function render(data: IndicatorData = withEu, meta: IndicatorMeta = overburden) {
     TestBed.configureTestingModule({
@@ -46,7 +71,13 @@ describe('TableComponent', () => {
             data: () => Promise.resolve(data),
           },
         },
-        { provide: GEOGRAPHY_REPOSITORY, useValue: { nuts0: () => Promise.resolve(geography) } },
+        {
+          provide: GEOGRAPHY_REPOSITORY,
+          useValue: {
+            nuts0: () => Promise.resolve(geography),
+            nuts2: () => Promise.resolve(regional),
+          },
+        },
         {
           provide: URL_STATE,
           useValue: { read: () => Promise.resolve({}), write: () => Promise.resolve() },
@@ -139,5 +170,15 @@ describe('TableComponent', () => {
       cell.textContent?.trim(),
     );
     expect(figures).toEqual(['+8,2 %', '-3,0 %']);
+  });
+
+  it('lists the regions by name at NUTS 2, marking national values', async () => {
+    const { fixture, store, table } = await render();
+    await store.setLevel(2);
+    fixture.detectChanges();
+
+    expect(table.querySelectorAll('thead th')[1]?.textContent?.trim()).toBe('Región');
+    const [row] = [...table.querySelectorAll('tbody tr')].map(cells);
+    expect(row).toEqual(['1', 'Comunidad de Madrid', '7,8 %', 'Dato nacional']);
   });
 });

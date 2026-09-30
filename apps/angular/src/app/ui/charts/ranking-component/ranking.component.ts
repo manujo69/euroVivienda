@@ -20,6 +20,8 @@ export class RankingComponent {
   readonly eu = input.required<GeoValue | undefined>();
   readonly selected = input.required<string | undefined>();
   readonly unit = input.required<string>();
+  /** Names of the NUTS 2 regions; countries are named by the domain. */
+  readonly names = input<Readonly<Record<string, string>>>({});
   /** Code of the country the user picks. */
   readonly picked = output<string>();
 
@@ -44,7 +46,7 @@ export class RankingComponent {
         kind: 'value',
         geo: entry.geo,
         rank: entry.rank,
-        name: geoName(entry.geo),
+        name: geoName(entry.geo, this.names()),
         value: figures[i] ?? '',
         selected: entry.geo === this.selected(),
       });

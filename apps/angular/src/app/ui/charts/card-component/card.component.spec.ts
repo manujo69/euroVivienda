@@ -42,6 +42,7 @@ const card = (extra: Partial<Card> = {}): Card => ({
   values: [],
   eu: { geo: 'EU27_2020', value: 8.2, flags: undefined },
   selected: undefined,
+  names: {},
   ...extra,
 });
 
@@ -79,6 +80,18 @@ describe('CardComponent', () => {
     expect(text(element, '.headline .explanation')).toBe('Portugal en 2024');
     expect(text(element, '.headline sup [aria-hidden="true"]')).toBe('p');
     expect(text(element, '.headline sup .visually-hidden')).toBe('provisional');
+  });
+
+  it('names a selected region by its name', async () => {
+    const { element } = await render(
+      card({
+        headline: { geo: 'ES30', value: 9.1, flags: undefined, national: true },
+        names: { ES30: 'Comunidad de Madrid' },
+      }),
+    );
+    expect(text(element, '.headline .explanation')).toBe(
+      'Comunidad de Madrid en 2024, dato nacional',
+    );
   });
 
   it('says so when there is no figure to show', async () => {

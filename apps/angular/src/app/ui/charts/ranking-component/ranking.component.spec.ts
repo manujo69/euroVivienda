@@ -52,6 +52,18 @@ describe('RankingComponent', () => {
     expect(element.querySelector('tr.eu')).not.toBeNull();
   });
 
+  it('names the regions it is given', () => {
+    const fixture = TestBed.createComponent(RankingComponent);
+    fixture.componentRef.setInput('values', [{ geo: 'ES30', value: 9, flags: undefined }]);
+    fixture.componentRef.setInput('eu', undefined);
+    fixture.componentRef.setInput('selected', undefined);
+    fixture.componentRef.setInput('unit', '%');
+    fixture.componentRef.setInput('names', { ES30: 'Comunidad de Madrid' });
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('tbody th')?.textContent?.trim()).toBe('Comunidad de Madrid');
+  });
+
   it('selects a country with its button, pressed on the selected one', () => {
     const { element, picked } = render('DE', null);
     const buttons = [...element.querySelectorAll<HTMLButtonElement>('tbody button')];

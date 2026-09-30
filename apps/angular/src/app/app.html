@@ -30,6 +30,13 @@
                 </label>
               }
               <label>
+                Nivel
+                <select (change)="onLevel($event)">
+                  <option value="0" [selected]="store.level() === 0">Países</option>
+                  <option value="2" [selected]="store.level() === 2">Regiones (NUTS 2)</option>
+                </select>
+              </label>
+              <label>
                 Año
                 <select class="tabular" (change)="onYear($event)">
                   @for (year of store.years(); track year) {
