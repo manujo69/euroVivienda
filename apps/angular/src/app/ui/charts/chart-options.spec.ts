@@ -1,4 +1,10 @@
-import { CATEGORY_COLOURS, lineOption, pieOption, stackedBarsOption } from './chart-options';
+import {
+  CATEGORY_COLOURS,
+  lineOption,
+  pieOption,
+  scatterOption,
+  stackedBarsOption,
+} from './chart-options';
 
 const point = (year: number, value: number) => ({ year, value, flags: undefined });
 
@@ -130,5 +136,44 @@ describe('stackedBarsOption', () => {
   it('stresses the name of the selected country', () => {
     expect(option.yAxis.axisLabel.formatter('España')).toBe('{selected|España}');
     expect(option.yAxis.axisLabel.formatter('Portugal')).toBe('Portugal');
+  });
+});
+
+describe('scatterOption', () => {
+  const option = scatterOption({
+    x: { label: 'Edad media de emancipación', unit: 'años', year: 2023 },
+    y: { label: 'Sobrecarga (Jóvenes)', unit: '%', year: 2024 },
+    points: [
+      { geo: 'ES', x: 30, y: 12 },
+      { geo: 'ES30', x: 24, y: 10 },
+    ],
+    selected: 'ES30',
+    names: { ES30: 'Comunidad de Madrid' },
+  });
+  const [series] = option.series;
+
+  it('names each axis with its indicator, unit and year', () => {
+    expect(option.xAxis.name).toBe('Edad media de emancipación (años, 2023)');
+    expect(option.yAxis.name).toBe('Sobrecarga (Jóvenes) (%, 2024)');
+  });
+
+  it('draws a point per region, named', () => {
+    expect(series?.data.map((point) => [point.name, point.value])).toEqual([
+      ['ES', [30, 12]],
+      ['ES30', [24, 10]],
+    ]);
+  });
+
+  it('stresses and labels the selected region', () => {
+    const [other, selected] = series?.data ?? [];
+    expect(selected?.label?.show).toBeTrue();
+    expect(selected?.label?.formatter).toBe('Comunidad de Madrid');
+    expect(selected?.symbolSize).toBeGreaterThan(other?.symbolSize ?? 0);
+  });
+
+  it('gives the region and both values in the tooltip, in Spanish', () => {
+    expect(option.tooltip.formatter({ name: 'ES30', value: [24.5, 10] })).toBe(
+      '<strong>Comunidad de Madrid</strong><br>Edad media de emancipación: 24,5 años<br>Sobrecarga (Jóvenes): 10 %',
+    );
   });
 });

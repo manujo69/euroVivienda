@@ -1,6 +1,6 @@
 // ECharts with only what the panel cards use, to keep the bundle small.
 
-import { BarChart, LineChart, PieChart } from 'echarts/charts';
+import { BarChart, LineChart, PieChart, ScatterChart } from 'echarts/charts';
 import {
   AriaComponent,
   GridComponent,
@@ -15,6 +15,7 @@ echarts.use([
   LineChart,
   PieChart,
   BarChart,
+  ScatterChart,
   GridComponent,
   LegendComponent,
   MarkLineComponent,

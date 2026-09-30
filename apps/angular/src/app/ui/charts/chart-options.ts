@@ -1,6 +1,8 @@
 // ECharts options for the panel cards, built from the state as pure functions.
 
 import type { Point, Slice } from '../../domain/indicator-rules';
+import { geoName } from '../../domain/labels';
+import type { ScatterPoint } from '../../domain/scatter';
 import { formatValue } from '../map/map-option';
 
 /** Dark end of the map palette for the region; muted ink for the EU mean. */
@@ -163,5 +165,69 @@ export function stackedBarsOption(input: BarsInput) {
         (row) => row.slices.find((slice) => slice.id === category.id)?.value ?? null,
       ),
     })),
+  };
+}
+
+export interface ScatterAxis {
+  /** Indicator, and its breakdown when it is not the first one. */
+  readonly label: string;
+  readonly unit: string;
+  readonly year: number | undefined;
+}
+
+export interface ScatterInput {
+  readonly x: ScatterAxis;
+  readonly y: ScatterAxis;
+  readonly points: readonly ScatterPoint[];
+  readonly selected: string | undefined;
+  /** Names of the NUTS 2 regions; countries are named by the domain. */
+  readonly names: Readonly<Record<string, string>>;
+}
+
+/** Two indicators against each other, one point per region: descriptive, never causal. */
+export function scatterOption(input: ScatterInput) {
+  const axis = ({ label, unit, year }: ScatterAxis) => ({
+    type: 'value' as const,
+    name: `${label} (${unit}${year === undefined ? '' : `, ${year}`})`,
+    nameLocation: 'middle' as const,
+    nameGap: 28,
+    nameTextStyle: { color: EU, fontSize: 11 },
+    // Regions spread around their values: zero would squash them.
+    scale: true,
+    axisLabel: { formatter: (value: number) => formatValue(value) },
+    splitLine: { lineStyle: { color: '#ececec' } },
+  });
+  const name = (geo: string) => geoName(geo, input.names);
+  return {
+    animation: false,
+    grid: { left: 16, right: 16, top: 16, bottom: 40, containLabel: true },
+    xAxis: axis(input.x),
+    yAxis: { ...axis(input.y), nameGap: 36 },
+    tooltip: {
+      trigger: 'item' as const,
+      formatter: ({ name: geo, value: [x, y] }: { name: string; value: [number, number] }) =>
+        [
+          `<strong>${name(geo)}</strong>`,
+          `${input.x.label}: ${formatValue(x, input.x.unit)}`,
+          `${input.y.label}: ${formatValue(y, input.y.unit)}`,
+        ].join('<br>'),
+    },
+    series: [
+      {
+        type: 'scatter' as const,
+        data: input.points.map((point) => {
+          const selected = point.geo === input.selected;
+          return {
+            name: point.geo,
+            value: [point.x, point.y],
+            symbolSize: selected ? 12 : 7,
+            itemStyle: { color: selected ? '#1a1a1a' : REGION, opacity: selected ? 1 : 0.75 },
+            ...(selected
+              ? { label: { show: true, formatter: name(point.geo), position: 'top' as const } }
+              : {}),
+          };
+        }),
+      },
+    ],
   };
 }
