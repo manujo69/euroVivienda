@@ -45,3 +45,14 @@ summary {
   color: var(--color-ink-muted);
   font-size: var(--size-text-small);
 }
+
+.axes {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--size-text-small);
+}
+
+.axis {
+  color: var(--color-ink-muted);
+}

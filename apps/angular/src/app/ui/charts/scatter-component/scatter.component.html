@@ -41,6 +41,11 @@
     </label>
   </details>
 
+  <ul class="axes">
+    <li><span class="axis">Eje vertical:</span> {{ axisNames().y }}</li>
+    <li><span class="axis">Eje horizontal:</span> {{ axisNames().x }}</li>
+  </ul>
+
   <!-- ECharts loads apart, as in the map. -->
   @defer (on immediate) {
     <app-chart

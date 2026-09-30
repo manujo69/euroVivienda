@@ -43,6 +43,14 @@ export class ScatterComponent {
     return `r = ${R.format(r)} · ${points.length} ${level === 2 ? 'regiones' : 'países'}`;
   });
 
+  /** The name of each axis, written here: too long for the chart. */
+  protected readonly axisNames = computed(() => {
+    const { x, y } = this.scatter();
+    const name = ({ label, unit, year }: ScatterAxis) =>
+      `${label} (${unit}${year === undefined ? '' : `, ${year}`})`;
+    return { x: name(axis(x)), y: name(axis(y)) };
+  });
+
   protected readonly chart = computed(() => {
     const { x, y, points, selected, names, label } = this.scatter();
     return {

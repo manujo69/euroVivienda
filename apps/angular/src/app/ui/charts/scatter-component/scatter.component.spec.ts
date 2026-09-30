@@ -81,6 +81,17 @@ describe('ScatterComponent', () => {
     expect(text(element, 'h3')).toBe('Sobrecarga (Jóvenes) frente a Edad media de emancipación');
   });
 
+  it('names each axis with its indicator, unit and year', async () => {
+    const { element } = await render(scatter());
+    const axes = [...element.querySelectorAll('.axes li')].map((item) =>
+      item.textContent?.replace(/\s+/g, ' ').trim(),
+    );
+    expect(axes).toEqual([
+      'Eje vertical: Sobrecarga por coste de vivienda (%, 2024)',
+      'Eje horizontal: Edad media de emancipación (años, 2023)',
+    ]);
+  });
+
   it('gives r and the number of countries, and warns that it is no cause', async () => {
     const { element } = await render(scatter());
     expect(text(element, '.correlation')).toBe('r = 0,34 · 3 países');

@@ -186,12 +186,9 @@ export interface ScatterInput {
 
 /** Two indicators against each other, one point per region: descriptive, never causal. */
 export function scatterOption(input: ScatterInput) {
-  const axis = ({ label, unit, year }: ScatterAxis) => ({
+  // Unnamed: catalogue names are too long for an axis; the card writes them above the chart.
+  const axis = () => ({
     type: 'value' as const,
-    name: `${label} (${unit}${year === undefined ? '' : `, ${year}`})`,
-    nameLocation: 'middle' as const,
-    nameGap: 28,
-    nameTextStyle: { color: EU, fontSize: 11 },
     // Regions spread around their values: zero would squash them.
     scale: true,
     axisLabel: { formatter: (value: number) => formatValue(value) },
@@ -200,9 +197,9 @@ export function scatterOption(input: ScatterInput) {
   const name = (geo: string) => geoName(geo, input.names);
   return {
     animation: false,
-    grid: { left: 16, right: 16, top: 16, bottom: 40, containLabel: true },
-    xAxis: axis(input.x),
-    yAxis: { ...axis(input.y), nameGap: 36 },
+    grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
+    xAxis: axis(),
+    yAxis: axis(),
     tooltip: {
       trigger: 'item' as const,
       formatter: ({ name: geo, value: [x, y] }: { name: string; value: [number, number] }) =>

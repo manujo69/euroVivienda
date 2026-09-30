@@ -152,9 +152,9 @@ describe('scatterOption', () => {
   });
   const [series] = option.series;
 
-  it('names each axis with its indicator, unit and year', () => {
-    expect(option.xAxis.name).toBe('Edad media de emancipación (años, 2023)');
-    expect(option.yAxis.name).toBe('Sobrecarga (Jóvenes) (%, 2024)');
+  it('leaves the axes unnamed: catalogue names are too long for them, the card writes them', () => {
+    expect('name' in option.xAxis).toBeFalse();
+    expect('name' in option.yAxis).toBeFalse();
   });
 
   it('draws a point per region, named', () => {
