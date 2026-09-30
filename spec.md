@@ -248,8 +248,8 @@ La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos prime
 1. **ETL mínimo:** un escalar + el de composición + NUTS 0 → JSON válido contra el contrato, con tests.
 2. **Mapa:** coloreado, leyenda, tooltip, selección, paleta accesible y tabla alternativa.
 3. **Catálogo y panel:** activar indicadores, principal, tarjetas por tipo y sincronización.
-4. **Año, NUTS 2, desgloses y URL compartible.**
-5. **Resto del catálogo:** dispersión con parejas sugeridas, estados vacíos y móvil.
+4. **Año, desgloses y URL compartible.**
+5. **Resto del catálogo y NUTS 2:** geometrías NUTS 2 e indicadores regionales, nivel NUTS 2 con herencia del dato nacional, dispersión con parejas sugeridas, estados vacíos y móvil.
 6. **Pulido:** «Sobre los datos», accesibilidad y auditoría de rendimiento.
 
 ## Riesgos

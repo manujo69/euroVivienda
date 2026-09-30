@@ -82,16 +82,16 @@ Consultas en `packages/etl/sql/analysis/`; resultados y decisiones en `cobertura
 - [x] Tarjetas por tipo: escalar, índice, composición y derivado; máximo cuatro abiertas. Panel a la derecha con una tarjeta por indicador activo y su cifra principal (región seleccionada o media UE); abiertas las cuatro usadas más recientemente, el resto plegadas. Escalar y derivado: evolución frente a la media UE y ranking corto (derivado con «elaboración propia»); índice: variación desde 2015 y líneas con base 100; composición: pastel y barras apiladas al 100 %, con una leyenda común. Gráficos en `@defer`. El contrato nombra las categorías (`categories` y `mapCategory` como `{ id, label }`).
 - [x] Selección sincronizada entre mapa y gráficos. La región seleccionada en el store se ve en el mapa, la tabla y cada tarjeta (cifra, líneas, ranking, pastel y barras), y se puede elegir desde el mapa, la tabla, el ranking (botones con `aria-pressed`) o las barras de una composición.
 
-## Hito 4 — Año, NUTS 2, desgloses y URL
+## Hito 4 — Año, desgloses y URL
 
 - [ ] Selector de año con fallback por indicador.
-- [ ] Nivel NUTS 2 con herencia del dato nacional.
 - [ ] Selector de desglose en las tarjetas (edad y régimen de tenencia en la sobrecarga).
 - [ ] Estado en la URL y normalización de combinaciones inválidas.
 
-## Hito 5 — Resto del catálogo
+## Hito 5 — Resto del catálogo y NUTS 2
 
 - [ ] Exportar el resto de indicadores del catálogo y las geometrías NUTS 2.
+- [ ] Nivel NUTS 2 con herencia del dato nacional (pasa del hito 4: necesita las geometrías NUTS 2 y los indicadores regionales publicados).
 - [ ] Tarjeta de dispersión con parejas sugeridas, selector libre y coeficiente r.
 - [ ] Estados vacíos y diseño móvil con pestañas.
 
