@@ -2,9 +2,7 @@
   class="chart"
   echarts
   role="img"
-  [attr.aria-label]="
-    'Mapa de ' + (store.meta()?.label ?? '') + '. Los datos están en la tabla.'
-  "
+  [attr.aria-label]="'Mapa de ' + (store.meta()?.label ?? '') + '. Los datos están en la tabla.'"
   [options]="option()"
   (chartClick)="onClick($any($event).name)"
 ></div>

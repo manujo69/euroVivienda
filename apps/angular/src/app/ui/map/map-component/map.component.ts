@@ -3,7 +3,8 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import type { EChartsOption } from 'echarts';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import { ExplorerStore } from '../../../application/explorer.store';
-import { codesOf, echarts, registerNuts0 } from '../echarts';
+import { codesOf } from '../../../domain/geography';
+import { echarts, registerNuts0 } from '../echarts';
 import { legendItems, mapOption } from '../map-option';
 
 @Component({
@@ -43,7 +44,6 @@ export class MapComponent {
   /** Only regions with data are selectable; the grey context is not. */
   protected onClick(code: string): void {
     if (this.regions().includes(code)) this.store.select(code);
-
   }
 
   protected readonly legend = computed(() =>

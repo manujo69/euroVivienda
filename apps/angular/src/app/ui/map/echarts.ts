@@ -22,6 +22,3 @@ export function registerNuts0(geography: MapGeography): void {
   echarts.registerMap('nuts0', map as Parameters<typeof echarts.registerMap>[1]);
   registered.add(geography);
 }
-
-export const codesOf = (layer: Geography): string[] =>
-  layer.features.map((feature) => String(feature.properties?.['code'] ?? feature.id));
