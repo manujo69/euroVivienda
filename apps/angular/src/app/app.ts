@@ -32,6 +32,10 @@ export class App {
     afterNextRender(() => void this.store.load());
   }
 
+  protected onYear(event: Event): void {
+    this.store.setYear(Number((event.target as HTMLSelectElement).value));
+  }
+
   protected onBreakdown(event: Event): void {
     this.store.setBreakdown((event.target as HTMLSelectElement).value);
   }

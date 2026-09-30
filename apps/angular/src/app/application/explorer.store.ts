@@ -10,6 +10,7 @@ import {
   openCards,
   resolveYear,
   valuesByGeo,
+  yearRange,
 } from '../domain/indicator-rules';
 import type { MapGeography } from '../domain/ports';
 import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from './tokens';
@@ -74,6 +75,11 @@ export class ExplorerStore {
   readonly values = computed(() => this.current().values);
   readonly eu = computed(() => this.current().eu);
 
+  /** Options of the year selector: the years of the active indicators, newest first. */
+  readonly years = computed(() =>
+    yearRange(this.catalogState().filter((meta) => this.activeIds().includes(meta.id))),
+  );
+
   readonly cards = computed((): Card[] => {
     const open = openCards(this.recency());
     return this.activeIds().flatMap((id) => {
@@ -135,6 +141,7 @@ export class ExplorerStore {
     if (this.activeIds().includes(id)) {
       this.activeIds.update((ids) => ids.filter((active) => active !== id));
       this.recency.update((ids) => ids.filter((active) => active !== id));
+      this.keepYearInRange();
       // The map goes to the last indicator still active, if any.
       if (this.mainId() === id) this.makeMain(this.activeIds().at(-1));
       return;
@@ -176,7 +183,14 @@ export class ExplorerStore {
   }
 
   setYear(year: number): void {
-    this.year.set(year);
+    if (this.years().includes(year)) this.year.set(year);
+  }
+
+  /** The chosen year stays among the selector options when the range shrinks. */
+  private keepYearInRange(): void {
+    const [last, first] = [this.years()[0], this.years().at(-1)];
+    if (last === undefined || first === undefined) return;
+    this.year.set(Math.min(Math.max(this.year(), first), last));
   }
 
   /** Clicking the selected region again clears the selection. */

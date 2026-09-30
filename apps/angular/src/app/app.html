@@ -29,12 +29,19 @@
                   </select>
                 </label>
               }
-              <span>
-                Año <strong class="tabular">{{ store.shownYear() }}</strong>
-                @if (store.shownYear() !== store.year()) {
-                  <span class="note">(último disponible)</span>
+              <label>
+                Año
+                <select class="tabular" (change)="onYear($event)">
+                  @for (year of store.years(); track year) {
+                    <option [value]="year" [selected]="year === store.year()">{{ year }}</option>
+                  }
+                </select>
+              </label>
+              @if (store.shownYear(); as shown) {
+                @if (shown !== store.year()) {
+                  <span class="note">(último disponible: {{ shown }})</span>
                 }
-              </span>
+              }
             </div>
           </header>
 

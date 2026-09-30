@@ -371,4 +371,45 @@ describe('ExplorerStore', () => {
       expect(store.cards()[0]?.headline?.value).toBe(7.2);
     });
   });
+
+  describe('year', () => {
+    const recent: IndicatorMeta = { ...overburden, id: 'recent', years: [2020, 2025] };
+    const early: IndicatorMeta = { ...overburden, id: 'early', years: [2015, 2023] };
+
+    async function withRanges() {
+      const store = setup({
+        catalog: () => Promise.resolve([recent, early]),
+        data: () => Promise.resolve(data),
+      });
+      await store.load();
+      return store;
+    }
+
+    it('offers the years of the active indicators, newest first', async () => {
+      const store = await withRanges();
+      expect(store.years()).toEqual([2025, 2024, 2023, 2022, 2021, 2020]);
+
+      await store.toggle('early');
+      expect(store.years().at(-1)).toBe(2015);
+    });
+
+    it('ignores years outside that range', async () => {
+      const store = await withRanges();
+      store.setYear(2016);
+      expect(store.year()).toBe(2025);
+
+      store.setYear(2021);
+      expect(store.year()).toBe(2021);
+    });
+
+    it('brings the year back into range when an indicator is switched off', async () => {
+      const store = await withRanges();
+      await store.toggle('early');
+      store.setYear(2016);
+
+      await store.toggle('early');
+
+      expect(store.year()).toBe(2020);
+    });
+  });
 });

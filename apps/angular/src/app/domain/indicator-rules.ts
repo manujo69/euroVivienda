@@ -139,3 +139,11 @@ export function slicesOf(
     v[id] === undefined ? [] : [{ id, label, value: v[id] }],
   );
 }
+
+/** Every year covered by the given indicators, newest first: the options of the year selector. */
+export function yearRange(metas: readonly IndicatorMeta[]): number[] {
+  if (!metas.length) return [];
+  const last = Math.max(...metas.map((meta) => meta.years[1]));
+  const first = Math.min(...metas.map((meta) => meta.years[0]));
+  return Array.from({ length: last - first + 1 }, (_, i) => last - i);
+}

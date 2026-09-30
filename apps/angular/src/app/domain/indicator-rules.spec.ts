@@ -10,6 +10,7 @@ import {
   slicesOf,
   timeSeries,
   valuesByGeo,
+  yearRange,
 } from './indicator-rules';
 
 const meta = (kind: IndicatorMeta['kind'], extra: Partial<IndicatorMeta> = {}): IndicatorMeta => ({
@@ -263,5 +264,19 @@ describe('slicesOf', () => {
   it('is empty without data for that region and year', () => {
     expect(slicesOf(tenure, data, 'PT', 2024, 'total')).toEqual([]);
     expect(slicesOf(tenure, data, 'ES', 2023, 'total')).toEqual([]);
+  });
+});
+
+describe('yearRange', () => {
+  it('spans every year of the indicators given, newest first', () => {
+    const hpi = meta('index', { years: [2015, 2025] });
+    const income = meta('scalar', { years: [2016, 2023] });
+    expect(yearRange([income])).toEqual([2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016]);
+    expect(yearRange([hpi, income])[0]).toBe(2025);
+    expect(yearRange([hpi, income]).at(-1)).toBe(2015);
+  });
+
+  it('is empty without indicators', () => {
+    expect(yearRange([])).toEqual([]);
   });
 });

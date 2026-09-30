@@ -30,7 +30,7 @@ const overburden: IndicatorMeta = {
 };
 
 const data: IndicatorData = {
-  ES: { '2024': { total: { v: 7.8 }, youth: { v: 12.4, f: 'p' } } },
+  ES: { '2016': { total: { v: 6.5 } }, '2024': { total: { v: 7.8 }, youth: { v: 12.4, f: 'p' } } },
   PT: { '2024': { total: { v: 5.1, f: 'p', n: 'Muestra pequeña.' } } },
   EU27_2020: { '2024': { total: { v: 8.2 } } },
 };
@@ -118,6 +118,41 @@ describe('App', () => {
     expect(cards.map((title) => title.textContent?.trim())).toEqual([
       'Sobrecarga por coste de vivienda',
     ]);
+  });
+
+  it('lets the user choose the year among those of the active indicators', async () => {
+    const page = await render();
+    const select = [...page.querySelectorAll('label')]
+      .find((label) => label.textContent?.includes('Año'))
+      ?.querySelector('select');
+    expect([...(select?.options ?? [])].map((option) => option.value)).toEqual([
+      '2025',
+      '2024',
+      '2023',
+      '2022',
+      '2021',
+      '2020',
+      '2019',
+      '2018',
+      '2017',
+      '2016',
+      '2015',
+    ]);
+    expect(select?.value).toBe('2025');
+  });
+
+  it('shows the latest earlier year with data, and says so', async () => {
+    const page = await render();
+    const select = [...page.querySelectorAll('label')]
+      .find((label) => label.textContent?.includes('Año'))
+      ?.querySelector('select');
+    if (select) select.value = '2020';
+    select?.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(TestBed.inject(ExplorerStore).year()).toBe(2020);
+    expect(page.querySelector('app-table caption')?.textContent).toContain('2016');
+    expect(page.querySelector('.head')?.textContent).toContain('último disponible: 2016');
   });
 
   it('asks for an indicator when none is active', async () => {
