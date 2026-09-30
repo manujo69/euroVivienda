@@ -50,4 +50,30 @@ describe('lineOption', () => {
     });
     expect(alone.series.map((line) => line.name)).toEqual(['Media UE']);
   });
+
+  describe('with a base', () => {
+    const indexed = lineOption({
+      unit: '',
+      base: 100,
+      lines: [{ name: 'Media UE', role: 'eu', points: [point(2015, 100), point(2016, 104)] }],
+    });
+
+    it('marks the base year value with a labelled reference line', () => {
+      expect(indexed.series[0]?.markLine).toEqual(
+        jasmine.objectContaining({
+          data: [{ yAxis: 100 }],
+          label: jasmine.objectContaining({ formatter: '2015 = 100' }),
+        }),
+      );
+    });
+
+    it('lets the axis start near the values instead of at zero', () => {
+      expect(indexed.yAxis.scale).toBeTrue();
+      expect(option.yAxis.scale).toBeFalse();
+    });
+
+    it('draws no reference line without a base', () => {
+      expect(option.series.every((line) => line.markLine === undefined)).toBeTrue();
+    });
+  });
 });

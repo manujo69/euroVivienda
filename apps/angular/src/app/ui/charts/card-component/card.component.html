@@ -20,7 +20,7 @@
   <p class="headline">
     @if (figure(); as figure) {
       <span class="figure"
-        >{{ figure.value }} <span class="unit">{{ card().meta.unit }}</span>
+        >{{ figure.value }} <span class="unit">{{ figure.unit }}</span>
         @if (figure.flags) {
           <sup>
             <span aria-hidden="true">{{ figure.flags }}</span>
@@ -47,6 +47,11 @@
           [selected]="card().selected"
           [unit]="card().meta.unit"
         />
+      }
+    } @else if (card().meta.kind === 'index') {
+      @defer (on immediate) {
+        <h4 class="chart-title">Evolución</h4>
+        <app-line-chart [option]="evolution().option" [label]="evolution().label" />
       }
     }
   }

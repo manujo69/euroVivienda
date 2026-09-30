@@ -141,4 +141,34 @@ describe('CardComponent', () => {
       expect(element.querySelector('app-line-chart')).not.toBeNull();
     });
   });
+
+  describe('index charts', () => {
+    const hpi: IndicatorMeta = {
+      ...overburden,
+      id: 'hpi',
+      label: 'Variación del precio de la vivienda',
+      kind: 'index',
+      unit: 'Índice (2015 = 100)',
+    };
+    const indexData: IndicatorData = {
+      EU27_2020: { '2015': { total: { v: 100 } }, '2016': { total: { v: 104.3 } } },
+    };
+
+    it('leads with the change since 2015, signed', () => {
+      const { element } = render(card({ meta: hpi, data: indexData }));
+      expect(text(element, '.headline .figure')).toBe('+8,2 %');
+      expect(text(element, '.headline .explanation')).toBe('Media UE en 2024, desde 2015');
+    });
+
+    it('draws the index against the base year, without a ranking', () => {
+      const { fixture, element } = render(card({ meta: hpi, data: indexData }));
+      const chart = fixture.debugElement.query(By.directive(NgxEchartsDirective));
+      const option = chart.injector.get(NgxEchartsDirective).options() as {
+        series: { data: number[]; markLine?: { data: { yAxis: number }[] } }[];
+      };
+      expect(option.series.map((line) => line.data)).toEqual([[100, 104.3]]);
+      expect(option.series[0]?.markLine?.data).toEqual([{ yAxis: 100 }]);
+      expect(element.querySelector('app-ranking')).toBeNull();
+    });
+  });
 });

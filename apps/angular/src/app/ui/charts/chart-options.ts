@@ -16,6 +16,18 @@ export interface Line {
 export interface LineInput {
   readonly unit: string;
   readonly lines: readonly Line[];
+  /** Value of the base year of an index (2015 = 100), drawn as a reference line. */
+  readonly base?: number;
+}
+
+function baseLine(base: number) {
+  return {
+    silent: true,
+    symbol: 'none',
+    data: [{ yAxis: base }],
+    lineStyle: { color: '#1a1a1a', width: 1, type: 'solid' as const },
+    label: { position: 'insideStartTop' as const, formatter: `2015 = ${base}`, color: '#5f5f5f' },
+  };
 }
 
 export function lineOption(input: LineInput) {
@@ -25,7 +37,7 @@ export function lineOption(input: LineInput) {
   const axis: number[] = [];
   for (let year = years[0] ?? 0; year <= (years.at(-1) ?? -1); year++) axis.push(year);
 
-  const series = input.lines.map((line) => {
+  const series = input.lines.map((line, i) => {
     const byYear = new Map(line.points.map((p) => [p.year, p.value]));
     const colour = line.role === 'region' ? REGION : EU;
     return {
@@ -42,6 +54,7 @@ export function lineOption(input: LineInput) {
       },
       // Direct labels instead of a legend.
       endLabel: { show: true, formatter: line.name, color: colour },
+      markLine: i === 0 && input.base !== undefined ? baseLine(input.base) : undefined,
     };
   });
 
@@ -55,6 +68,8 @@ export function lineOption(input: LineInput) {
     },
     yAxis: {
       type: 'value' as const,
+      // An index moves around its base: zero would squash the lines.
+      scale: input.base !== undefined,
       axisLabel: { formatter: (value: number) => formatValue(value) },
       splitLine: { lineStyle: { color: '#ececec' } },
     },
