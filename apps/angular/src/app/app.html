@@ -1,67 +1,76 @@
-<main class="explorer">
+<div class="explorer">
   @switch (store.status()) {
     @case ('error') {
-      <p role="alert">No se han podido cargar los datos. Vuelve a intentarlo más tarde.</p>
+      <main>
+        <p role="alert">No se han podido cargar los datos. Vuelve a intentarlo más tarde.</p>
+      </main>
     }
     @case ('ready') {
+      <aside class="catalogue">
+        <app-catalog />
+      </aside>
       @if (store.meta(); as meta) {
-        <header class="head">
-          <div class="title">
-            <h1 class="screen-title">{{ meta.label }}</h1>
-            @if (meta.notes) {
-              <p class="subtitle">{{ meta.notes }}</p>
-            }
-          </div>
-          <div class="controls">
-            @if (meta.breakdowns.length > 1) {
-              <label>
-                Desglose
-                <select [value]="store.breakdown()" (change)="onBreakdown($event)">
-                  @for (breakdown of meta.breakdowns; track breakdown.id) {
-                    <option [value]="breakdown.id">{{ breakdown.label }}</option>
-                  }
-                </select>
-              </label>
-            }
-            <span>
-              Año <strong class="tabular">{{ store.shownYear() }}</strong>
-              @if (store.shownYear() !== store.year()) {
-                <span class="note">(último disponible)</span>
+        <main>
+          <header class="head">
+            <div class="title">
+              <h1 class="screen-title">{{ meta.label }}</h1>
+              @if (meta.notes) {
+                <p class="subtitle">{{ meta.notes }}</p>
               }
-            </span>
-          </div>
-        </header>
+            </div>
+            <div class="controls">
+              @if (meta.breakdowns.length > 1) {
+                <label>
+                  Desglose
+                  <select [value]="store.breakdown()" (change)="onBreakdown($event)">
+                    @for (breakdown of meta.breakdowns; track breakdown.id) {
+                      <option [value]="breakdown.id">{{ breakdown.label }}</option>
+                    }
+                  </select>
+                </label>
+              }
+              <span>
+                Año <strong class="tabular">{{ store.shownYear() }}</strong>
+                @if (store.shownYear() !== store.year()) {
+                  <span class="note">(último disponible)</span>
+                }
+              </span>
+            </div>
+          </header>
 
-        @if (euFigure(); as figure) {
-          <p class="entry">
-            <span class="figure entry-value"
-              >{{ figure }}<span class="entry-unit">{{ meta.unit }}</span></span
-            >
-            <span class="entry-text">Media de la UE en {{ store.shownYear() }}</span>
+          @if (euFigure(); as figure) {
+            <p class="entry">
+              <span class="figure entry-value"
+                >{{ figure }}<span class="entry-unit">{{ meta.unit }}</span></span
+              >
+              <span class="entry-text">Media de la UE en {{ store.shownYear() }}</span>
+            </p>
+          }
+
+          <!-- ECharts is most of the bundle: it loads apart, once the data is in. -->
+          @defer (on immediate) {
+            <app-map />
+          } @placeholder {
+            <div class="map-placeholder" aria-hidden="true"></div>
+          }
+
+          <p class="note">
+            Las regiones ultraperiféricas (Canarias, Azores, Madeira y los departamentos franceses
+            de ultramar) no aparecen en el mapa; sus datos están incluidos en los de su país.
           </p>
-        }
+          <p class="note">
+            Fuente: <a [href]="meta.source.url">{{ meta.source.name }} ({{ meta.source.code }})</a>,
+            actualizado el {{ meta.source.lastUpdate }}. Límites administrativos: © EuroGeographics.
+          </p>
 
-        <!-- ECharts is most of the bundle: it loads apart, once the data is in. -->
-        @defer (on immediate) {
-          <app-map />
-        } @placeholder {
-          <div class="map-placeholder" aria-hidden="true"></div>
-        }
-
-        <p class="note">
-          Las regiones ultraperiféricas (Canarias, Azores, Madeira y los departamentos franceses de
-          ultramar) no aparecen en el mapa; sus datos están incluidos en los de su país.
-        </p>
-        <p class="note">
-          Fuente: <a [href]="meta.source.url">{{ meta.source.name }} ({{ meta.source.code }})</a>,
-          actualizado el {{ meta.source.lastUpdate }}. Límites administrativos: © EuroGeographics.
-        </p>
-
-        <app-table />
+          <app-table />
+        </main>
       }
     }
     @default {
-      <p aria-live="polite">Cargando datos…</p>
+      <main>
+        <p aria-live="polite">Cargando datos…</p>
+      </main>
     }
   }
-</main>
+</div>

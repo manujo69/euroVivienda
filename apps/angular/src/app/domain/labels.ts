@@ -1,5 +1,7 @@
 // Spanish names and meanings shown to the user.
 
+import type { Theme } from './indicator-rules';
+
 const COUNTRY_NAMES: Readonly<Record<string, string>> = {
   AT: 'Austria',
   BE: 'Bélgica',
@@ -49,4 +51,14 @@ const FLAGS: Readonly<Record<string, string>> = {
 
 export function flagLabels(flags: string | undefined): string[] {
   return [...(flags ?? '')].map((flag) => FLAGS[flag] ?? flag);
+}
+
+const THEME_NAMES: Readonly<Record<Theme, string>> = {
+  prices: 'Precios',
+  access: 'Acceso',
+  context: 'Contexto',
+};
+
+export function themeName(theme: Theme): string {
+  return THEME_NAMES[theme];
 }

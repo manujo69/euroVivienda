@@ -53,3 +53,17 @@ export function valuesByGeo(
     eu: all.find((entry) => entry.geo === EU_AGGREGATE),
   };
 }
+
+export type Theme = IndicatorMeta['theme'];
+
+const THEMES: readonly Theme[] = ['prices', 'access', 'context'];
+
+/** The catalogue by theme, in the order of spec.md; themes without indicators are left out. */
+export function byTheme(
+  catalog: readonly IndicatorMeta[],
+): { theme: Theme; indicators: IndicatorMeta[] }[] {
+  return THEMES.map((theme) => ({
+    theme,
+    indicators: catalog.filter((meta) => meta.theme === theme),
+  })).filter((group) => group.indicators.length > 0);
+}

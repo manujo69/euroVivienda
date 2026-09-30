@@ -99,6 +99,15 @@ describe('App', () => {
     expect(notes).toEqual(['', 'Provisional. Muestra pequeña.']);
   });
 
+  it('shows the catalogue beside the map, with the main indicator active', async () => {
+    const page = await render();
+    const catalogue = page.querySelector('aside app-catalog');
+    expect(catalogue?.textContent).toContain('Acceso');
+    expect(
+      catalogue?.querySelector<HTMLInputElement>('input:checked')?.parentElement?.textContent,
+    ).toContain('Sobrecarga por coste de vivienda');
+  });
+
   it('warns that the outermost regions are not drawn', async () => {
     const page = await render();
     expect(page.textContent).toContain('ultraperiféricas');

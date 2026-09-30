@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+fieldset {
+  margin: 0 0 24px;
+  padding: 0;
+  border: none;
+}
+
+legend {
+  width: 100%;
+  padding: 0;
+}
+
+ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  padding: 6px 0;
+  border-bottom: var(--rule-thin) solid var(--color-rule);
+}
+
+label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+}
+
+input {
+  flex: none;
+  margin: 0;
+}
+
+.error {
+  margin: 4px 0 0 21px;
+  font-size: var(--size-text-small);
+}

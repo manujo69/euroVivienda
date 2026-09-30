@@ -1,0 +1,27 @@
+<nav aria-label="Catálogo de indicadores">
+  @for (group of groups(); track group.theme) {
+    <fieldset>
+      <legend class="section-title">{{ group.name }}</legend>
+      <ul>
+        @for (meta of group.indicators; track meta.id) {
+          <li>
+            <label>
+              <input
+                #box
+                type="checkbox"
+                [checked]="store.active().includes(meta.id)"
+                (change)="toggle(meta.id, box)"
+              />
+              {{ meta.label }}
+            </label>
+            @if (store.failed().has(meta.id)) {
+              <p class="error" role="alert">
+                No se han podido cargar los datos de {{ meta.label }}.
+              </p>
+            }
+          </li>
+        }
+      </ul>
+    </fieldset>
+  }
+</nav>

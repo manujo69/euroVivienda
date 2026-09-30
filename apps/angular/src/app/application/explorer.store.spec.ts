@@ -32,15 +32,33 @@ const data: IndicatorData = {
   EU27_2020: { '2024': { total: { v: 8.2 } } },
 };
 
+const tenure: IndicatorMeta = {
+  ...overburden,
+  id: 'tenure',
+  label: 'Régimen de tenencia',
+  kind: 'composition',
+  categories: ['own', 'rent'],
+  mapCategory: 'rent',
+  breakdowns: [{ id: 'total', label: 'Total' }],
+  breaks: { total: [20, 30] },
+};
+
+const tenureData: IndicatorData = {
+  ES: { '2024': { total: { v: { own: 75.3, rent: 24.7 } } } },
+};
+
 const empty = { type: 'FeatureCollection' as const, features: [] };
 const geography: MapGeography = { regions: empty, context: empty };
 
+const byId: Record<string, IndicatorData> = { overburden: data, tenure: tenureData };
+
 function setup(indicators: Partial<IndicatorRepository> = {}) {
   const repository: IndicatorRepository = {
-    catalog: () => Promise.resolve([overburden] as Catalog),
-    data: () => Promise.resolve(data),
+    catalog: () => Promise.resolve([overburden, tenure] as Catalog),
+    data: (id) => (byId[id] ? Promise.resolve(byId[id]) : Promise.reject(new Error('404'))),
     ...indicators,
   };
+  const dataSpy = spyOn(repository, 'data').and.callThrough();
   const geographies: GeographyRepository = { nuts0: () => Promise.resolve(geography) };
   TestBed.configureTestingModule({
     providers: [
@@ -49,7 +67,7 @@ function setup(indicators: Partial<IndicatorRepository> = {}) {
       { provide: GEOGRAPHY_REPOSITORY, useValue: geographies },
     ],
   });
-  return TestBed.inject(ExplorerStore);
+  return Object.assign(TestBed.inject(ExplorerStore), { repository: { data: dataSpy } });
 }
 
 describe('ExplorerStore', () => {
@@ -102,5 +120,70 @@ describe('ExplorerStore', () => {
     const store = setup({ data: () => Promise.reject(new Error('404')) });
     await store.load();
     expect(store.status()).toBe('error');
+  });
+
+  describe('catalogue', () => {
+    it('starts with the first indicator of the catalogue active', async () => {
+      const store = setup();
+      await store.load();
+
+      expect(store.catalog().map((meta) => meta.id)).toEqual(['overburden', 'tenure']);
+      expect(store.active()).toEqual(['overburden']);
+    });
+
+    it('activates an indicator, loading its data', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.toggle('tenure');
+
+      expect(store.active()).toEqual(['overburden', 'tenure']);
+      expect(store.repository.data).toHaveBeenCalledWith('tenure');
+    });
+
+    it('deactivates an active indicator', async () => {
+      const store = setup();
+      await store.load();
+      await store.toggle('tenure');
+
+      await store.toggle('overburden');
+
+      expect(store.active()).toEqual(['tenure']);
+    });
+
+    it('loads the data of an indicator only once', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.toggle('tenure');
+      await store.toggle('tenure');
+      await store.toggle('tenure');
+
+      expect(store.active()).toEqual(['overburden', 'tenure']);
+      expect(store.repository.data.calls.allArgs()).toEqual([['overburden'], ['tenure']]);
+    });
+
+    it('leaves an indicator off and marks it when its data fails to load', async () => {
+      const store = setup({
+        data: (id) => (id === 'tenure' ? Promise.reject(new Error('404')) : Promise.resolve(data)),
+      });
+      await store.load();
+
+      await store.toggle('tenure');
+
+      expect(store.active()).toEqual(['overburden']);
+      expect(store.failed().has('tenure')).toBeTrue();
+      expect(store.status()).toBe('ready');
+    });
+
+    it('ignores ids that are not in the catalogue', async () => {
+      const store = setup();
+      await store.load();
+
+      await store.toggle('unknown');
+
+      expect(store.active()).toEqual(['overburden']);
+      expect(store.repository.data).not.toHaveBeenCalledWith('unknown');
+    });
   });
 });

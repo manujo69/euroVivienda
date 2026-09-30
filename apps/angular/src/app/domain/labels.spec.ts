@@ -1,4 +1,4 @@
-import { flagLabels, geoName } from './labels';
+import { flagLabels, geoName, themeName } from './labels';
 
 describe('geoName', () => {
   it('names the EU countries and the aggregate in Spanish', () => {
@@ -16,5 +16,13 @@ describe('flagLabels', () => {
   it('spells out each Eurostat flag letter', () => {
     expect(flagLabels('bp')).toEqual(['ruptura de serie', 'provisional']);
     expect(flagLabels(undefined)).toEqual([]);
+  });
+});
+
+describe('themeName', () => {
+  it('names each theme of the catalogue in Spanish', () => {
+    expect(themeName('prices')).toBe('Precios');
+    expect(themeName('access')).toBe('Acceso');
+    expect(themeName('context')).toBe('Contexto');
   });
 });

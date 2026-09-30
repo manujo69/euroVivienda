@@ -1,5 +1,5 @@
 import type { IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
-import { classOf, mapValue, resolveYear, valuesByGeo } from './indicator-rules';
+import { byTheme, classOf, mapValue, resolveYear, valuesByGeo } from './indicator-rules';
 
 const meta = (kind: IndicatorMeta['kind'], extra: Partial<IndicatorMeta> = {}): IndicatorMeta => ({
   id: 'x',
@@ -96,5 +96,35 @@ describe('valuesByGeo', () => {
       ],
       eu: { geo: 'EU27_2020', value: 8.2, flags: 'e' },
     });
+  });
+});
+
+describe('byTheme', () => {
+  const indicator = (id: string, theme: IndicatorMeta['theme']) => ({
+    ...meta('scalar'),
+    id,
+    theme,
+  });
+
+  it('groups the catalogue by theme in a fixed order, keeping the catalogue order inside', () => {
+    const catalog = [
+      indicator('unemployment', 'context'),
+      indicator('overburden', 'access'),
+      indicator('hpi', 'prices'),
+      indicator('tenure', 'access'),
+    ];
+    expect(
+      byTheme(catalog).map((group) => [group.theme, group.indicators.map((item) => item.id)]),
+    ).toEqual([
+      ['prices', ['hpi']],
+      ['access', ['overburden', 'tenure']],
+      ['context', ['unemployment']],
+    ]);
+  });
+
+  it('leaves out themes without indicators', () => {
+    expect(byTheme([indicator('overburden', 'access')]).map((group) => group.theme)).toEqual([
+      'access',
+    ]);
   });
 });
