@@ -86,12 +86,16 @@ describe('model.indicator', () => {
       'unemployment',
     ]);
     const tenure = indicators.find((indicator) => indicator.id === 'tenure');
-    expect(tenure).toMatchObject({ kind: 'composition', levels: [0], map_category: 'rent' });
+    expect(tenure).toMatchObject({ kind: 'composition', levels: [0] });
+    expect(JSON.parse(tenure?.map_category as string)).toEqual({
+      id: 'rent',
+      label: 'Inquilinos (mercado y reducido)',
+    });
     expect(JSON.parse(tenure?.categories as string)).toEqual([
-      'own_l',
-      'own_nl',
-      'rent_mkt',
-      'rent_fr',
+      { id: 'own_l', label: 'Propietarios con hipoteca' },
+      { id: 'own_nl', label: 'Propietarios sin hipoteca' },
+      { id: 'rent_mkt', label: 'Inquilinos a precio de mercado' },
+      { id: 'rent_fr', label: 'Inquilinos con alquiler reducido o gratuito' },
     ]);
     expect(indicators.find((indicator) => indicator.id === 'unemployment')).toMatchObject({
       levels: [0, 2],

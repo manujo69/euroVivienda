@@ -166,10 +166,10 @@ CREATE TABLE indicator (
   unit           VARCHAR NOT NULL,
   levels         TINYINT[] NOT NULL,   -- [0] o [0, 2]
   breakdowns     JSON NOT NULL,        -- [{id, label}], el primero es el de por defecto
-  categories     JSON,                 -- solo composition: porciones del pastel
+  categories     JSON,                 -- solo composition: porciones del pastel, [{id, label}]
   source_code    VARCHAR NOT NULL,
   source_filter  JSON,
-  map_category   VARCHAR,
+  map_category   JSON,                 -- solo composition: {id, label} de la categoría del mapa
   notes          VARCHAR
 );
 
@@ -219,8 +219,8 @@ interface IndicatorMeta {
   years: [number, number];
   source: { name: string; code: string; url: string; lastUpdate: string };  // lastUpdate: AAAA-MM-DD
   breakdowns: { id: string; label: string }[];  // el primero es el de por defecto
-  categories?: string[];                        // solo 'composition'
-  mapCategory?: string;
+  categories?: { id: string; label: string }[]; // solo 'composition'
+  mapCategory?: { id: string; label: string };
   scale: 'sequential' | 'diverging';
   breaks: Record<string, number[]>;             // cortes fijos por desglose
   notes?: string;
@@ -238,7 +238,7 @@ interface IndicatorData {
 
 Los tipos se infieren de esquemas Zod, que además validan lo que los tipos no expresan: años en orden, desgloses sin repetir, `categories` y `mapCategory` solo (y siempre) en composiciones, cortes ascendentes con una entrada por desglose, ids únicos en `catalog.json` y, en cada `data/[id].json` frente a su `IndicatorMeta`, años dentro de `years`, desgloses declarados, `v` numérico salvo en composiciones (categorías conocidas) y flags con las letras de Eurostat. La app importa solo los tipos.
 
-En una composición, `categories` son las porciones del pastel y `mapCategory` la categoría que pinta el mapa, que puede ser un agregado de ellas: en tenencia, `rent` (alquiler total, publicado por Eurostat) junto a `own_l`, `own_nl`, `rent_mkt` y `rent_fr`. `v` incluye las dos cosas.
+En una composición, `categories` son las porciones del pastel y `mapCategory` la categoría que pinta el mapa, que puede ser un agregado de ellas: en tenencia, `rent` (alquiler total, publicado por Eurostat) junto a `own_l`, `own_nl`, `rent_mkt` y `rent_fr`. `v` incluye las dos cosas, por id. Cada categoría lleva su nombre (`label`), como los desgloses: la app no escribe nombres a mano.
 
 La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos primeros caracteres del código NUTS son el país). El agregado UE viene de Eurostat cuando existe; en el precio frente a renta se calcula con los agregados UE de sus dos fuentes.
 

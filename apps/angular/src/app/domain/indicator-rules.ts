@@ -18,7 +18,7 @@ export interface GeoValue {
 /** What the map paints: the value, the change since 2015 of an index, the map category of a composition. */
 export function mapValue(meta: IndicatorMeta, cell: Cell): number | undefined {
   if (typeof cell.v === 'number') return meta.kind === 'index' ? cell.v - 100 : cell.v;
-  return meta.mapCategory === undefined ? undefined : cell.v[meta.mapCategory];
+  return meta.mapCategory === undefined ? undefined : cell.v[meta.mapCategory.id];
 }
 
 /** Class of a value against ascending breaks: 0 below the first, breaks.length at or above the last. */

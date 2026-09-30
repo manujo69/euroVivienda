@@ -6,7 +6,7 @@ CREATE OR REPLACE VIEW publish.map_value AS
   FROM model.observation AS o
   JOIN model.indicator AS i ON i.id = o.indicator_id
   JOIN model.geo AS g ON g.code = o.geo
-  WHERE g.level = 0 AND NOT g.is_aggregate AND o.category = coalesce(i.map_category, '_');
+  WHERE g.level = 0 AND NOT g.is_aggregate AND o.category = coalesce(i.map_category->>'id', '_');
 
 -- Sequential: quintiles. Diverging (values on both sides of 0): 0 plus terciles of each side.
 CREATE OR REPLACE VIEW publish.breaks AS

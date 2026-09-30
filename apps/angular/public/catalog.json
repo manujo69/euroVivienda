@@ -121,12 +121,27 @@
       }
     ],
     "categories": [
-      "own_l",
-      "own_nl",
-      "rent_mkt",
-      "rent_fr"
+      {
+        "id": "own_l",
+        "label": "Propietarios con hipoteca"
+      },
+      {
+        "id": "own_nl",
+        "label": "Propietarios sin hipoteca"
+      },
+      {
+        "id": "rent_mkt",
+        "label": "Inquilinos a precio de mercado"
+      },
+      {
+        "id": "rent_fr",
+        "label": "Inquilinos con alquiler reducido o gratuito"
+      }
     ],
-    "mapCategory": "rent",
+    "mapCategory": {
+      "id": "rent",
+      "label": "Inquilinos (mercado y reducido)"
+    },
     "scale": "sequential",
     "breaks": {
       "total": [

@@ -10,8 +10,8 @@ SELECT error('undeclared breakdowns or categories: ' || string_agg(DISTINCT o.in
 FROM model.observation AS o
 JOIN model.indicator AS i ON i.id = o.indicator_id
 WHERE NOT list_contains(json_extract_string(i.breakdowns, '$[*].id'), o.breakdown)
-  OR (o.category <> '_' AND NOT list_contains(json_extract_string(i.categories, '$[*]'), o.category)
-      AND o.category IS DISTINCT FROM i.map_category)
+  OR (o.category <> '_' AND NOT list_contains(json_extract_string(i.categories, '$[*].id'), o.category)
+      AND o.category IS DISTINCT FROM (i.map_category->>'id'))
 HAVING count(*) > 0;
 
 SELECT error('observations at undeclared levels: ' || string_agg(DISTINCT o.indicator_id || ' ' || g.level, ', '))

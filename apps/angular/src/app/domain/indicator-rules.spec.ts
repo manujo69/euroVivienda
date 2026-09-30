@@ -37,7 +37,13 @@ describe('mapValue', () => {
   });
 
   it('paints the map category of compositions', () => {
-    const tenure = meta('composition', { categories: ['own', 'rent_mkt'], mapCategory: 'rent' });
+    const tenure = meta('composition', {
+      categories: [
+        { id: 'own', label: 'Propietarios' },
+        { id: 'rent_mkt', label: 'Inquilinos a precio de mercado' },
+      ],
+      mapCategory: { id: 'rent', label: 'Inquilinos' },
+    });
     expect(mapValue(tenure, { v: { own: 70, rent_mkt: 20, rent: 30 } })).toBe(30);
     expect(mapValue(tenure, { v: { own: 70 } })).toBeUndefined();
   });

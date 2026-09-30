@@ -91,7 +91,7 @@ describe('publish.catalog and publish.data', () => {
     const tenure = catalog[1] as IndicatorMeta;
     expect(tenure).toMatchObject({
       years: [2015, 2016],
-      mapCategory: 'rent',
+      mapCategory: { id: 'rent', label: 'Inquilinos (mercado y reducido)' },
       source: {
         name: 'Eurostat',
         code: 'ilc_lvho02',

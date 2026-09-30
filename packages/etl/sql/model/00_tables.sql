@@ -27,10 +27,10 @@ CREATE TABLE model.indicator (
   unit           VARCHAR NOT NULL,
   levels         TINYINT[] NOT NULL,   -- [0] o [0, 2]
   breakdowns     JSON NOT NULL,        -- [{id, label}], el primero es el de por defecto
-  categories     JSON,                 -- solo composition: porciones del pastel
+  categories     JSON,                 -- solo composition: porciones del pastel, [{id, label}]
   source_code    VARCHAR NOT NULL,
   source_filter  JSON,
-  map_category   VARCHAR,
+  map_category   JSON,                 -- solo composition: {id, label} de la categoría del mapa
   notes          VARCHAR
 );
 

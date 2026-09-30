@@ -7,6 +7,8 @@ const id = z.string().regex(/^[a-z][a-z0-9_]*$/);
 const year = z.int().min(1900).max(2100);
 /** Eurostat flags, alone or combined: e, p, b, u, c, d, n. */
 const flags = z.string().regex(/^[bcdenpu]+$/);
+/** Something the user sees by name: a breakdown, a category. */
+const named = z.strictObject({ id, label: z.string().min(1) });
 
 export const indicatorMetaSchema = z
   .strictObject({
@@ -24,11 +26,11 @@ export const indicatorMetaSchema = z
       lastUpdate: z.iso.date(),
     }),
     /** The first one is the default. */
-    breakdowns: z.array(z.strictObject({ id, label: z.string().min(1) })).min(1),
+    breakdowns: z.array(named).min(1),
     /** Composition only: the slices of the pie. */
-    categories: z.array(id).min(1).optional(),
+    categories: z.array(named).min(1).optional(),
     /** Composition only: the category the map paints, possibly a total of several categories. */
-    mapCategory: id.optional(),
+    mapCategory: named.optional(),
     scale: z.enum(['sequential', 'diverging']),
     /** Fixed class breaks per breakdown, over the whole series. */
     breaks: z.record(z.string(), z.array(z.number()).min(1)),
@@ -89,8 +91,8 @@ export type IndicatorData = z.infer<typeof dataShape>;
 /** data/[id].json, checked against the indicator it belongs to. */
 export function indicatorDataSchema(meta: IndicatorMeta) {
   const breakdowns = new Set(meta.breakdowns.map((breakdown) => breakdown.id));
-  const categories = new Set(meta.categories);
-  if (meta.mapCategory) categories.add(meta.mapCategory);
+  const categories = new Set(meta.categories?.map((category) => category.id));
+  if (meta.mapCategory) categories.add(meta.mapCategory.id);
   const composition = meta.kind === 'composition';
   const [first, last] = meta.years;
 

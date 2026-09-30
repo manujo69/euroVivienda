@@ -37,8 +37,11 @@ const tenure: IndicatorMeta = {
   id: 'tenure',
   label: 'Régimen de tenencia',
   kind: 'composition',
-  categories: ['own', 'rent'],
-  mapCategory: 'rent',
+  categories: [
+    { id: 'own', label: 'Propietarios' },
+    { id: 'rent', label: 'Inquilinos' },
+  ],
+  mapCategory: { id: 'rent', label: 'Inquilinos' },
   breakdowns: [{ id: 'total', label: 'Total' }],
   breaks: { total: [20, 30] },
 };

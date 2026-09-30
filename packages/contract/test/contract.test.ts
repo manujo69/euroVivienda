@@ -32,8 +32,13 @@ const tenure: IndicatorMeta = {
   kind: 'composition',
   unit: '%',
   breakdowns: [{ id: 'total', label: 'Total' }],
-  categories: ['own_l', 'own_nl', 'rent_mkt', 'rent_fr'],
-  mapCategory: 'rent',
+  categories: [
+    { id: 'own_l', label: 'Propietarios con hipoteca' },
+    { id: 'own_nl', label: 'Propietarios sin hipoteca' },
+    { id: 'rent_mkt', label: 'Inquilinos a precio de mercado' },
+    { id: 'rent_fr', label: 'Inquilinos con alquiler reducido o gratuito' },
+  ],
+  mapCategory: { id: 'rent', label: 'Inquilinos (mercado y reducido)' },
   breaks: { total: [20, 30, 40] },
 };
 
@@ -67,9 +72,15 @@ describe('indicatorMetaSchema', () => {
     expect(issues(indicatorMetaSchema.safeParse({ ...tenure, mapCategory: undefined }))).toContain(
       'composition needs categories and mapCategory',
     );
-    expect(issues(indicatorMetaSchema.safeParse({ ...hpi, categories: ['a'] }))).toContain(
-      'only compositions have categories or mapCategory',
-    );
+    expect(
+      issues(indicatorMetaSchema.safeParse({ ...hpi, categories: [{ id: 'a', label: 'A' }] })),
+    ).toContain('only compositions have categories or mapCategory');
+  });
+
+  it('names each category and the map category, as it names the breakdowns', () => {
+    expect(indicatorMetaSchema.safeParse(tenure).success).toBe(true);
+    expect(indicatorMetaSchema.safeParse({ ...tenure, categories: ['own_l'] }).success).toBe(false);
+    expect(indicatorMetaSchema.safeParse({ ...tenure, mapCategory: 'rent' }).success).toBe(false);
   });
 
   it('needs ascending class breaks for exactly the declared breakdowns', () => {
