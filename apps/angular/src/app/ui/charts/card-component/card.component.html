@@ -39,7 +39,7 @@
       <!-- ECharts loads apart, as in the map. -->
       @defer (on immediate) {
         <h4 class="chart-title">Evolución</h4>
-        <app-line-chart [option]="evolution().option" [label]="evolution().label" />
+        <app-chart [option]="evolution().option" [label]="evolution().label" />
         <h4 class="chart-title">Ranking {{ card().year }}</h4>
         <app-ranking
           [values]="card().values"
@@ -51,7 +51,7 @@
     } @else if (card().meta.kind === 'index') {
       @defer (on immediate) {
         <h4 class="chart-title">Evolución</h4>
-        <app-line-chart [option]="evolution().option" [label]="evolution().label" />
+        <app-chart [option]="evolution().option" [label]="evolution().label" />
       }
     }
   }

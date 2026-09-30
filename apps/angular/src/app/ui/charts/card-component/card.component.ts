@@ -4,7 +4,7 @@ import { EU_AGGREGATE, timeSeries } from '../../../domain/indicator-rules';
 import { flagLabels, geoName } from '../../../domain/labels';
 import { formatValue } from '../../map/map-option';
 import { type Line, lineOption } from '../chart-options';
-import { LineChartComponent } from '../line-chart-component/line-chart.component';
+import { ChartComponent } from '../chart-component/chart.component';
 import { RankingComponent } from '../ranking-component/ranking.component';
 
 const SIGNED = new Intl.NumberFormat('es-ES', {
@@ -15,7 +15,7 @@ const SIGNED = new Intl.NumberFormat('es-ES', {
 /** One active indicator in the panel: its headline figure, and its charts when open. */
 @Component({
   selector: 'app-card',
-  imports: [LineChartComponent, RankingComponent],
+  imports: [ChartComponent, RankingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './card.component.html',
   styleUrl: './card.component.scss',

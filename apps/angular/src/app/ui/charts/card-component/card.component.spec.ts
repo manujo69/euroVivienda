@@ -134,14 +134,14 @@ describe('CardComponent', () => {
 
     it('draws no charts while folded', async () => {
       const { element } = await render(card({ data: series, open: false }));
-      expect(element.querySelector('app-line-chart')).toBeNull();
+      expect(element.querySelector('app-chart')).toBeNull();
       expect(element.querySelector('app-ranking')).toBeNull();
     });
 
     it('marks derived indicators as own elaboration', async () => {
       const { element } = await render(card({ meta: { ...overburden, kind: 'derived' } }));
       expect(text(element, '.own')).toBe('Elaboración propia');
-      expect(element.querySelector('app-line-chart')).not.toBeNull();
+      expect(element.querySelector('app-chart')).not.toBeNull();
     });
   });
 
