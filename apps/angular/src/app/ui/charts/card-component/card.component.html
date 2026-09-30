@@ -1,0 +1,31 @@
+<article [class.folded]="!card().open">
+  <header>
+    <h3 class="section-title">{{ card().meta.label }}</h3>
+    @if (!card().open) {
+      <button
+        type="button"
+        aria-expanded="false"
+        [attr.aria-label]="'Abrir ' + card().meta.label"
+        (click)="opened.emit()"
+      >
+        Abrir
+      </button>
+    }
+  </header>
+  <p class="headline">
+    @if (figure(); as figure) {
+      <span class="figure"
+        >{{ figure.value }} <span class="unit">{{ card().meta.unit }}</span>
+        @if (figure.flags) {
+          <sup>
+            <span aria-hidden="true">{{ figure.flags }}</span>
+            <span class="visually-hidden">{{ figure.flagText }}</span>
+          </sup>
+        }
+      </span>
+      <span class="explanation">{{ figure.explanation }}</span>
+    } @else {
+      Sin dato
+    }
+  </p>
+</article>

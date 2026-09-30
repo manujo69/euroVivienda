@@ -110,6 +110,14 @@ describe('App', () => {
     ).toContain('Sobrecarga por coste de vivienda');
   });
 
+  it('shows a card per active indicator in the panel beside the map', async () => {
+    const page = await render();
+    const cards = [...page.querySelectorAll('aside app-panel app-card h3')];
+    expect(cards.map((title) => title.textContent?.trim())).toEqual([
+      'Sobrecarga por coste de vivienda',
+    ]);
+  });
+
   it('asks for an indicator when none is active', async () => {
     const page = await render();
     page.querySelector<HTMLInputElement>('app-catalog input:checked')?.click();

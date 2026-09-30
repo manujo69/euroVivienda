@@ -67,3 +67,17 @@ export function byTheme(
     indicators: catalog.filter((meta) => meta.theme === theme),
   })).filter((group) => group.indicators.length > 0);
 }
+
+/** At most four cards open (spec.md, «Reglas de interacción»): the ones used most recently. */
+export function openCards(recency: readonly string[], limit = 4): ReadonlySet<string> {
+  return new Set(recency.slice(-limit));
+}
+
+/** The figure a card leads with: the selected region's value, else the EU mean. */
+export function headline(
+  values: readonly GeoValue[],
+  eu: GeoValue | undefined,
+  selected: string | undefined,
+): GeoValue | undefined {
+  return values.find((entry) => entry.geo === selected) ?? eu;
+}

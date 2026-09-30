@@ -257,4 +257,102 @@ describe('ExplorerStore', () => {
       expect(store.breakdown()).toBe('total');
     });
   });
+
+  describe('cards', () => {
+    const scalar = (id: string): IndicatorMeta => ({ ...overburden, id, label: id });
+    const many = ['a', 'b', 'c', 'd', 'e'].map(scalar);
+
+    async function withMany() {
+      const store = setup({
+        catalog: () => Promise.resolve(many),
+        data: () => Promise.resolve(data),
+      });
+      await store.load();
+      for (const meta of many.slice(1)) await store.toggle(meta.id);
+      return store;
+    }
+
+    const summary = (store: ExplorerStore) =>
+      store.cards().map((card) => [card.meta.id, card.open]);
+
+    it('gives one card per active indicator, in activation order', async () => {
+      const store = setup();
+      await store.load();
+      await store.toggle('tenure');
+
+      expect(store.cards().map((card) => card.meta.id)).toEqual(['overburden', 'tenure']);
+    });
+
+    it('folds the oldest cards beyond four', async () => {
+      const store = await withMany();
+      expect(summary(store)).toEqual([
+        ['a', false],
+        ['b', true],
+        ['c', true],
+        ['d', true],
+        ['e', true],
+      ]);
+    });
+
+    it('opens a folded card, folding the one used least recently', async () => {
+      const store = await withMany();
+
+      store.openCard('a');
+
+      expect(summary(store)).toEqual([
+        ['a', true],
+        ['b', false],
+        ['c', true],
+        ['d', true],
+        ['e', true],
+      ]);
+    });
+
+    it('opens the next folded card when an open one is switched off', async () => {
+      const store = await withMany();
+
+      await store.toggle('e');
+
+      expect(summary(store)).toEqual([
+        ['a', true],
+        ['b', true],
+        ['c', true],
+        ['d', true],
+      ]);
+    });
+
+    it('leads each card with the EU mean, or with the selected region when it has a value', async () => {
+      const store = setup();
+      await store.load();
+      await store.toggle('tenure');
+      const headlines = () =>
+        store.cards().map((card) => [card.meta.id, card.headline?.geo, card.headline?.value]);
+
+      expect(headlines()).toEqual([
+        ['overburden', 'EU27_2020', 8.2],
+        ['tenure', undefined, undefined],
+      ]);
+
+      store.select('ES');
+      expect(headlines()).toEqual([
+        ['overburden', 'ES', 7.8],
+        ['tenure', 'ES', 24.7],
+      ]);
+    });
+
+    it('shows each card at its latest year with data', async () => {
+      const store = setup();
+      await store.load();
+      expect(store.cards()[0]?.year).toBe(2024);
+    });
+
+    it('follows the map breakdown on the card of the main indicator', async () => {
+      const store = setup();
+      await store.load();
+      store.setBreakdown('youth');
+      store.select('ES');
+
+      expect(store.cards()[0]?.headline?.value).toBe(7.2);
+    });
+  });
 });

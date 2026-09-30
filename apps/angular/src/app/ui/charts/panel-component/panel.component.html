@@ -1,0 +1,8 @@
+<section aria-labelledby="panel-title">
+  <h2 id="panel-title" class="section-title">Indicadores activos</h2>
+  @for (card of store.cards(); track card.meta.id) {
+    <app-card [card]="card" (opened)="store.openCard(card.meta.id)" />
+  } @empty {
+    <p class="empty">Activa indicadores en el catálogo para ver sus gráficos.</p>
+  }
+</section>

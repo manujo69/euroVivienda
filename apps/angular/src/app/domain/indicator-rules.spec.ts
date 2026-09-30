@@ -1,5 +1,13 @@
 import type { IndicatorData, IndicatorMeta } from '@eurovivienda/contract';
-import { byTheme, classOf, mapValue, resolveYear, valuesByGeo } from './indicator-rules';
+import {
+  byTheme,
+  classOf,
+  headline,
+  mapValue,
+  openCards,
+  resolveYear,
+  valuesByGeo,
+} from './indicator-rules';
 
 const meta = (kind: IndicatorMeta['kind'], extra: Partial<IndicatorMeta> = {}): IndicatorMeta => ({
   id: 'x',
@@ -126,5 +134,36 @@ describe('byTheme', () => {
     expect(byTheme([indicator('overburden', 'access')]).map((group) => group.theme)).toEqual([
       'access',
     ]);
+  });
+});
+
+describe('openCards', () => {
+  it('keeps open the four cards used most recently', () => {
+    expect([...openCards(['a', 'b', 'c', 'd', 'e', 'f'])]).toEqual(['c', 'd', 'e', 'f']);
+  });
+
+  it('keeps every card open while there are four or fewer', () => {
+    expect([...openCards(['a', 'b'])]).toEqual(['a', 'b']);
+  });
+});
+
+describe('headline', () => {
+  const values = [
+    { geo: 'ES', value: 7.8, flags: undefined },
+    { geo: 'PT', value: 5.1, flags: 'p' },
+  ];
+  const eu = { geo: 'EU27_2020', value: 8.2, flags: undefined };
+
+  it('gives the value of the selected region', () => {
+    expect(headline(values, eu, 'PT')).toBe(values[1]);
+  });
+
+  it('falls back to the EU mean with no selection or no value for it', () => {
+    expect(headline(values, eu, undefined)).toBe(eu);
+    expect(headline(values, eu, 'FR')).toBe(eu);
+  });
+
+  it('has nothing to show without selection or EU mean', () => {
+    expect(headline(values, undefined, undefined)).toBeUndefined();
   });
 });

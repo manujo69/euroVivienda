@@ -1,19 +1,35 @@
-// Catalogue on the left and map in the centre (spec.md, «Experiencia de usuario»).
+// Catalogue on the left, map in the centre and chart panel on the right (spec.md, «Experiencia de
+// usuario»). The minimum widths add up to 1136 px: below 1152 px the panel goes under the map, and
+// below 768 px everything goes in one column.
 .explorer {
   display: grid;
-  grid-template-columns: minmax(240px, 280px) minmax(0, 960px);
+  grid-template-columns: minmax(240px, 280px) minmax(480px, 1fr) minmax(320px, 400px);
   gap: 32px;
-  max-width: 1280px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 24px 16px 48px;
+}
+
+.catalogue {
+  grid-column: 1;
 }
 
 main {
   grid-column: 2;
 }
 
-.catalogue {
-  grid-column: 1;
+.panel {
+  grid-column: 3;
+}
+
+@media (max-width: 1151px) {
+  .explorer {
+    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  }
+
+  .panel {
+    grid-column: 2;
+  }
 }
 
 @media (max-width: 767px) {
@@ -22,7 +38,8 @@ main {
   }
 
   main,
-  .catalogue {
+  .catalogue,
+  .panel {
     grid-column: 1;
   }
 }

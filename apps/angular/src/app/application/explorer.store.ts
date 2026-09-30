@@ -3,11 +3,27 @@
 
 import { Injectable, computed, inject, signal } from '@angular/core';
 import type { Catalog, IndicatorData } from '@eurovivienda/contract';
-import { resolveYear, valuesByGeo } from '../domain/indicator-rules';
+import type { IndicatorMeta } from '@eurovivienda/contract';
+import {
+  type GeoValue,
+  headline,
+  openCards,
+  resolveYear,
+  valuesByGeo,
+} from '../domain/indicator-rules';
 import type { MapGeography } from '../domain/ports';
 import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from './tokens';
 
 export type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+/** One card of the chart panel. */
+export interface Card {
+  readonly meta: IndicatorMeta;
+  readonly open: boolean;
+  /** Latest year with data up to the one chosen. */
+  readonly year: number | undefined;
+  readonly headline: GeoValue | undefined;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ExplorerStore {
@@ -21,6 +37,8 @@ export class ExplorerStore {
   private readonly data = computed(() => this.loaded()[this.mainId() ?? ''] ?? {});
   private readonly activeIds = signal<readonly string[]>([]);
   private readonly failedIds = signal<ReadonlySet<string>>(new Set());
+  /** Active indicators, the card used least recently first. */
+  private readonly recency = signal<readonly string[]>([]);
 
   readonly catalog = this.catalogState.asReadonly();
   /** Active indicators, in the order they were activated. */
@@ -49,6 +67,24 @@ export class ExplorerStore {
   readonly values = computed(() => this.current().values);
   readonly eu = computed(() => this.current().eu);
 
+  readonly cards = computed((): Card[] => {
+    const open = openCards(this.recency());
+    return this.activeIds().flatMap((id) => {
+      const meta = this.catalogState().find((item) => item.id === id);
+      if (!meta) return [];
+      const data = this.loaded()[id] ?? {};
+      const year = resolveYear(data, this.year());
+      // Until each card has its own selector (hito 4), only the main one follows the map breakdown.
+      const breakdown =
+        id === this.mainId() ? this.breakdown() : (meta.breakdowns[0]?.id ?? 'total');
+      const { values, eu } =
+        year === undefined
+          ? { values: [], eu: undefined }
+          : valuesByGeo(meta, data, year, breakdown);
+      return [{ meta, open: open.has(id), year, headline: headline(values, eu, this.selected()) }];
+    });
+  });
+
   /** Loads the catalogue, the first indicator and the map. Call it in the browser only. */
   async load(): Promise<void> {
     this.status.set('loading');
@@ -64,6 +100,7 @@ export class ExplorerStore {
       this.loaded.set({ [main.id]: data });
       this.geography.set(geography);
       this.activeIds.set([main.id]);
+      this.recency.set([main.id]);
       this.makeMain(main.id);
       this.year.set(main.years[1]);
       this.status.set('ready');
@@ -77,6 +114,7 @@ export class ExplorerStore {
     if (!this.catalogState().some((meta) => meta.id === id)) return;
     if (this.activeIds().includes(id)) {
       this.activeIds.update((ids) => ids.filter((active) => active !== id));
+      this.recency.update((ids) => ids.filter((active) => active !== id));
       // The map goes to the last indicator still active, if any.
       if (this.mainId() === id) this.makeMain(this.activeIds().at(-1));
       return;
@@ -92,7 +130,14 @@ export class ExplorerStore {
     }
     this.failedIds.update((failed) => new Set([...failed].filter((other) => other !== id)));
     this.activeIds.update((ids) => [...ids, id]);
+    this.recency.update((ids) => [...ids, id]);
     this.makeMain(id);
+  }
+
+  /** Opens a card, folding the one used least recently if four are already open. */
+  openCard(id: string): void {
+    if (!this.activeIds().includes(id)) return;
+    this.recency.update((ids) => [...ids.filter((other) => other !== id), id]);
   }
 
   /** Puts an active indicator on the map; inactive ones are ignored. */

@@ -8,12 +8,13 @@ import {
 import { ExplorerStore } from './application/explorer.store';
 import { formatValue } from './ui/map/map-option';
 import { CatalogComponent } from './ui/catalog/catalog-component/catalog.component';
+import { PanelComponent } from './ui/charts/panel-component/panel.component';
 import { MapComponent } from './ui/map/map-component/map.component';
 import { TableComponent } from './ui/table/table-component/table.component';
 
 @Component({
   selector: 'app-root',
-  imports: [CatalogComponent, MapComponent, TableComponent],
+  imports: [CatalogComponent, MapComponent, PanelComponent, TableComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.html',
   styleUrl: './app.scss',
