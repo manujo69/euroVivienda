@@ -8,9 +8,10 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY } from './application/tokens';
+import { GEOGRAPHY_REPOSITORY, INDICATOR_REPOSITORY, URL_STATE } from './application/tokens';
 import { HttpGeographyRepository } from './infrastructure/http-geography.repository';
 import { HttpIndicatorRepository } from './infrastructure/http-indicator.repository';
+import { RouterUrlStateAdapter } from './infrastructure/router-url-state.adapter';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,5 +23,6 @@ export const appConfig: ApplicationConfig = {
     // Ports of the domain, each bound to its adapter.
     { provide: INDICATOR_REPOSITORY, useClass: HttpIndicatorRepository },
     { provide: GEOGRAPHY_REPOSITORY, useClass: HttpGeographyRepository },
+    { provide: URL_STATE, useClass: RouterUrlStateAdapter },
   ],
 };
