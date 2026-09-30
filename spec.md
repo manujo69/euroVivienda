@@ -14,7 +14,7 @@ Se construye en Angular con arquitectura hexagonal simplificada. Una versión en
 
 **Incluido:**
 
-- UE-27 en dos niveles: país (NUTS 0) y región (NUTS 2). Cada indicador declara los niveles en que existe; en NUTS 2, los indicadores solo nacionales muestran el valor de su país marcado como «dato nacional».
+- UE-27 en dos niveles: país (NUTS 0) y región (NUTS 2). Cada indicador declara los niveles en que existe; el mapa solo baja a NUTS 2 con un indicador principal regional.
 - Serie temporal 2015 → último año disponible, con selector de año global.
 - Catálogo de 10 indicadores con desgloses, mapa coroplético, panel de gráficos y estado compartible por URL.
 - Página «Sobre los datos» con fuentes, metodología, limitaciones de cada indicador y aviso de que las relaciones mostradas son descriptivas, no causales.
@@ -49,7 +49,7 @@ Tres zonas: catálogo a la izquierda, mapa de la UE en el centro y panel de grá
 2. Un indicador activo es el principal y colorea el mapa. Por defecto, el último activado.
 3. Clic en una región: se selecciona y se resalta en todos los gráficos.
 4. Con dos o más indicadores numéricos activos aparece una única tarjeta de dispersión, con parejas sugeridas (precio frente a renta; sobrecarga de jóvenes frente a edad de emancipación; sobrecarga frente a paro) y un selector libre como opción avanzada. Muestra el coeficiente r y el número de regiones, con el aviso de que correlación no implica causa. Si los años difieren, cada eje muestra el suyo.
-5. En NUTS 2, los indicadores solo nacionales pintan cada región con el valor de su país, con trama y la etiqueta «dato nacional». La dispersión en NUTS 2 solo ofrece indicadores regionales.
+5. El nivel NUTS 2 solo está disponible cuando el indicador principal tiene datos regionales; con uno solo nacional, la opción aparece desactivada («sin datos regionales») y, si el principal pasa a ser nacional, el mapa vuelve a países. Con el mapa en NUTS 2, las tarjetas de indicadores nacionales siguen por país y siguen al país de la región seleccionada. La dispersión en NUTS 2 solo ofrece indicadores regionales.
 6. Un indicador con desgloses muestra un selector en su tarjeta; el mapa usa el desglose activo del principal.
 7. Todo el estado vive en la URL: `?ind=hpi,overburden&main=hpi&geo=ES&year=2023&level=0&bd=overburden:youth`. Una URL con combinaciones inválidas se normaliza al estado válido más cercano.
 
@@ -240,7 +240,7 @@ Los tipos se infieren de esquemas Zod, que además validan lo que los tipos no e
 
 En una composición, `categories` son las porciones del pastel y `mapCategory` la categoría que pinta el mapa, que puede ser un agregado de ellas: en tenencia, `rent` (alquiler total, publicado por Eurostat) junto a `own_l`, `own_nl`, `rent_mkt` y `rent_fr`. `v` incluye las dos cosas, por id. Cada categoría lleva su nombre (`label`), como los desgloses: la app no escribe nombres a mano.
 
-La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos primeros caracteres del código NUTS son el país). El agregado UE viene de Eurostat cuando existe; en el precio frente a renta se calcula con los agregados UE de sus dos fuentes.
+El país de una región se resuelve en el cliente (los dos primeros caracteres del código NUTS): las tarjetas de indicadores nacionales siguen al país de la región seleccionada. El agregado UE viene de Eurostat cuando existe; en el precio frente a renta se calcula con los agregados UE de sus dos fuentes.
 
 ## Hitos
 
@@ -249,7 +249,7 @@ La herencia del dato nacional en NUTS 2 se resuelve en el cliente (los dos prime
 2. **Mapa:** coloreado, leyenda, tooltip, selección, paleta accesible y tabla alternativa.
 3. **Catálogo y panel:** activar indicadores, principal, tarjetas por tipo y sincronización.
 4. **Año, desgloses y URL compartible.**
-5. **Resto del catálogo y NUTS 2:** geometrías NUTS 2 e indicadores regionales, nivel NUTS 2 con herencia del dato nacional, dispersión con parejas sugeridas, estados vacíos y móvil.
+5. **Resto del catálogo y NUTS 2:** geometrías NUTS 2 e indicadores regionales, nivel NUTS 2 para los indicadores regionales, dispersión con parejas sugeridas, estados vacíos y móvil.
 6. **Pulido:** «Sobre los datos», accesibilidad y auditoría de rendimiento.
 
 ## Riesgos

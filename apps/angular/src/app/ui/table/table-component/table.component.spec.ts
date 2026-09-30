@@ -172,13 +172,17 @@ describe('TableComponent', () => {
     expect(figures).toEqual(['+8,2 %', '-3,0 %']);
   });
 
-  it('lists the regions by name at NUTS 2, marking national values', async () => {
-    const { fixture, store, table } = await render();
+  it('lists the regions by name at NUTS 2', async () => {
+    const regional: IndicatorMeta = { ...overburden, levels: [0, 2] };
+    const { fixture, store, table } = await render(
+      { ...withEu, ES30: { '2024': { total: { v: 9.1 } } } },
+      regional,
+    );
     await store.setLevel(2);
     fixture.detectChanges();
 
     expect(table.querySelectorAll('thead th')[1]?.textContent?.trim()).toBe('Región');
     const [row] = [...table.querySelectorAll('tbody tr')].map(cells);
-    expect(row).toEqual(['1', 'Comunidad de Madrid', '7,8 %', 'Dato nacional']);
+    expect(row).toEqual(['1', 'Comunidad de Madrid', '9,1 %', '']);
   });
 });

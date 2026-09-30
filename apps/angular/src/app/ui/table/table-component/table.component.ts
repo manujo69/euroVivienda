@@ -30,9 +30,7 @@ export class TableComponent {
       value: figures[i] ?? '',
       // Flags first, then the note, as one sentence-case text: «Provisional. Solo el 2,3 % …».
       flags: sentenceCase(
-        [entry.national ? 'dato nacional' : '', flagLabels(entry.flags).join(', '), entry.note]
-          .filter(Boolean)
-          .join('. '),
+        [flagLabels(entry.flags).join(', '), entry.note].filter(Boolean).join('. '),
       ),
     });
     return { rows: sorted.map(row), eu: eu && row(eu, sorted.length) };

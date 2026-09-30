@@ -79,12 +79,15 @@ export function normalizeUrlState(
     if (chosen && declared) bd[meta.id] = chosen;
   }
 
+  const main = state.main && ind.includes(state.main) ? state.main : ind.at(-1);
+  // Regions only for a main indicator with regional data.
+  const regional = catalog.find((meta) => meta.id === main)?.levels.includes(2) ?? false;
   return {
     ind,
-    main: state.main && ind.includes(state.main) ? state.main : ind.at(-1),
+    main,
     geo: state.geo && geos.includes(state.geo) ? state.geo : undefined,
     year,
-    level: state.level === 2 ? 2 : 0,
+    level: state.level === 2 && regional ? 2 : 0,
     bd,
   };
 }

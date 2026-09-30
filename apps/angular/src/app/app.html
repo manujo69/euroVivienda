@@ -33,7 +33,17 @@
                 Nivel
                 <select (change)="onLevel($event)">
                   <option value="0" [selected]="store.level() === 0">Países</option>
-                  <option value="2" [selected]="store.level() === 2">Regiones (NUTS 2)</option>
+                  <option
+                    value="2"
+                    [selected]="store.level() === 2"
+                    [disabled]="!store.canShowRegions()"
+                  >
+                    {{
+                      store.canShowRegions()
+                        ? 'Regiones (NUTS 2)'
+                        : 'Regiones (NUTS 2): sin datos regionales'
+                    }}
+                  </option>
                 </select>
               </label>
               <label>

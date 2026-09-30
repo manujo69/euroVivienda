@@ -42,7 +42,6 @@ export class CardComponent {
       explanation:
         `${geoName(headline.geo, this.card().names)} en ${year}` +
         (index ? ', desde 2015' : '') +
-        (headline.national ? ', dato nacional' : '') +
         (meta.mapCategory ? ` · ${meta.mapCategory.label}` : ''),
     };
   });

@@ -10,6 +10,8 @@ import {
   openCards,
   resolveYear,
   type Level,
+  levelOf,
+  selectionAt,
   valuesByGeo,
   yearRange,
 } from '../domain/indicator-rules';
@@ -79,6 +81,8 @@ export class ExplorerStore {
     const geography = this.geography();
     return geography ? namesOf(geography.regions) : {};
   });
+  /** Regions only for a main indicator with regional data. */
+  readonly canShowRegions = computed(() => this.meta()?.levels.includes(2) ?? false);
   private readonly regionCodes = computed(() => {
     const geography = this.geography();
     return this.level() === 2 && geography ? codesOf(geography.regions) : [];
@@ -119,11 +123,13 @@ export class ExplorerStore {
       const data = this.loaded()[id] ?? {};
       const year = resolveYear(data, this.year());
       const breakdown = this.breakdownOf(meta);
+      // National indicators stay by country on a NUTS 2 map, on the country of the region selected.
+      const level = levelOf(meta, this.level());
+      const selected = selectionAt(meta, this.level(), this.selected());
       const { values, eu } =
         year === undefined
           ? { values: [], eu: undefined }
-          : valuesByGeo(meta, data, year, breakdown, this.level(), this.regionCodes());
-      const selected = this.selected();
+          : valuesByGeo(meta, data, year, breakdown, level, this.regionCodes());
       return [
         {
           meta,
@@ -185,8 +191,11 @@ export class ExplorerStore {
       const requested = parseUrlState(query);
       // The region in the URL is checked against the map of its level.
       const nuts2 = requested.level === 2 ? await this.geographies.nuts2() : undefined;
-      const geography = nuts2 ?? nuts0;
-      const state = normalizeUrlState(requested, catalog, codesOf(geography.regions));
+      let state = normalizeUrlState(requested, catalog, codesOf((nuts2 ?? nuts0).regions));
+      // NUTS 2 dropped (the main indicator is national): the region is checked on the countries.
+      if (nuts2 && state.level === 0) {
+        state = normalizeUrlState({ ...requested, level: 0 }, catalog, codesOf(nuts0.regions));
+      }
       const results = await Promise.allSettled(state.ind.map((id) => this.indicators.data(id)));
       const loaded: Record<string, IndicatorData> = {};
       const failed = new Set<string>();
@@ -202,7 +211,7 @@ export class ExplorerStore {
       this.loaded.set(loaded);
       this.failedIds.set(failed);
       this.geographiesByLevel.set(nuts2 ? { 0: nuts0, 2: nuts2 } : { 0: nuts0 });
-      this.levelState.set(nuts2 ? 2 : 0);
+      this.levelState.set(state.level === 2 ? 2 : 0);
       this.activeIds.set(active);
       this.recency.set(active);
       this.mainId.set(state.main && active.includes(state.main) ? state.main : active.at(-1));
@@ -224,7 +233,7 @@ export class ExplorerStore {
       this.recency.update((ids) => ids.filter((active) => active !== id));
       this.keepYearInRange();
       // The map goes to the last indicator still active, if any.
-      if (this.mainId() === id) this.mainId.set(this.activeIds().at(-1));
+      if (this.mainId() === id) this.putOnMap(this.activeIds().at(-1));
       return;
     }
     if (!(id in this.loaded())) {
@@ -239,7 +248,7 @@ export class ExplorerStore {
     this.failedIds.update((failed) => new Set([...failed].filter((other) => other !== id)));
     this.activeIds.update((ids) => [...ids, id]);
     this.recency.update((ids) => [...ids, id]);
-    this.mainId.set(id);
+    this.putOnMap(id);
   }
 
   /**
@@ -247,7 +256,7 @@ export class ExplorerStore {
    * not a region: the selection goes.
    */
   async setLevel(level: Level): Promise<void> {
-    if (level === this.level()) return;
+    if (level === this.level() || (level === 2 && !this.canShowRegions())) return;
     if (!this.geographiesByLevel()[level]) {
       try {
         const geography = await (level === 2 ? this.geographies.nuts2() : this.geographies.nuts0());
@@ -268,7 +277,16 @@ export class ExplorerStore {
 
   /** Puts an active indicator on the map; inactive ones are ignored. */
   setMain(id: string): void {
-    if (this.activeIds().includes(id)) this.mainId.set(id);
+    if (this.activeIds().includes(id)) this.putOnMap(id);
+  }
+
+  /** A main indicator without regional data takes the map back to the countries. */
+  private putOnMap(id: string | undefined): void {
+    this.mainId.set(id);
+    if (this.level() === 2 && !this.canShowRegions()) {
+      this.selected.set(undefined);
+      this.levelState.set(0);
+    }
   }
 
   /** Chooses the breakdown of an indicator; ids it does not declare are ignored. */

@@ -97,16 +97,6 @@ const HATCH = {
   dashArrayY: [2, 4],
   rotation: Math.PI / 4,
 };
-/**
- * Light hatching the other way for a national value on the NUTS 2 map (spec.md, rule 5): the
- * colour of the class stays readable, and it does not look like «sin dato».
- */
-export const NATIONAL_HATCH = {
-  color: 'rgba(255, 255, 255, 0.6)',
-  dashArrayX: [1, 0],
-  dashArrayY: [1.5, 4],
-  rotation: -Math.PI / 4,
-};
 
 export interface MapInput {
   /** Name of the ECharts map: 'nuts0' (default) or 'nuts2'. */
@@ -150,7 +140,7 @@ interface ItemStyle {
   areaColor: string;
   borderColor: string;
   borderWidth: number;
-  decal?: typeof HATCH | typeof NATIONAL_HATCH;
+  decal?: typeof HATCH;
 }
 
 interface Label {
@@ -190,7 +180,6 @@ export function mapOption(input: MapInput) {
       borderColor: selected ? INK : borderColour(areaColor),
       borderWidth: selected ? 2 : 0.6,
       ...(entry ? {} : { decal: HATCH }),
-      ...(entry?.national ? { decal: NATIONAL_HATCH } : {}),
     };
     return {
       name: code,
@@ -222,7 +211,6 @@ export function mapOption(input: MapInput) {
       title,
       line,
       ...(flags.length ? [flags.join(', ')] : []),
-      ...(entry.national ? ['Dato nacional'] : []),
       ...(entry.note ? [`<em>${entry.note}</em>`] : []),
     ].join('<br>');
   };

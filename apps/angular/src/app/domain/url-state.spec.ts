@@ -23,7 +23,11 @@ const overburden = meta('overburden', {
   ],
   breaks: { rent_mkt: [10, 20], youth: [10, 20] },
 });
-const catalog = [overburden, meta('tenure'), meta('income', { years: [2015, 2023] })];
+const catalog = [
+  overburden,
+  meta('tenure'),
+  meta('income', { years: [2015, 2023], levels: [0, 2] }),
+];
 const geos = ['ES', 'PT'];
 
 const state = (extra: Partial<UrlState> = {}): UrlState => ({
@@ -143,8 +147,9 @@ describe('normalizeUrlState', () => {
     expect(normalize({ bd: { overburden: 'rent_mkt' } }).bd).toEqual({});
   });
 
-  it('keeps NUTS 0 or NUTS 2, and falls back to countries for any other level', () => {
-    expect(normalize({ level: 2 }).level).toBe(2);
-    expect(normalize({ level: 3 }).level).toBe(0);
+  it('keeps NUTS 2 only when the main indicator is regional', () => {
+    expect(normalize({ ind: ['income'], main: 'income', year: 2020, level: 2 }).level).toBe(2);
+    expect(normalize({ level: 2 }).level).toBe(0);
+    expect(normalize({ ind: ['income'], main: 'income', year: 2020, level: 3 }).level).toBe(0);
   });
 });

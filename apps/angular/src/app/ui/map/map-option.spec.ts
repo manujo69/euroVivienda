@@ -140,31 +140,22 @@ describe('mapOption at NUTS 2', () => {
     codes: ['ES30', 'ES51'],
     context: [],
     values: [
-      { geo: 'ES30', value: 7.8, flags: undefined, national: true as const },
+      { geo: 'ES30', value: 7.8, flags: undefined },
       { geo: 'ES51', value: 3.1, flags: undefined },
     ],
     selected: undefined,
     names: { ES30: 'Comunidad de Madrid', ES51: 'Cataluña' },
   };
   const option = mapOption(regional);
-  const byName = new Map(option.series[0].data.map((item) => [item.name, item]));
 
   it('draws on the map it is given, the countries by default', () => {
     expect(option.series[0].map).toBe('nuts2');
     expect(mapOption(input).series[0].map).toBe('nuts0');
   });
 
-  it('hatches the national values apart from the regions without data', () => {
-    const national = byName.get('ES30')?.itemStyle.decal;
-    const noData = mapOption({ ...input, values: [] }).series[0].data[0]?.itemStyle.decal;
-    expect(national).toBeDefined();
-    expect(national).not.toEqual(noData);
-    expect(byName.get('ES51')?.itemStyle.decal).toBeUndefined();
-  });
-
-  it('names the region and says when its value is national', () => {
+  it('names the region in the tooltip', () => {
     expect(option.tooltip.formatter({ name: 'ES30' })).toBe(
-      '<strong>Comunidad de Madrid</strong><br>7,8 % · 2024<br>Dato nacional',
+      '<strong>Comunidad de Madrid</strong><br>7,8 % · 2024',
     );
     expect(option.tooltip.formatter({ name: 'ES51' })).toBe(
       '<strong>Cataluña</strong><br>3,1 % · 2024',

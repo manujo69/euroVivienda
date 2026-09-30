@@ -561,41 +561,100 @@ describe('ExplorerStore', () => {
   });
 
   describe('NUTS 2', () => {
-    it('shows the regions, each with its country value for a national indicator', async () => {
-      const store = setup();
+    const unemployment: IndicatorMeta = {
+      ...overburden,
+      id: 'unemployment',
+      label: 'Tasa de paro',
+      theme: 'context',
+      levels: [0, 2],
+      breakdowns: [{ id: 'total', label: 'Total' }],
+      breaks: { total: [5, 10] },
+    };
+    const regionalData: IndicatorData = {
+      ES: { '2024': { total: { v: 11 } } },
+      ES30: { '2024': { total: { v: 9 } } },
+      ES51: { '2024': { total: { v: 8.5 } } },
+      PT17: { '2024': { total: { v: 6.4 } } },
+      EU27_2020: { '2024': { total: { v: 6 } } },
+    };
+
+    /** Overburden (national) and unemployment (regional, on the map). */
+    function withRegional(query: QueryParams = { ind: 'overburden,unemployment' }) {
+      return setup(
+        {
+          catalog: () => Promise.resolve([overburden, unemployment]),
+          data: (id) => Promise.resolve(id === 'unemployment' ? regionalData : data),
+        },
+        query,
+      );
+    }
+
+    it('shows the regions of a regional indicator', async () => {
+      const store = withRegional();
       await store.load();
 
       await store.setLevel(2);
 
       expect(store.level()).toBe(2);
       expect(store.geography()).toBe(regional);
-      expect(store.values()).toEqual([
-        { geo: 'ES30', value: 7.8, flags: undefined, national: true },
-        { geo: 'ES51', value: 7.8, flags: undefined, national: true },
-        { geo: 'PT17', value: 5.1, flags: undefined, national: true },
+      expect(store.values().map((entry) => [entry.geo, entry.value])).toEqual([
+        ['ES30', 9],
+        ['ES51', 8.5],
+        ['PT17', 6.4],
       ]);
-      expect(store.cards()[0]?.values.map((entry) => entry.geo)).toEqual(['ES30', 'ES51', 'PT17']);
     });
 
-    it('gives the cards the names of the regions', async () => {
-      const store = setup();
+    it('keeps national indicators by country, on the country of the region selected', async () => {
+      const store = withRegional();
       await store.load();
       await store.setLevel(2);
-      expect(store.cards()[0]?.names['ES51']).toBe('Cataluña');
+
+      store.select('ES30');
+
+      const [national, regionalCard] = store.cards();
+      expect(national?.values.map((entry) => entry.geo)).toEqual(['ES', 'PT']);
+      expect(national?.selected).toBe('ES');
+      expect(national?.headline?.value).toBe(7.8);
+      expect(regionalCard?.selected).toBe('ES30');
+      expect(regionalCard?.headline?.value).toBe(9);
     });
 
-    it('names the regions from their geometry', async () => {
+    it('offers no regions for a national indicator on the map', async () => {
       const store = setup();
+      await store.load();
+
+      expect(store.canShowRegions()).toBeFalse();
+      await store.setLevel(2);
+
+      expect(store.level()).toBe(0);
+      expect(store.nuts2).not.toHaveBeenCalled();
+    });
+
+    it('takes the map back to the countries when a national indicator becomes the main one', async () => {
+      const store = withRegional();
+      await store.load();
+      await store.setLevel(2);
+      store.select('ES30');
+
+      store.setMain('overburden');
+
+      expect(store.level()).toBe(0);
+      expect(store.selected()).toBeUndefined();
+    });
+
+    it('names the regions from their geometry, and the cards get the names', async () => {
+      const store = withRegional();
       await store.load();
       expect(store.names()['ES30']).toBeUndefined();
 
       await store.setLevel(2);
 
       expect(store.names()['ES30']).toBe('Comunidad de Madrid');
+      expect(store.cards()[1]?.names['ES51']).toBe('Cataluña');
     });
 
     it('loads the NUTS 2 geometry once, and goes back to the countries', async () => {
-      const store = setup();
+      const store = withRegional();
       await store.load();
 
       await store.setLevel(2);
@@ -605,11 +664,11 @@ describe('ExplorerStore', () => {
       expect(store.nuts2).toHaveBeenCalledTimes(1);
       await store.setLevel(0);
       expect(store.geography()).toBe(geography);
-      expect(store.values().map((entry) => entry.geo)).toEqual(['ES', 'PT']);
+      expect(store.values().map((entry) => entry.geo)).toEqual(['ES']);
     });
 
     it('clears the selection when the level changes', async () => {
-      const store = setup();
+      const store = withRegional();
       await store.load();
       store.select('ES');
 
@@ -619,7 +678,7 @@ describe('ExplorerStore', () => {
     });
 
     it('opens a URL at NUTS 2 with its region, and keeps the level in the URL', async () => {
-      const store = setup({}, { ind: 'overburden', level: '2', geo: 'ES51' });
+      const store = withRegional({ ind: 'unemployment', level: '2', geo: 'ES51' });
       await store.load();
 
       expect(store.level()).toBe(2);
@@ -628,6 +687,14 @@ describe('ExplorerStore', () => {
       expect(store.urlPort.write.calls.mostRecent()?.args[0]).toEqual(
         jasmine.objectContaining({ level: '2', geo: 'ES51' }),
       );
+    });
+
+    it('opens a URL at NUTS 2 of a national indicator on the countries', async () => {
+      const store = withRegional({ ind: 'overburden', level: '2', geo: 'ES51' });
+      await store.load();
+
+      expect(store.level()).toBe(0);
+      expect(store.selected()).toBeUndefined();
     });
   });
 });

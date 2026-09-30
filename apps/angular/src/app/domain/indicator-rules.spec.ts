@@ -3,9 +3,11 @@ import {
   byTheme,
   classOf,
   headline,
+  levelOf,
   mapValue,
   openCards,
   resolveYear,
+  selectionAt,
   shortRanking,
   slicesOf,
   timeSeries,
@@ -149,17 +151,28 @@ describe('valuesByGeo at NUTS 2', () => {
     });
   });
 
-  it('paints each region of a national indicator with its country, marked as national', () => {
+  it('gives nothing at NUTS 2 for a national indicator', () => {
     const overburden = meta('scalar', { levels: [0] });
-    const data: IndicatorData = {
-      ES: { '2024': { total: { v: 7.8, n: 'Nota.' } } },
-      EL: { '2024': { total: { v: 26 } } },
-    };
-    expect(valuesByGeo(overburden, data, 2024, 'total', 2, regions).values).toEqual([
-      { geo: 'EL30', value: 26, flags: undefined, national: true },
-      { geo: 'ES30', value: 7.8, flags: undefined, note: 'Nota.', national: true },
-      { geo: 'ES51', value: 7.8, flags: undefined, note: 'Nota.', national: true },
-    ]);
+    const data: IndicatorData = { ES: { '2024': { total: { v: 7.8 } } } };
+    expect(valuesByGeo(overburden, data, 2024, 'total', 2, regions).values).toEqual([]);
+  });
+});
+
+describe('levelOf and selectionAt', () => {
+  const regional = meta('scalar', { levels: [0, 2] });
+  const national = meta('scalar', { levels: [0] });
+
+  it('shows a national indicator by country, whatever the level of the map', () => {
+    expect(levelOf(regional, 2)).toBe(2);
+    expect(levelOf(national, 2)).toBe(0);
+    expect(levelOf(regional, 0)).toBe(0);
+  });
+
+  it('selects the country of the selected region in a national indicator', () => {
+    expect(selectionAt(national, 2, 'ES30')).toBe('ES');
+    expect(selectionAt(regional, 2, 'ES30')).toBe('ES30');
+    expect(selectionAt(national, 0, 'ES')).toBe('ES');
+    expect(selectionAt(national, 2, undefined)).toBeUndefined();
   });
 });
 

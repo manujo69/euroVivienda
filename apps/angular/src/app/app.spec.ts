@@ -219,21 +219,16 @@ describe('App', () => {
     );
   });
 
-  it('switches the map between countries and NUTS 2 regions', async () => {
+  it('offers NUTS 2 regions only for a main indicator with regional data', async () => {
     const page = await render();
     const select = [...page.querySelectorAll('label')]
       .find((label) => label.textContent?.includes('Nivel'))
       ?.querySelector('select');
-    expect([...(select?.options ?? [])].map((option) => option.text.trim())).toEqual([
-      'Países',
-      'Regiones (NUTS 2)',
-    ]);
+    const [countries, regions] = [...(select?.options ?? [])];
 
-    if (select) select.value = '2';
-    select?.dispatchEvent(new Event('change'));
-    await fixture.whenStable();
-
-    expect(TestBed.inject(ExplorerStore).level()).toBe(2);
+    expect(countries?.text.trim()).toBe('Países');
+    expect(regions?.text.trim()).toBe('Regiones (NUTS 2): sin datos regionales');
+    expect(regions?.disabled).toBeTrue();
   });
 
   it('asks for an indicator when none is active', async () => {

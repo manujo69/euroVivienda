@@ -53,7 +53,4 @@ export class MapComponent {
   protected readonly legend = computed(() =>
     legendItems(this.store.breaks(), this.store.meta()?.scale ?? 'sequential'),
   );
-
-  /** At NUTS 2, national indicators paint regions with their country's value, hatched. */
-  protected readonly national = computed(() => this.store.values().some((entry) => entry.national));
 }

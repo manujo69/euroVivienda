@@ -13,7 +13,8 @@ const overburden: IndicatorMeta = {
   theme: 'access',
   kind: 'scalar',
   unit: '%',
-  levels: [0],
+  // Regional, so the map can go down to NUTS 2.
+  levels: [0, 2],
   years: [2015, 2025],
   source: {
     name: 'Eurostat',
@@ -29,6 +30,8 @@ const overburden: IndicatorMeta = {
 const data: IndicatorData = {
   ES: { '2024': { total: { v: 7.8 } } },
   PT: { '2024': { total: { v: 5.1 } } },
+  ES30: { '2024': { total: { v: 9.1 } } },
+  ES51: { '2024': { total: { v: 6.2 } } },
 };
 
 /** A unit square per code, enough for ECharts to frame the map. */
@@ -164,18 +167,6 @@ describe('MapComponent', () => {
       const tooltip = (options()['tooltip'] as { formatter: (p: { name: string }) => string })
         .formatter;
       expect(tooltip({ name: 'ES30' })).toContain('Comunidad de Madrid');
-    });
-
-    it('explains the hatching of national values in the legend', async () => {
-      const { map } = await atNuts2();
-      const items = [...map.querySelectorAll('.legend li')].map((item) => item.textContent?.trim());
-      expect(items.at(-1)).toBe('Dato nacional');
-    });
-
-    it('has no national values to explain at country level', async () => {
-      const { map } = await render();
-      const items = [...map.querySelectorAll('.legend li')].map((item) => item.textContent?.trim());
-      expect(items).not.toContain('Dato nacional');
     });
   });
 });

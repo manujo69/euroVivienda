@@ -85,13 +85,11 @@ describe('CardComponent', () => {
   it('names a selected region by its name', async () => {
     const { element } = await render(
       card({
-        headline: { geo: 'ES30', value: 9.1, flags: undefined, national: true },
+        headline: { geo: 'ES30', value: 9.1, flags: undefined },
         names: { ES30: 'Comunidad de Madrid' },
       }),
     );
-    expect(text(element, '.headline .explanation')).toBe(
-      'Comunidad de Madrid en 2024, dato nacional',
-    );
+    expect(text(element, '.headline .explanation')).toBe('Comunidad de Madrid en 2024');
   });
 
   it('says so when there is no figure to show', async () => {
